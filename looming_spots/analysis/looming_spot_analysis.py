@@ -14,7 +14,7 @@ def convert_loom_to_triggers():
     pass
 
 
-def load_frame(idx):
+def load_frame(rdr, idx):
     for i, frame in enumerate(rdr):
         if i == idx:
             return frame
