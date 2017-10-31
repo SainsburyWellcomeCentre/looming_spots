@@ -2,11 +2,12 @@ import os
 import numpy as np
 import skvideo
 from datetime import datetime
-import scipy.signal
+import scipy.signal, scipy.misc
 import skvideo.io
 import configobj
 import cv2
 from looming_spots.analysis import loom_exceptions
+# from looming_spots.ref_builder.viewer import Viewer
 
 
 def is_datetime(folder_name):
@@ -129,6 +130,7 @@ def auto_extract_all(directory, overwrite=False):
 
 
 def get_frame(rdr_path, idx):
+    idx = int(idx)
     rdr = skvideo.io.vreader(rdr_path)
     for i, frame in enumerate(rdr):
         if i == idx:
@@ -149,26 +151,61 @@ def get_reference_frames(rdr_path, frame_idx_left, frame_idx_right):
     return mouse_left_frame, mouse_right_frame
 
 
-def make_reference_frame(left_frame, right_frame, x_pos):
+def make_reference_frame(left_frame, right_frame, mirror_plane=450):
+    # import matplotlib.pyplot as plt
+    # plt.figure()
+    # plt.subplot(121)
+    # plt.imshow(left_frame[:, :mirror_plane, :])
+    # plt.subplot(122)
+    # plt.imshow(right_frame[:, mirror_plane:, :])
+    # plt.show()
     composite_frame = np.zeros_like(left_frame)
-    composite_frame[:, :x_pos, :] = left_frame[:, :x_pos, :]
-    composite_frame[:, x_pos:, :] = right_frame[:, x_pos:, :]
+    composite_frame[:, :mirror_plane, :] = left_frame[:, :mirror_plane, :]
+    composite_frame[:, mirror_plane:, :] = right_frame[:, mirror_plane:, :]
     return composite_frame
 
 
 def get_ref_index(directory):
     meta_path = os.path.join(directory + '/metadata.txt')
     print(meta_path)
-    if os.path.isfile(meta_path):
-        metadata = configobj.ConfigObj(meta_path)
-        ref_left = int(metadata['left'])
-        ref_right = int(metadata['right'])
-    else:
-        msg = 'The indices cannot be obtained from a metafile'
-        msg += "please enter values for left and right images as a tuple"
+    if not os.path.isfile(meta_path):
+        msg = 'The indices cannot be obtained from a metafile, would you like to make a reference frame manually?'
+        msg += "WARNING: THIS WILL OVERWRITE THE METADATA FILE"
         answer = input(msg)
-        ref_left, ref_right = (int(e) for e in answer.strip('[]() ').split(','))
+        if answer == 'yes':
+            pass
+            # Viewer(directory, video_name='loom{}.h264')
+
+    metadata = configobj.ConfigObj(meta_path)
+    ref_left = int(metadata['reference_frame']['left_frame_idx'])
+    ref_right = int(metadata['reference_frame']['right_frame_idx'])
     return ref_left, ref_right
+
+
+def get_reference_frame_details(directory):
+    meta_path = os.path.join(directory + '/metadata.txt')
+    metadata = configobj.ConfigObj(meta_path)
+    left_idx = int(metadata['reference_frame']['left_frame_idx'])
+    left_path = metadata['reference_frame']['left_video_name']
+    right_idx = int(metadata['reference_frame']['right_frame_idx'])
+    right_path = metadata['reference_frame']['right_video_name']
+    return
+
+
+def load_ref_from_metadata(directory):
+
+    left_frame = get_frame(os.path.join(directory, left_path), left_idx)
+    right_frame = get_frame(os.path.join(directory, right_path), right_idx)
+
+    ref = make_reference_frame(left_frame, right_frame)
+    save_frame_as_png(ref)
+
+
+def save_frame_as_png(frame, directory):
+    ref_array = np.mean(frame, axis=2)
+    save_fpath = os.path.join(directory, 'ref.png')
+    print('saving reference frame to: {}'.format(save_fpath))
+    scipy.misc.imsave(save_fpath, ref_array, format='png')
 
 
 def load_video(rdr, ref=None):
@@ -179,10 +216,6 @@ def load_video(rdr, ref=None):
         gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         video.append(gray_frame)
     return video
-
-
-def save_video(video, path):
-    skvideo.io.vwrite(path, np.array(video))
 
 
 def add_ref_to_all(mouse_dir):
@@ -203,3 +236,7 @@ def add_ref_to_all_loom_videos(directory):
             rdr = skvideo.io.vreader(vid_path)
             vid = load_video(rdr, ref)
             save_video(vid, vid_path)
+
+
+def save_video(video, path):
+    skvideo.io.vwrite(path, np.array(video))
