@@ -7,6 +7,16 @@ import numpy as np
 import re
 from looming_spots.analysis import extract_looms
 
+DEFAULT_VIDEO_PATH = './camera.mp4'
+
+
+def get_digit_from_string(string):
+    return int(re.search(r'\d+', string).group())
+
+
+def digit_present(string):
+    return any([x.isdigit() for x in string])
+
 
 class Viewer(object):
     """
@@ -16,17 +26,18 @@ class Viewer(object):
     text file called Metadata.txt, and also saves the composite frame. If there are a series of videos that change
     by increment only then 'w' and 'q' enable toggling between videos.
     """
-    def __init__(self, directory, video=None, video_fname=None):
+    def __init__(self, directory, video=None, video_fname='loom0.h264'):
         self.frame_idx = 0
         self.directory = directory
         self.video_idx = None
+
         if video is not None:
             self.video = video
         elif video_fname:
             self.video_ext = '.' + video_fname.split('.')[-1]
             self.video_name = video_fname.split('.')[0]
-            if any([x.isdigit() for x in self.video_name]):
-                self.video_idx = int(re.search(r'\d+', self.video_name).group())
+            if digit_present(self.video_name):
+                self.video_idx = get_digit_from_string(self.video_name)
             self.video_fname_fmt = re.sub(r'\d+', '{}', self.video_name)
             self.video = self.load_video()
 
@@ -40,7 +51,6 @@ class Viewer(object):
         self.ref = Ref()
         self.left_ref = None
         self.right_ref = None
-
         plt.show()
 
     @property
@@ -119,37 +129,38 @@ class Viewer(object):
 
 
 class Ref(object):
-    def __init__(self):
+    def __init__(self, path=None):
+        if not path:
+            self.path = DEFAULT_VIDEO_PATH
         self.metadata = ConfigObj('./metadata.cfg')
+        self.initialise_metadata()
         self.left = None
         self.right = None
         self.load_from_metadata()
         self.load_reference_frame()
-        self.initialise_metadata()
 
     def initialise_metadata(self):
         if 'reference_frame' not in self.metadata:
             self.metadata['reference_frame'] = {}
-            self.metadata['reference_frame']['left'] = {}
-            self.metadata['reference_frame']['right'] = {}
+            self.metadata['video_name'] = self.path
 
     def load_from_metadata(self):
         if 'reference_frame' not in self.metadata:
             return 'cannot load reference frame, no metadata attributes found'
-
-        ref_attributes = self.metadata['reference_frame']
-
-        for item in ref_attributes:
-            side = ref_attributes[item]
-            video_name = ref_attributes[item]['video_name']
-            frame_idx = ref_attributes[item]['frame_idx']
-            half_ref = HalfRef(self, side, video_name, frame_idx)
+        print('loading from metadata')
+        video_name = self.metadata['video_name']
+        for item in self.metadata['reference_frame']:
             if item == 'left':  # TODO: generic concatenation row and column-wise from matrix as list of image pieces
+                frame_idx = self.metadata['reference_frame'][item]
+                half_ref = HalfRef(self, item, video_name, int(frame_idx))
                 self.left = half_ref
             elif item == 'right':
+                frame_idx = self.metadata['reference_frame'][item]
+                half_ref = HalfRef(self, item, video_name, int(frame_idx))
                 self.right = half_ref
 
     def load_reference_frame(self):
+        print('loading reference frame')
         if self.left is None or self.right is None:
             return
         img = extract_looms.make_reference_frame(self.left.image, self.right.image)
@@ -166,10 +177,17 @@ class HalfRef(object):
         self.video_name = video_name
         self.frame_idx = frame_idx
         self.frame = frame
-        self.metadata = self.ref.metadata['reference_frame'][self.side]
+        self.metadata = self.ref.metadata['reference_frame']
+
+    def absolute_frame_idx(self):
+        vid_idx = get_digit_from_string(self.video_name)
+        from looming_spots import metadata
+        loom_frame_idx = metadata.load_config()['manual_loom_idx'][vid_idx]
+        abs_idx = int(self.frame_idx) + int(loom_frame_idx) - 200  # TODO: test to ensure the frames are identical
+        return abs_idx
 
     def initialise_metadata(self):
-        if self.side not in self.ref.metadata['reference_frame']:
+        if self.side not in self.ref.metadata['reference_frame']:  # TODO: remove redundancy
             self.ref.metadata['reference_frame'][self.side] = {}
 
     def load_from_metadata(self):
@@ -177,8 +195,7 @@ class HalfRef(object):
         self.frame_idx = self.metadata['frame_idx']
 
     def save_metadata(self):
-        self.metadata['video_name'] = self.video_name
-        self.metadata['frame_idx'] = self.frame_idx
+        self.metadata[self.side] = self.absolute_frame_idx()
         self.ref.write_metadata()
 
     @property

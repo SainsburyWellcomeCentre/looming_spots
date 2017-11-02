@@ -8,6 +8,7 @@ import scipy.signal
 import skvideo
 import skvideo.io
 from configobj import ConfigObj
+from looming_spots import metadata
 
 from looming_spots.analysis import loom_exceptions
 from looming_spots.metadata import save_key_to_config
@@ -102,7 +103,7 @@ def get_manual_looms(loom_idx, n_looms_per_stimulus=5, n_auto_looms=120, ILI_ign
         n_manual_looms = len(ilis)-n_auto_looms
     elif len(ilis) == n_auto_looms:
         print('HABITUATION ONLY, {} looms detected'.format(len(ilis)))
-        return []
+        return
     else:
         first_loom_idx = 0
         n_manual_looms = len(ilis)
@@ -111,11 +112,11 @@ def get_manual_looms(loom_idx, n_looms_per_stimulus=5, n_auto_looms=120, ILI_ign
     if remainder != 0:
         print("expected looms to be in multiple of: {}, got remainder: {}, skipping".format(n_looms_per_stimulus,
                                                                                             remainder))
-        return []
+        return
     manual_looms = np.arange(first_loom_idx, first_loom_idx+n_manual_looms, 5)
     if len(manual_looms) > 5:
         print('way too many stimuli to be correct: {}, skipping'.format(len(manual_looms)))
-        return []
+        return
     return loom_idx[manual_looms]
 
 
@@ -141,13 +142,20 @@ def extract_loom_video(directory, loom_start, loom_number, n_samples_before=200,
 
 def auto_extract_all(directory, overwrite=False):
     if any('loom' in fname for fname in os.listdir(directory)) and not overwrite:
-        raise loom_exceptions.LoomVideosAlreadyExtractedError(directory)
+        print('looms already present')
+        return 'looms already extracted.. skipping'
     ai = load_ai(directory)
     ai_filtered = filter_raw_pd_trace(ai)
     all_loom_idx = get_loom_idx(ai_filtered)
     manual_loom_indices = get_manual_looms(all_loom_idx)
-    save_key_to_config('loom_indices', manual_loom_indices)
-    extract_loom_videos(directory, manual_loom_indices)
+    if manual_loom_indices is not None:
+        config = metadata.load_config()
+        metadata.save_key_to_config(config, 'manual_loom_idx', list(manual_loom_indices))
+
+        extract_loom_videos(directory, manual_loom_indices)
+    else:
+        print('no loom indices')
+    print('done')
 
 
 def get_frame(rdr_path, idx):
