@@ -1,13 +1,46 @@
 import os
-import numpy as np
-import skvideo
 from datetime import datetime
-import scipy.signal, scipy.misc
-import skvideo.io
-import configobj
+
 import cv2
+import numpy as np
+import scipy.misc
+import scipy.signal
+import skvideo
+import skvideo.io
+from configobj import ConfigObj
+
 from looming_spots.analysis import loom_exceptions
-# from looming_spots.ref_builder.viewer import Viewer
+from looming_spots.metadata import save_key_to_config
+
+
+def load_video(rdr, ref=None):
+    video = []
+    if ref:
+        video.append(ref)
+    for frame in rdr:
+        gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        video.append(gray_frame)
+    return video
+
+
+def save_frame_as_png(frame, directory):
+    ref_array = np.mean(frame, axis=2)
+    save_fpath = os.path.join(directory, 'ref.png')
+    print('saving reference frame to: {}'.format(save_fpath))
+    scipy.misc.imsave(save_fpath, ref_array, format='png')
+
+
+def get_session_label(directory, n_habituation_looms=120):
+    ai = load_ai(directory)
+    filtered_ai = filter_raw_pd_trace(ai)
+    loom_starts = get_loom_idx(filtered_ai)
+    print("there are {} looms".format(len(loom_starts)))
+    if len(loom_starts) == n_habituation_looms:
+        return 'habituation_only'
+    elif len(loom_starts) < 50:
+        return 'test_only'
+    elif len(loom_starts) > n_habituation_looms:
+        return 'habituation_and_test'
 
 
 def is_datetime(folder_name):
@@ -59,19 +92,6 @@ def get_loom_idx(filtered_ai):
     # loom_downs = np.diff(loom_on) == -1
     loom_starts = np.where(loom_ups)[0]
     return loom_starts
-
-
-def get_session_label(directory, n_habituation_looms=120):
-    ai = load_ai(directory)
-    filtered_ai = filter_raw_pd_trace(ai)
-    loom_starts = get_loom_idx(filtered_ai)
-    print("there are {} looms".format(len(loom_starts)))
-    if len(loom_starts) == n_habituation_looms:
-        return 'habituation_only'
-    elif len(loom_starts) < 50:
-        return 'test_only'
-    elif len(loom_starts) > n_habituation_looms:
-        return 'habituation_and_test'
 
 
 def get_manual_looms(loom_idx, n_looms_per_stimulus=5, n_auto_looms=120, ILI_ignore_n_samples=1300):
@@ -126,6 +146,7 @@ def auto_extract_all(directory, overwrite=False):
     ai_filtered = filter_raw_pd_trace(ai)
     all_loom_idx = get_loom_idx(ai_filtered)
     manual_loom_indices = get_manual_looms(all_loom_idx)
+    save_key_to_config('loom_indices', manual_loom_indices)
     extract_loom_videos(directory, manual_loom_indices)
 
 
@@ -152,13 +173,6 @@ def get_reference_frames(rdr_path, frame_idx_left, frame_idx_right):
 
 
 def make_reference_frame(left_frame, right_frame, mirror_plane=450):
-    # import matplotlib.pyplot as plt
-    # plt.figure()
-    # plt.subplot(121)
-    # plt.imshow(left_frame[:, :mirror_plane, :])
-    # plt.subplot(122)
-    # plt.imshow(right_frame[:, mirror_plane:, :])
-    # plt.show()
     composite_frame = np.zeros_like(left_frame)
     composite_frame[:, :mirror_plane, :] = left_frame[:, :mirror_plane, :]
     composite_frame[:, mirror_plane:, :] = right_frame[:, mirror_plane:, :]
@@ -176,7 +190,7 @@ def get_ref_index(directory):
             pass
             # Viewer(directory, video_name='loom{}.h264')
 
-    metadata = configobj.ConfigObj(meta_path)
+    metadata = ConfigObj(meta_path)
     ref_left = int(metadata['reference_frame']['left_frame_idx'])
     ref_right = int(metadata['reference_frame']['right_frame_idx'])
     return ref_left, ref_right
@@ -184,38 +198,12 @@ def get_ref_index(directory):
 
 def get_reference_frame_details(directory):
     meta_path = os.path.join(directory + '/metadata.txt')
-    metadata = configobj.ConfigObj(meta_path)
+    metadata = ConfigObj(meta_path)
     left_idx = int(metadata['reference_frame']['left_frame_idx'])
     left_path = metadata['reference_frame']['left_video_name']
     right_idx = int(metadata['reference_frame']['right_frame_idx'])
     right_path = metadata['reference_frame']['right_video_name']
     return
-
-
-def load_ref_from_metadata(directory):
-
-    left_frame = get_frame(os.path.join(directory, left_path), left_idx)
-    right_frame = get_frame(os.path.join(directory, right_path), right_idx)
-
-    ref = make_reference_frame(left_frame, right_frame)
-    save_frame_as_png(ref)
-
-
-def save_frame_as_png(frame, directory):
-    ref_array = np.mean(frame, axis=2)
-    save_fpath = os.path.join(directory, 'ref.png')
-    print('saving reference frame to: {}'.format(save_fpath))
-    scipy.misc.imsave(save_fpath, ref_array, format='png')
-
-
-def load_video(rdr, ref=None):
-    video = []
-    if ref:
-        video.append(ref)
-    for frame in rdr:
-        gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        video.append(gray_frame)
-    return video
 
 
 def add_ref_to_all(mouse_dir):

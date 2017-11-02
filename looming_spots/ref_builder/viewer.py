@@ -19,13 +19,14 @@ class Viewer(object):
     def __init__(self, directory, video=None, video_fname=None):
         self.frame_idx = 0
         self.directory = directory
-
+        self.video_idx = None
         if video is not None:
             self.video = video
         elif video_fname:
             self.video_ext = '.' + video_fname.split('.')[-1]
             self.video_name = video_fname.split('.')[0]
-            self.video_idx = int(re.search(r'\d+', self.video_name).group())
+            if any([x.isdigit() for x in self.video_name]):
+                self.video_idx = int(re.search(r'\d+', self.video_name).group())
             self.video_fname_fmt = re.sub(r'\d+', '{}', self.video_name)
             self.video = self.load_video()
 
@@ -36,7 +37,7 @@ class Viewer(object):
         self.fig.canvas.mpl_connect('button_press_event', self.on_click)
         self.fig.canvas.mpl_connect('key_press_event', self.on_key_press)
         self.fig.canvas.mpl_connect('scroll_event', self.on_scroll)
-
+        self.ref = Ref()
         self.left_ref = None
         self.right_ref = None
 
@@ -48,7 +49,7 @@ class Viewer(object):
 
     @property
     def video_path(self):
-        video_path = os.path.join(self.directory, self.video_fname_fmt.format(self.video_idx)) + '.h264'
+        video_path = os.path.join(self.directory, self.video_fname_fmt.format(self.video_idx)) + self.video_ext
         return video_path
 
     def on_click(self, event, step_size=50):
@@ -58,12 +59,12 @@ class Viewer(object):
 
     def on_key_press(self, event):
         if event.key == 'left':
-            self.left_ref = HalfRef('left', self.current_video_name, self.frame_idx, self.video[self.frame_idx])
+            self.left_ref = HalfRef(self.ref, 'left', self.current_video_name, self.frame_idx, self.video[self.frame_idx])
             self.left_ref.save_metadata()
             print('left ref idx: {}'.format(self.frame_idx))
 
         elif event.key == 'right':
-            self.right_ref = HalfRef('right', self.current_video_name, self.frame_idx, self.video[self.frame_idx])
+            self.right_ref = HalfRef(self.ref, 'right', self.current_video_name, self.frame_idx, self.video[self.frame_idx])
             self.right_ref.save_metadata()
             print('left ref idx: {}'.format(self.frame_idx))
 
@@ -117,52 +118,69 @@ class Viewer(object):
         scipy.misc.imsave(save_fpath, ref_array, format='png')
 
 
-class HalfRef(object):
-    def __init__(self, side=None, video_name=None, frame_idx=None, frame=None):
-        self.metadata = ConfigObj('./manual_metadata.txt')
-        self.side = side
-        self.video_name = video_name
-        self.frame_idx = frame_idx
-        self.frame = frame
-
-    def load_from_metadata(self):
-        self.video_name = self.metadata['reference_frame'][self.side]['video_name']
-        self.frame_idx = self.metadata['reference_frame'][self.side]['frame_idx']
-
-    def save_metadata(self):
-        if 'reference_frame' not in self.metadata:
-            self.metadata['reference_frame'] = {}
-        if self.side not in self.metadata:
-            self.metadata['reference_frame'][self.side] = {}
-
-        self.metadata['reference_frame'][self.side]['video_name'] = self.video_name
-        self.metadata['reference_frame'][self.side]['frame_idx'] = self.frame_idx
-        self.metadata.write()
-
-    @property
-    def image(self):
-        return extract_looms.get_frame(self.video_name, self.frame_idx)
-
-
 class Ref(object):
     def __init__(self):
-        self.metadata = ConfigObj('./manual_metadata.txt')
+        self.metadata = ConfigObj('./metadata.cfg')
         self.left = None
         self.right = None
         self.load_from_metadata()
         self.load_reference_frame()
+        self.initialise_metadata()
+
+    def initialise_metadata(self):
+        if 'reference_frame' not in self.metadata:
+            self.metadata['reference_frame'] = {}
+            self.metadata['reference_frame']['left'] = {}
+            self.metadata['reference_frame']['right'] = {}
 
     def load_from_metadata(self):
-        for item in self.metadata['reference_frame']:
-            side = self.metadata['reference_frame'][item]
-            video_name = self.metadata['reference_frame'][item]['video_name']
-            frame_idx = self.metadata['reference_frame'][item]['frame_idx']
-            half_ref = HalfRef(side, video_name, frame_idx)
-            if item == 'left':
+        if 'reference_frame' not in self.metadata:
+            return 'cannot load reference frame, no metadata attributes found'
+
+        ref_attributes = self.metadata['reference_frame']
+
+        for item in ref_attributes:
+            side = ref_attributes[item]
+            video_name = ref_attributes[item]['video_name']
+            frame_idx = ref_attributes[item]['frame_idx']
+            half_ref = HalfRef(self, side, video_name, frame_idx)
+            if item == 'left':  # TODO: generic concatenation row and column-wise from matrix as list of image pieces
                 self.left = half_ref
             elif item == 'right':
                 self.right = half_ref
 
     def load_reference_frame(self):
+        if self.left is None or self.right is None:
+            return
         img = extract_looms.make_reference_frame(self.left.image, self.right.image)
         plt.imshow(img); plt.show()
+
+    def write_metadata(self):
+        self.metadata.write()
+
+
+class HalfRef(object):
+    def __init__(self, ref, side=None, video_name=None, frame_idx=None, frame=None):
+        self.ref = ref
+        self.side = side
+        self.video_name = video_name
+        self.frame_idx = frame_idx
+        self.frame = frame
+        self.metadata = self.ref.metadata['reference_frame'][self.side]
+
+    def initialise_metadata(self):
+        if self.side not in self.ref.metadata['reference_frame']:
+            self.ref.metadata['reference_frame'][self.side] = {}
+
+    def load_from_metadata(self):
+        self.video_name = self.metadata['video_name']
+        self.frame_idx = self.metadata['frame_idx']
+
+    def save_metadata(self):
+        self.metadata['video_name'] = self.video_name
+        self.metadata['frame_idx'] = self.frame_idx
+        self.ref.write_metadata()
+
+    @property
+    def image(self):
+        return extract_looms.get_frame(self.video_name, self.frame_idx)
