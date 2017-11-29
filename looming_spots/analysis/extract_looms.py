@@ -8,20 +8,33 @@ import scipy.signal
 import skvideo
 import skvideo.io
 from configobj import ConfigObj
-from looming_spots import metadata
-
 from looming_spots.analysis import loom_exceptions
-from looming_spots.metadata import save_key_to_config
+
+METADATA_PATH = './metadata.cfg'
 
 
-def load_video(rdr, ref=None):
+def load_video_from_path(vid_path):
+    rdr = skvideo.io.vreader(vid_path)
+    vid = load_video_from_rdr(rdr, ref=None)
+    return vid
+
+
+def load_video_from_rdr(rdr, ref=None):
     video = []
-    if ref:
+    if ref is not None:
         video.append(ref)
     for frame in rdr:
         gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         video.append(gray_frame)
-    return video
+    return np.array(video)
+
+
+def save_frame_as_array(frame, directory):
+    ref_array = np.mean(frame, axis=2)
+    ref_path = os.path.join(directory, 'ref.npy')
+    print('refarray:{}'.format(ref_array))
+    print('saving reference frame to: {}'.format(ref_path))
+    np.save(ref_path, ref_array)
 
 
 def save_frame_as_png(frame, directory):
@@ -76,9 +89,56 @@ def load_ai(directory, pd_threshold=2.5):
 
 def get_context_from_stimulus_mat(directory):
     stimulus_path = os.path.join(directory, 'stimulus.mat')
-    stimulus_params = scipy.io.loadmat(stimulus_path)['params']
-    dot_locations = [x[0] for x in stimulus_params[0][0] if len(x[0]) == 2]  # only spot position has length 2
-    return 'B' if any(1240 in x for x in dot_locations) else 'A'  # b is the only condition where a position can be 1240
+    print(stimulus_path)
+    if os.path.isfile(stimulus_path):
+        stimulus_params = scipy.io.loadmat(stimulus_path)['params']
+        dot_locations = [x[0] for x in stimulus_params[0][0] if len(x[0]) == 2]  # only spot position has length 2
+        return 'B' if any(1240 in x for x in dot_locations) else 'A'  # b is the only condition where a position can be 1240
+    else:
+        print('no stimulus parameters file')
+        return 'n/a'
+
+
+def write_context_to_metadata(directory):
+    config_path = os.path.join(directory, METADATA_PATH)
+    mtd = ConfigObj(config_path, encoding="UTF8", indent_type='    ', unrepr=False,
+                    create_empty=True, write_empty_values=True)
+    context = get_context_from_stimulus_mat(directory)
+    mtd['context'] = context
+    mtd.write()
+
+
+def _parse_reference_frame_idx_from_experiment(directory, fname='metadata.txt'):
+    import re
+    file_path = os.path.join(directory, fname)
+    if not os.path.isfile(file_path):
+        return None, None
+
+    with open(file_path) as f:
+        data = f.readlines()
+        left, right = None, None
+        for item in data:
+            if 'right' in item:
+                right = re.search(r'\d+', item).group()
+            elif 'left' in item:
+                left = re.search(r'\d+', item).group()
+        print('left frame: {}, right_frame:{}'.format(left, right))
+    return left, right
+
+
+def create_metadata_from_experiment(directory):  # TODO: extract configobj boilerplate
+    metadata = load_config(directory)
+    metadata['video_name'] = './camera.mp4'
+    left_frame_idx, right_frame_idx = _parse_reference_frame_idx_from_experiment(directory)
+    print(directory)
+    context = get_context_from_stimulus_mat(directory)
+    metadata['context'] = context
+    if left_frame_idx:
+        metadata['reference_frame'] = {}
+        metadata['reference_frame']['right'] = right_frame_idx
+        metadata['reference_frame']['left'] = left_frame_idx
+        metadata.write()
+    write_context_to_metadata(directory)
 
 
 def filter_raw_pd_trace(pd_trace, fs=10000):
@@ -149,13 +209,24 @@ def auto_extract_all(directory, overwrite=False):
     all_loom_idx = get_loom_idx(ai_filtered)
     manual_loom_indices = get_manual_looms(all_loom_idx)
     if manual_loom_indices is not None:
-        config = metadata.load_config()
-        metadata.save_key_to_config(config, 'manual_loom_idx', list(manual_loom_indices))
-
+        config = load_config(directory)
+        save_key_to_config(config, 'manual_loom_idx', list(manual_loom_indices))
         extract_loom_videos(directory, manual_loom_indices)
     else:
         print('no loom indices')
     print('done')
+
+
+def load_config(directory):
+    config_path = os.path.join(directory, METADATA_PATH)
+    metadata = ConfigObj(config_path, encoding="UTF8", indent_type='    ', unrepr=False,
+                         create_empty=True, write_empty_values=True)
+    return metadata
+
+
+def save_key_to_config(config, key, item):
+    config[key] = item
+    config.write()
 
 
 def get_frame(rdr_path, idx):
@@ -166,12 +237,12 @@ def get_frame(rdr_path, idx):
             return frame
 
 
-def make_ref(directory, video_fname='camera.mp4', mirror_plane=450):
+def make_ref(directory, video_fname='camera.mp4', mirror_plane=400):
     left_idx, right_idx = get_ref_index(directory)
     video_path = os.path.join(directory, video_fname)
     left_frame, right_frame = get_reference_frames(video_path, left_idx, right_idx)
     ref = make_reference_frame(left_frame, right_frame, mirror_plane)
-    return np.mean(ref, axis=2)
+    save_frame_as_array(ref, directory)
 
 
 def get_reference_frames(rdr_path, frame_idx_left, frame_idx_right):
@@ -187,31 +258,56 @@ def make_reference_frame(left_frame, right_frame, mirror_plane=450):
     return composite_frame
 
 
+def check_reference_is_first_frame(video, reference_image):
+    return video[0, :, :] == reference_image
+
+
+def check_reference_data_exist(directory):
+    meta_path = os.path.join(directory + '/metadata.cfg')  # TODO: rm hard code
+    if not os.path.isfile(meta_path):
+        print('no metadata file present')
+        return False
+    else:
+        metadata = ConfigObj(meta_path)
+        if 'reference_frame' in metadata:
+            return True
+        else:
+            print('no reference frame data in {}'.format(meta_path))
+            return False
+
+
 def get_ref_index(directory):
-    meta_path = os.path.join(directory + '/metadata.txt')
+    meta_path = os.path.join(directory + '/metadata.cfg')
     print(meta_path)
     if not os.path.isfile(meta_path):
         msg = 'The indices cannot be obtained from a metafile, would you like to make a reference frame manually?'
         msg += "WARNING: THIS WILL OVERWRITE THE METADATA FILE"
         answer = input(msg)
         if answer == 'yes':
-            pass
-            # Viewer(directory, video_name='loom{}.h264')
+            from looming_spots.ref_builder.viewer import Viewer
+            Viewer(directory)
 
     metadata = ConfigObj(meta_path)
-    ref_left = int(metadata['reference_frame']['left_frame_idx'])
-    ref_right = int(metadata['reference_frame']['right_frame_idx'])
+    if 'reference_frame' not in metadata:  # TODO: use check_reference_data_exist
+        # raise SteveIsntHereError
+        from looming_spots.ref_builder.viewer import Viewer
+        Viewer(directory)
+
+    metadata = ConfigObj(meta_path)
+    if 'skip' in metadata:
+        raise CannotFormReferenceFrameError
+
+    ref_left = int(metadata['reference_frame']['left'])
+    ref_right = int(metadata['reference_frame']['right'])
     return ref_left, ref_right
 
 
-def get_reference_frame_details(directory):
-    meta_path = os.path.join(directory + '/metadata.txt')
-    metadata = ConfigObj(meta_path)
-    left_idx = int(metadata['reference_frame']['left_frame_idx'])
-    left_path = metadata['reference_frame']['left_video_name']
-    right_idx = int(metadata['reference_frame']['right_frame_idx'])
-    right_path = metadata['reference_frame']['right_video_name']
-    return
+class CannotFormReferenceFrameError(Exception):
+    pass
+
+
+class SteveIsntHereError(Exception):
+    pass
 
 
 def add_ref_to_all(mouse_dir):
@@ -227,12 +323,25 @@ def add_ref_to_all_loom_videos(directory):
         return 'no loom videos in directory: {}'.format(directory)
     for fname in os.listdir(directory):
         if 'loom' in fname and '.h264' in fname:
+            print('adding ref to {}'.format(fname))
             vid_path = os.path.join(directory, fname)
-            ref = make_ref(directory, fname)
-            rdr = skvideo.io.vreader(vid_path)
-            vid = load_video(rdr, ref)
-            save_video(vid, vid_path)
+            try:
+                ref = get_ref(directory)
+                rdr = skvideo.io.vreader(vid_path)
+                vid = load_video_from_rdr(rdr, ref)
+                save_video(vid, vid_path)
+            except Exception:
+                raise CannotFormReferenceFrameError
 
 
 def save_video(video, path):
-    skvideo.io.vwrite(path, np.array(video))
+    skvideo.io.vwrite(path, video)
+
+
+def get_ref(directory, ref_fname='ref.npy'):
+    ref_path = os.path.join(directory, ref_fname)
+    print(ref_path)
+    if not os.path.isfile(ref_path):
+        print('making ref')
+        make_ref(directory)
+    return np.load(ref_path)

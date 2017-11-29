@@ -48,7 +48,7 @@ class Viewer(object):
         self.fig.canvas.mpl_connect('button_press_event', self.on_click)
         self.fig.canvas.mpl_connect('key_press_event', self.on_key_press)
         self.fig.canvas.mpl_connect('scroll_event', self.on_scroll)
-        self.ref = Ref()
+        self.ref = Ref(directory)
         self.left_ref = None
         self.right_ref = None
         plt.show()
@@ -66,17 +66,21 @@ class Viewer(object):
         if event.button == 1:
             self.frame_idx = min(self.frame_idx + step_size, self.video.shape[0] - 1)
             self.update()
+        if event.button == 2:
+            pass  # TODO: get x and set as mirror point
 
     def on_key_press(self, event):
         if event.key == 'left':
-            self.left_ref = HalfRef(self.ref, 'left', self.current_video_name, self.frame_idx, self.video[self.frame_idx])
+            self.left_ref = HalfRef(self.ref, 'left', self.current_video_name,
+                                    self.frame_idx, self.video[self.frame_idx])
             self.left_ref.save_metadata()
             print('left ref idx: {}'.format(self.frame_idx))
 
         elif event.key == 'right':
-            self.right_ref = HalfRef(self.ref, 'right', self.current_video_name, self.frame_idx, self.video[self.frame_idx])
+            self.right_ref = HalfRef(self.ref, 'right', self.current_video_name,
+                                     self.frame_idx, self.video[self.frame_idx])
             self.right_ref.save_metadata()
-            print('left ref idx: {}'.format(self.frame_idx))
+            print('right ref idx: {}'.format(self.frame_idx))
 
         elif event.key == 'enter':
             self.save_reference_frame_indices()
@@ -90,6 +94,9 @@ class Viewer(object):
             self.video_idx += 1
             self.video = self.load_video()
             self.update()
+        elif event.key == 'k':
+            self.ref.metadata['skip'] = True
+            self.ref.write_metadata()
 
     def on_scroll(self, event, step_size=20):
         if event.button == 'up':
@@ -129,10 +136,10 @@ class Viewer(object):
 
 
 class Ref(object):
-    def __init__(self, path=None):
+    def __init__(self, directory, path=None):
         if not path:
             self.path = DEFAULT_VIDEO_PATH
-        self.metadata = ConfigObj('./metadata.cfg')
+        self.metadata = extract_looms.load_config(directory)
         self.initialise_metadata()
         self.left = None
         self.right = None
@@ -181,8 +188,7 @@ class HalfRef(object):
 
     def absolute_frame_idx(self):
         vid_idx = get_digit_from_string(self.video_name)
-        from looming_spots import metadata
-        loom_frame_idx = metadata.load_config()['manual_loom_idx'][vid_idx]
+        loom_frame_idx = self.ref.metadata['manual_loom_idx'][vid_idx]
         abs_idx = int(self.frame_idx) + int(loom_frame_idx) - 200  # TODO: test to ensure the frames are identical
         return abs_idx
 
