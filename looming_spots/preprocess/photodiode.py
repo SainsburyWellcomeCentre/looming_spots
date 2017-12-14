@@ -60,22 +60,7 @@ def get_loom_idx_from_raw(directory):
     return loom_starts
 
 
-def get_loom_idx_from_raw_filtfilt(directory):
-    ai = load_pd_on_clock_ups(directory)
-    filtered_pd = filter_pd_twoway(ai)
-    loom_on = (filtered_pd > 1).astype(int)
-    loom_ups = np.diff(loom_on) == 1
-    loom_starts = np.where(loom_ups)[0]
-    return loom_starts
-
-
 def filter_pd(pd_trace, fs=10000):
-    b1, a1 = scipy.signal.butter(3, 1000./fs*2., 'low',)
-    pd_trace = scipy.signal.lfilter(b1, a1, pd_trace)
-    return pd_trace
-
-
-def filter_pd_twoway(pd_trace, fs=10000):
     b1, a1 = scipy.signal.butter(3, 1000./fs*2., 'low',)
     pd_trace = scipy.signal.filtfilt(b1, a1, pd_trace)
     return pd_trace
