@@ -1,11 +1,14 @@
 import os
-import matplotlib.pyplot as plt
-from configobj import ConfigObj
-import skvideo.io
-import scipy.misc
-import numpy as np
 import re
-from looming_spots.analysis import extract_looms
+
+import matplotlib.pyplot as plt
+import numpy as np
+import scipy.misc
+import skvideo.io
+
+import looming_spots.db.experiment_metadata
+import looming_spots.preprocess.video_processing
+import looming_spots.ref_builder.reference_frames
 
 DEFAULT_VIDEO_PATH = './camera.mp4'
 
@@ -139,7 +142,7 @@ class Ref(object):
     def __init__(self, directory, path=None):
         if not path:
             self.path = DEFAULT_VIDEO_PATH
-        self.metadata = extract_looms.load_config(directory)
+        self.metadata = looming_spots.db.experiment_metadata.load_metadata(directory)
         self.initialise_metadata()
         self.left = None
         self.right = None
@@ -170,7 +173,7 @@ class Ref(object):
         print('loading reference frame')
         if self.left is None or self.right is None:
             return
-        img = extract_looms.make_reference_frame(self.left.image, self.right.image)
+        img = looming_spots.ref_builder.reference_frames.make_reference_frame(self.left.image, self.right.image)
         plt.imshow(img); plt.show()
 
     def write_metadata(self):
@@ -206,4 +209,4 @@ class HalfRef(object):
 
     @property
     def image(self):
-        return extract_looms.get_frame(self.video_name, self.frame_idx)
+        return looming_spots.preprocess.video_processing.get_frame(self.video_name, self.frame_idx)

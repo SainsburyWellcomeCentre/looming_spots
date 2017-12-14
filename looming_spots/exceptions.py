@@ -19,3 +19,11 @@ class LoomVideosAlreadyExtractedError(LoomException):
 
 class DateTimeException(LoomException):
     pass
+
+
+class SteveIsntHereError(LoomException):
+    pass
+
+
+class CannotFormReferenceFrameError(LoomException):
+    pass

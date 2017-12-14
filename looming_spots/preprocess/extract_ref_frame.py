@@ -3,6 +3,8 @@ import skvideo
 import numpy as np
 import configobj
 import cv2
+import skvideo.io
+from datetime import datetime
 
 
 def get_frame(rdr_path, idx):
@@ -68,8 +70,16 @@ def add_ref_to_all(mouse_dir):
                 for fname in os.listdir(path):
                     if 'loom' in fname and '.h264' in fname:
                         vid_path = os.path.join(path, fname)
-                        l_idx, r_idx = extract_ref_frame.get_ref_index(path)
-                        ref = extract_ref_frame.make_ref(path, fname)
+                        ref = make_ref(path, fname)
                         rdr = skvideo.io.vreader(vid_path)
-                        vid = extract_ref_frame.load_video_with_ref(rdr, ref)
-                        extract_ref_frame.save_video(vid, vid_path)
+                        vid = load_video_with_ref(rdr, ref)
+                        save_video(vid, vid_path)
+
+
+def is_datetime(folder_name):
+    try:
+        date_time = datetime.strptime(folder_name, '%Y%m%d_%H_%M_%S')
+        print('string is in date_time format: {}'.format(date_time))
+        return True
+    except ValueError:  # FIXME: custom exception required
+        return False
