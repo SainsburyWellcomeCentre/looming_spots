@@ -6,8 +6,7 @@ import numpy as np
 import scipy.misc
 import skvideo.io
 
-import looming_spots.create_reference_frame.reference_frames
-import looming_spots.metadata.experiment_metadata
+import looming_spots.db.metadata.experiment_metadata
 import looming_spots.util.video_processing
 
 DEFAULT_VIDEO_PATH = './camera.mp4'
@@ -24,8 +23,8 @@ def digit_present(string):
 
 class Viewer(object):
     """
-    This class allows browsing short videos to build reference frames manually. It allows the manual selection of left
-    and right frames. 'left key': sets the index for the frame containing an empty left hand side of the arena, whereas
+    Manually select left and right frames and mirror plane for reference frame building.
+    'left key': sets the index for the frame containing an empty left hand side of the arena, whereas
     'right key': sets the index of the right. 'Enter': triggers the writing of these indices and video paths to a
     text file called Metadata.txt, and also saves the composite frame. If there are a series of videos that change
     by increment only then 'w' and 'q' enable toggling between videos.
@@ -159,7 +158,7 @@ class Ref(object):
     def __init__(self, directory, path=None):
         if not path:
             self.path = DEFAULT_VIDEO_PATH
-        self.metadata = looming_spots.metadata.experiment_metadata.load_metadata(directory)
+        self.metadata = looming_spots.db.metadata.experiment_metadata.load_metadata(directory)
         self.initialise_metadata()
         self.left = None
         self.right = None
@@ -189,8 +188,7 @@ class Ref(object):
         print('loading reference frame')
         if self.left is None or self.right is None:
             return
-        img = looming_spots.create_reference_frame.reference_frames.make_reference_frame(self.left.image,
-                                                                                         self.right.image)
+        img = Viewer.make_reference_frame(self.left.image, self.right.image)
         plt.imshow(img); plt.show()
 
     def write_metadata(self):
