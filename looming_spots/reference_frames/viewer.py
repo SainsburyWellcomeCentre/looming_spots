@@ -6,11 +6,12 @@ import numpy as np
 import scipy.misc
 import skvideo.io
 
-import looming_spots.db.experiment_metadata
-import looming_spots.preprocess.video_processing
-import looming_spots.ref_builder.reference_frames
+import looming_spots.create_reference_frame.reference_frames
+import looming_spots.metadata.experiment_metadata
+import looming_spots.util.video_processing
 
 DEFAULT_VIDEO_PATH = './camera.mp4'
+VIEWER_N_FRAMES_LIMIT = 18000
 
 
 def get_digit_from_string(string):
@@ -33,14 +34,17 @@ class Viewer(object):
         self.frame_idx = 0
         self.directory = directory
         self.video_idx = None
+        self.mirror_idx = 300
 
         if video is not None:
             self.video = video
         elif video_fname:
             self.video_ext = '.' + video_fname.split('.')[-1]
             self.video_name = video_fname.split('.')[0]
+
             if digit_present(self.video_name):
                 self.video_idx = get_digit_from_string(self.video_name)
+
             self.video_fname_fmt = re.sub(r'\d+', '{}', self.video_name)
             self.video = self.load_video()
 
@@ -65,28 +69,27 @@ class Viewer(object):
         video_path = os.path.join(self.directory, self.video_fname_fmt.format(self.video_idx)) + self.video_ext
         return video_path
 
-    def on_click(self, event, step_size=50):
+    def on_click(self, event, step_size=4):
         if event.button == 1:
             self.frame_idx = min(self.frame_idx + step_size, self.video.shape[0] - 1)
             self.update()
-        if event.button == 2:
-            pass  # TODO: get x and set as mirror point
+        if event.button == 3:
+            self.mirror_idx = int(event.xdata)
+            print(self.mirror_idx)
 
     def on_key_press(self, event):
         if event.key == 'left':
             self.left_ref = HalfRef(self.ref, 'left', self.current_video_name,
                                     self.frame_idx, self.video[self.frame_idx])
-            self.left_ref.save_metadata()
             print('left ref idx: {}'.format(self.frame_idx))
 
         elif event.key == 'right':
             self.right_ref = HalfRef(self.ref, 'right', self.current_video_name,
                                      self.frame_idx, self.video[self.frame_idx])
-            self.right_ref.save_metadata()
             print('right ref idx: {}'.format(self.frame_idx))
 
         elif event.key == 'enter':
-            self.save_reference_frame_indices()
+            self.save_reference_frame()
 
         elif event.key == 'q':
             self.video_idx -= 1
@@ -97,12 +100,24 @@ class Viewer(object):
             self.video_idx += 1
             self.video = self.load_video()
             self.update()
+
         elif event.key == 'k':
             self.ref.metadata['skip'] = True
             self.ref.write_metadata()
 
+        elif event.key == 't':
+            self.ref.metadata['track_start'] = self.frame_idx
+            self.ref.write_metadata()
+        elif event.key == 'z':
+            self.ref.metadata['grid_location'] = 'left'
+            self.ref.write_metadata()
+        elif event.key == 'x':
+            self.ref.metadata['grid_location'] = 'right'
+            self.ref.write_metadata()
+
     def on_scroll(self, event, step_size=20):
         if event.button == 'up':
+            print(self.frame_idx, self.video.shape[0])
             self.frame_idx = min(self.frame_idx + step_size, self.video.shape[0] - 1)
         elif event.button == 'down':
             self.frame_idx = max(self.frame_idx - step_size, 0)
@@ -115,39 +130,40 @@ class Viewer(object):
     def load_video(self):
         self.frame_idx = 0
         print(self.video_path)
-        return skvideo.io.vread(self.video_path, num_frames=400)
+        if self.video_path.endswith('mp4'):
+            return skvideo.io.vread(self.video_path, num_frames=VIEWER_N_FRAMES_LIMIT)
+        return skvideo.io.vread(self.video_path)
 
     def save_reference_frame_indices(self):
-        self.left_ref.save_metadata()
-        self.right_ref.save_metadata()
         self.save_reference_frame()
 
     @staticmethod
-    def make_reference_frame(left_frame, right_frame, x_pos=400):
+    def make_reference_frame(left_frame, right_frame, mirror_plane_idx):
         composite_frame = np.zeros_like(left_frame)
-        composite_frame[:, :x_pos, :] = left_frame[:, :x_pos, :]
-        composite_frame[:, x_pos:, :] = right_frame[:, x_pos:, :]
+        composite_frame[:, :mirror_plane_idx, :] = left_frame[:, :mirror_plane_idx, :]
+        composite_frame[:, mirror_plane_idx:, :] = right_frame[:, mirror_plane_idx:, :]
         return composite_frame
 
     def save_reference_frame(self):
-        reference_frame = self.make_reference_frame(self.left_ref.frame, self.right_ref.frame)
+        reference_frame = self.make_reference_frame(self.left_ref.frame, self.right_ref.frame,
+                                                    mirror_plane_idx=self.mirror_idx)
         plt.imshow(reference_frame); plt.show()
         ref_array = np.mean(reference_frame, axis=2)
         save_fpath = os.path.join(self.directory, 'ref.png')
         print('saving reference frame to: {}'.format(save_fpath))
         scipy.misc.imsave(save_fpath, ref_array, format='png')
+        np.save(save_fpath[:-4] + '.npy', ref_array)
 
 
 class Ref(object):
     def __init__(self, directory, path=None):
         if not path:
             self.path = DEFAULT_VIDEO_PATH
-        self.metadata = looming_spots.db.experiment_metadata.load_metadata(directory)
+        self.metadata = looming_spots.metadata.experiment_metadata.load_metadata(directory)
         self.initialise_metadata()
         self.left = None
         self.right = None
         self.load_from_metadata()
-        self.load_reference_frame()
 
     def initialise_metadata(self):
         if 'reference_frame' not in self.metadata:
@@ -173,7 +189,8 @@ class Ref(object):
         print('loading reference frame')
         if self.left is None or self.right is None:
             return
-        img = looming_spots.ref_builder.reference_frames.make_reference_frame(self.left.image, self.right.image)
+        img = looming_spots.create_reference_frame.reference_frames.make_reference_frame(self.left.image,
+                                                                                         self.right.image)
         plt.imshow(img); plt.show()
 
     def write_metadata(self):
@@ -203,10 +220,6 @@ class HalfRef(object):
         self.video_name = self.metadata['video_name']
         self.frame_idx = self.metadata['frame_idx']
 
-    def save_metadata(self):
-        self.metadata[self.side] = self.absolute_frame_idx()
-        self.ref.write_metadata()
-
     @property
     def image(self):
-        return looming_spots.preprocess.video_processing.get_frame(self.video_name, self.frame_idx)
+        return looming_spots.util.video_processing.get_frame(self.video_name, self.frame_idx)

@@ -2,14 +2,6 @@ import cv2
 import numpy as np
 
 
-def load_track():
-    pass
-
-
-def load_loom():
-    pass
-
-
 def convert_loom_to_triggers():
     pass
 
