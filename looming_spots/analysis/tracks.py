@@ -5,8 +5,8 @@ import numpy as np
 import pandas as pd
 from scipy.ndimage import gaussian_filter
 
-from looming_spots.tracking.manual.retrack_variables import convert_tracks_from_dat
 from looming_spots.preprocess import photodiode
+from zarchive.track.retrack_variables import convert_tracks_from_dat
 
 STIMULUS_ONSETS = [200, 228, 256, 284, 312]
 NORM_FRONT_OF_HOUSE_A = 0.1
@@ -18,7 +18,6 @@ CLASSIFICATION_WINDOW_END = 350 #345
 CLASSIFICATION_SPEED = -0.027
 DISTANCE_THRESHOLD = 0.05
 SPEED_THRESHOLD = -0.01
-LOCAL_REFERENCE_IMAGE_PATH = '/home/slenzi/spine_shares/loomer/data_working_copy/ref.npy'
 CLASSIFICATION_LATENCY = 5
 
 
@@ -51,8 +50,6 @@ def normalise_track(x_track, context):
     elif context == 'B':
         return (x_track - 39)/(600-39)
     elif context == 'split':
-        #x_track = 640 - x_track
-        #return(x_track - 90)/(550-30)
         return(x_track - 30)/(550-30)
 
 
@@ -459,9 +456,8 @@ def plot_durations(sessions, ax, color='r', label='', highlight_flees=False):
     plt.ylim([0, 0.1])
 
 
-def plot_session_tracks_and_loom_positions(session, color='r', ref_path=LOCAL_REFERENCE_IMAGE_PATH):
-    img = np.load(ref_path)
-    plt.imshow(img, cmap='Greys', vmin=0, vmax=110, aspect='auto')
+def plot_session_tracks_and_loom_positions(session, color='r'):
+    plt.imshow(session.reference_frame, cmap='Greys', vmin=0, vmax=110, aspect='auto')
     for loom_folder in session.loom_paths:
         x, y = load_raw_track(loom_folder)
         plt.plot(x[CLASSIFICATION_WINDOW_START], y[CLASSIFICATION_WINDOW_START],

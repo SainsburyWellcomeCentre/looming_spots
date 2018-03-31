@@ -11,14 +11,17 @@ N_MIN = 10
 FRAME_RATE = 30
 N_SAMPLES_TO_ANALYSE = N_MIN*60*FRAME_RATE
 
-root = '/home/slenzi/spine_shares/loomer/processed_data/CA178_1/20180318_19_17_58/'
-mtd_path = os.path.join(root, 'metadata.cfg')
-config = ConfigObj(mtd_path, unrepr=False)
+
+def load_config(path):
+    mtd_path = os.path.join(path, 'metadata.cfg')
+    return ConfigObj(mtd_path, unrepr=False)
 
 
-def plot_binned_preference(path, start, grid_location, n_bins=10):
+def get_binned_preference(session, start, grid_location, n_bins=10, video_name='camera'):
 
-    normalised_track = tracks.load_normalised_track(path, context='split')
+    path_to_video = os.path.join(session.path, video_name)
+    config = load_config(session.path)
+    normalised_track = tracks.load_normalised_track(path_to_video, context='split')
 
     if start is None:
         start = int(config['track_start'])
@@ -46,12 +49,14 @@ def plot_binned_preference(path, start, grid_location, n_bins=10):
     return binned_preference
 
 
-def plot_sides(path, start=None):
+def plot_sides(session, start=None):
+    config = load_config(session.path)
+
     if start is None:
         start = int(config['track_start'])
     end = start + N_SAMPLES_TO_ANALYSE
-    track = tracks.load_normalised_track(path + '/camera', context='split')[start:end]
-    x, y = tracks.load_raw_track(path + '/camera')
+    track = tracks.load_normalised_track(session.path + '/camera', context='split')[start:end]
+    x, y = tracks.load_raw_track(session.path + '/camera')
     x = x[start:end]
     y = y[start:end]
     above = track > 0.5

@@ -8,16 +8,13 @@ import numpy as np
 from looming_spots.db.metadata import experiment_metadata
 from looming_spots.preprocess import extract_looms
 from looming_spots.preprocess import photodiode
-
-HEAD_DIRECTORY = "/home/slenzi/spine_shares/loomer/"
-RAW_DATA_DIRECTORY = os.path.join(HEAD_DIRECTORY, 'raw_data')
-PROCESSED_DIRECTORY = os.path.join(HEAD_DIRECTORY, 'processed_data')
+from looming_spots.db.paths import RAW_DATA_DIRECTORY, PROCESSED_DATA_DIRECTORY
 
 
 def process_all_data():  # TODO: look for recent folders first instead of looping over all
     for mouse_id in os.listdir(RAW_DATA_DIRECTORY):
         try:
-            mouse_dir = os.path.join(PROCESSED_DIRECTORY, mouse_id)
+            mouse_dir = os.path.join(PROCESSED_DATA_DIRECTORY, mouse_id)
             copy_mouse_directory_to_processed(mouse_id)
             apply_all_preprocessing(mouse_dir)
         except Exception as e:

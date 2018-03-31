@@ -5,12 +5,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from looming_spots.analysis import tracks
+from looming_spots.db.paths import PROCESSED_DATA_DIRECTORY
 from looming_spots.db.metadata import experiment_metadata
 from looming_spots.db.trial import Trial
 from looming_spots.util import generic_functions
-
-PROCESSED_DATA_PATH = '/home/slenzi/spine_shares/loomer/processed_data/'
-#PROCESSED_DATA_PATH = '/home/slenzi/spine_shares/loomer/data_working_copy/'
 
 
 class Session(object):
@@ -37,7 +35,7 @@ class Session(object):
         parent_dir = self.mouse_id
         session_dir = datetime.strftime(self.dt, '%Y%m%d_%H_%M_%S')
         print(parent_dir, session_dir)
-        return os.path.join(PROCESSED_DATA_PATH, parent_dir, session_dir)
+        return os.path.join(PROCESSED_DATA_DIRECTORY, parent_dir, session_dir)
 
     @property
     def mouse_name(self):

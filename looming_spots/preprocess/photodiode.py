@@ -8,7 +8,7 @@ from looming_spots.db.metadata import experiment_metadata
 from looming_spots.preprocess import convert_videos
 
 N_HABITUATION_LOOMS = 120
-PATH_TO_TRACES = '/home/slenzi/spine_shares/loomer/20180311_20_48_18/probe_data_g0_t0.imec.ap.bin'
+# PATH_TO_TRACES = '/home/slenzi/spine_shares/loomer/20180311_20_48_18/probe_data_g0_t0.imec.ap.bin'
 FRAME_RATE = 30
 
 

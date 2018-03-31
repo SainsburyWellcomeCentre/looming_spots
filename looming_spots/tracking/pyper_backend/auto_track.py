@@ -2,10 +2,10 @@ import os
 import subprocess
 
 import looming_spots.util.generic_functions
-from looming_spots.preprocess import extract_looms
+from looming_spots.db.paths import PROCESSED_DATA_DIRECTORY
 from configobj import ConfigObj
 
-PROCESSED_DATA_PATH = '/home/slenzi/spine_shares/loomer/processed_data'
+
 PYTHON_PATH = '/home/slenzi/miniconda3/envs/pyper_env/bin/python2.7'
 PYPER_COMMAND = 'pyper.cli.tracking_cli'
 
@@ -31,7 +31,7 @@ def pyper_cli_track_video_path(session_path, start=0, n_frames=18000, video_name
                           shell=True)
 
 
-def track_all_sessions_all_mice(root=PROCESSED_DATA_PATH):
+def track_all_sessions_all_mice(root=PROCESSED_DATA_DIRECTORY):
     for dirName, subdirList, fileList in os.walk(root):
         for subdir in subdirList:
             if looming_spots.util.generic_functions.is_datetime(subdir):
