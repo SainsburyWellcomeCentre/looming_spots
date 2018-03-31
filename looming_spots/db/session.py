@@ -1,14 +1,15 @@
 import os
-from datetime import datetime
 
 import matplotlib.pyplot as plt
 import numpy as np
+from datetime import datetime
 
+from looming_spots.util import generic_functions
 from looming_spots.analysis import tracks
-from looming_spots.db.paths import PROCESSED_DATA_DIRECTORY
 from looming_spots.db.metadata import experiment_metadata
 from looming_spots.db.trial import Trial
-from looming_spots.util import generic_functions
+
+from looming_spots.db.paths import PROCESSED_DATA_DIRECTORY
 
 
 class Session(object):
@@ -23,12 +24,6 @@ class Session(object):
     @property
     def data_path(self):
         return os.path.join('./',  self.mouse_id, self.dt.strftime('%Y%m%d_%H_%M_%S'))
-
-    def __lt__(self, other):
-        return self.dt < other.dt
-
-    def __gt__(self, other):
-        return self.dt > other.dt
 
     @property
     def path(self):
@@ -103,6 +98,12 @@ class Session(object):
             color = 'r' if t.is_flee() else 'k'
             plt.plot(t.normalised_x_track, color=color)
             t.plot_peak_acceleration()
+
+    def __lt__(self, other):
+        return self.dt < other.dt
+
+    def __gt__(self, other):
+        return self.dt > other.dt
 
 
 class LoomsNotTrackedError(Exception):

@@ -31,7 +31,7 @@ def auto_extract_all_looms(session_folder, overwrite=False, extract_habituation_
     if manual_loom_indices is not None:
         config = experiment_metadata.load_metadata(session_folder)
         experiment_metadata.save_key_to_metadata(config, 'manual_loom_idx', list(manual_loom_indices))
-        extract_loom_videos(session_folder, manual_loom_indices)
+        extract_loom_videos(session_folder, session_folder, manual_loom_indices)
 
 
 def extract_loom_videos(directory_in, directory_out, extraction_idx):

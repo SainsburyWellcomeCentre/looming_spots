@@ -154,7 +154,7 @@ def get_loom_idx_from_raw(directory):  # TODO: save npy file instead
     convert_videos.compare_pd_and_video(directory)
     ai = load_pd_on_clock_ups(directory)
     loom_starts = find_pd_threshold_crossings(ai)
-    if loom_starts % 5 != 0:
+    if len(loom_starts) % 5 != 0:
         raise LoomNumberError(Exception)
     return loom_starts
 

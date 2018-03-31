@@ -47,7 +47,7 @@ def compare_pd_and_video(directory):
 
 
 def get_processed_path(mouse_id):
-    return os.path.join(PROCESSED_DIRECTORY, mouse_id)
+    return os.path.join(PROCESSED_DATA_DIRECTORY, mouse_id)
 
 
 def get_raw_path(mouse_id):
@@ -58,7 +58,8 @@ def convert_avi_to_mp4(avi_path):
     mp4_path = avi_path[:-4] + '.mp4'
     print('avi: {} mp4: {}'.format(avi_path, mp4_path))
     #subprocess.check_call(['ffmpeg -i {} -c:v libx264 -preset fast -crf 18 {}'.format(avi_path, mp4_path)], shell=True)
-    subprocess.check_call(['ffmpeg -i {} -c:v mpeg4 -preset fast -crf 18 -b 5000k {}'.format(avi_path, mp4_path)], shell=True)
+    subprocess.check_call(['ffmpeg -i {} -c:v mpeg4 -preset fast -crf 18 -b 5000k {}'.format(avi_path,
+                                                                                             mp4_path)], shell=True)
     os.remove(avi_path)
 
 
