@@ -119,14 +119,14 @@ def get_loom_idx_on_probe(directory, upsample_factor=3):
     return stimulus_onsets_on_probe
 
 
-def get_probe_clock_ups(path_to_traces=PATH_TO_TRACES, n_chan=385):
+def get_probe_clock_ups(path_to_traces, n_chan=385):
     clock_input = get_clock_from_traces(path_to_traces, n_chan=n_chan)
     clock_ups = np.where(np.diff(clock_input) == 1)[0]
     print('getting clock ups from probe trace... this can take a while')
     return clock_ups
 
 
-def get_clock_from_traces(path_to_traces=PATH_TO_TRACES, n_chan=385):
+def get_clock_from_traces(path_to_traces, n_chan=385):
     data = np.memmap(path_to_traces, dtype=np.int16)
     if data.shape[0] % n_chan != 0:
         raise 'data of length {} cannot be reshaped into {} channels'.format(data.shape[0], n_chan)

@@ -102,6 +102,7 @@ class Session(object):
         for t in self.trials:
             color = 'r' if t.is_flee() else 'k'
             plt.plot(t.normalised_x_track, color=color)
+            t.plot_peak_acceleration()
 
 
 class LoomsNotTrackedError(Exception):
