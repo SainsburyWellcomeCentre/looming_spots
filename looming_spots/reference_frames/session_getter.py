@@ -2,7 +2,7 @@ import os
 
 from looming_spots.reference_frames import viewer
 from looming_spots.util import generic_functions
-from zarchive import load_sessions
+from looming_spots.db.load import load_sessions
 
 
 class SessionGetter(object):
