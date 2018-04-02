@@ -3,6 +3,7 @@ import numpy as np
 
 from looming_spots.analysis import plotting
 from looming_spots.db import session
+from looming_spots.util import generic_functions
 
 ARENA_SIZE_CM = 50
 FRAME_RATE = 30
@@ -13,6 +14,7 @@ class SessionGroup(object):
         self.sessions = sessions
         self.group_key = group_key
         self.fig = fig
+        self.title = '{} (n = {} mice)'.format(self.group_key, len(self.sessions))
 
     @property
     def heatmap_data(self):
@@ -41,12 +43,13 @@ class SessionGroup(object):
                 continue
 
         plotting.plot_looms(fig)
-        plt.title(self.group_key)
+        plt.title(self.title)
         plt.ylabel('x position in box (cm)')
         plt.xlabel('time (s)')
         track_length = get_x_length(fig)
         self.convert_y_axis(0, 1, 0, ARENA_SIZE_CM, n_steps=6)
         self.convert_x_axis(track_length, n_steps=11)
+        generic_functions.neaten_plots(fig.axes)
 
     def convert_x_axis(self, track_length, n_steps):
         plt.xticks(np.linspace(0, track_length - 1, n_steps), np.linspace(0, (track_length - 1) / FRAME_RATE, n_steps))
@@ -62,9 +65,10 @@ class SessionGroup(object):
 
         plt.imshow(self.heatmap_data, cmap='Greys', aspect='auto', vmin=-0.03, vmax=0.03)
         self.convert_x_axis(track_length=len(self.heatmap_data[0])+1, n_steps=11)
-        plt.title(self.group_key)
+        plt.title(self.title)
         plt.ylabel('trial')
         plt.xlabel('time (s)')
+        generic_functions.neaten_plots(fig.axes)
 
     def plot_acc_heatmaps(self, fig=None):
 
@@ -80,10 +84,12 @@ class SessionGroup(object):
                 except session.LoomsNotTrackedError:
                     continue
         plt.imshow(all_accs, cmap='Greys', aspect='auto', vmin=-0.0075, vmax=0.0075)
-        plt.title(self.group_key)
+        plt.title(self.title)
+        generic_functions.neaten_plots(fig.axes)
 
 
 def get_x_length(fig):
     line = fig.axes[0].lines[0]
     xdata = line.get_xdata()
     return len(xdata)
+

@@ -1,5 +1,5 @@
 from datetime import datetime
-
+import seaborn as sns
 import numpy as np
 
 
@@ -44,3 +44,8 @@ def chunks(l, n):
     """Yield successive n-sized chunks from l."""
     for i in range(0, len(l), n):
         yield l[i:i + n]
+
+
+def neaten_plots(axes, top=True, right=True, left=False, bottom=False):
+    for ax in axes:
+        sns.despine(ax=ax, top=top, right=right, left=left, bottom=bottom)

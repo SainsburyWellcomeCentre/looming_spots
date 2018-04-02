@@ -102,7 +102,7 @@ def apply_all_preprocessing(mouse_dir):
             if ".avi" in name:
                 convert_to_mp4(name, session_folder, remove_avi=True)
                 initialise_metadata(session_folder, remove_txt=True)
-            extract_looms.auto_extract_all_looms(session_folder)
+                extract_looms.auto_extract_all_looms(session_folder)
 
 
 def apply_all_preprocessing_to_mouse_id(mouse_id):
