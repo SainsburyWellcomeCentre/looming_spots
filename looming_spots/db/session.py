@@ -27,7 +27,6 @@ class Session(object):
     def path(self):
         parent_dir = self.mouse_id
         session_dir = datetime.strftime(self.dt, '%Y%m%d_%H_%M_%S')
-        print(parent_dir, session_dir)
         return os.path.join(PROCESSED_DATA_DIRECTORY, parent_dir, session_dir)
 
     @property
@@ -73,12 +72,6 @@ class Session(object):
         return len(loom_idx)
 
     @property
-    def grid_location(self):
-        mtd = experiment_metadata.load_metadata(self.path)
-        grid_location = mtd['grid_location']
-        return grid_location
-
-    @property
     def reference_frame(self):
         fpath = os.path.join(self.path, 'ref.npy')
         return np.load(fpath)
@@ -97,6 +90,7 @@ class Session(object):
             plt.plot(t.normalised_x_track, color=color)
             t.plot_peak_acceleration()
 
+    @property
     def photodiode_trace(self, raw=False):
         if raw:
             pd, clock = photodiode.load_pd_and_clock_raw(self.path)
@@ -104,14 +98,17 @@ class Session(object):
             pd = photodiode.load_pd_on_clock_ups(self.path)
         return pd
 
+    @property
     def metadata(self):
         return experiment_metadata.load_metadata(self.path)
 
+    @property
     def loom_idx(self):
-        return self.metadata()['loom_idx']
+        return self.metadata['loom_idx']
 
+    @property
     def manual_loom_idx(self):
-        return self.metadata()['manual_loom_idx']
+        return self.metadata['manual_loom_idx']
 
     @property
     def context(self):
@@ -119,7 +116,13 @@ class Session(object):
 
     @property
     def protocol(self):
-        return experiment_metadata.get_session_label_from_loom_idx(self.loom_idx())
+        return experiment_metadata.get_session_label_from_loom_idx(self.loom_idx)
+
+    @property
+    def grid_location(self):
+        mtd = experiment_metadata.load_metadata(self.path)
+        grid_location = mtd['grid_location']
+        return grid_location
 
     def __lt__(self, other):
         return self.dt < other.dt

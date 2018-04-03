@@ -4,13 +4,12 @@ from datetime import datetime
 import looming_spots.preprocess.extract_looms
 import looming_spots.util.generic_functions
 from looming_spots.db import session
-from looming_spots.db.metadata.experiment_metadata import get_context, get_session_label_from_loom_idx, get_loom_idx
 
 from looming_spots.db.paths import PROCESSED_DATA_DIRECTORY
 from looming_spots.db import session_group, experiment
 
 
-def load_sessions(mouse_id):
+def load_sessions(mouse_id, tests_only=False):
     sessions_path = os.path.join(PROCESSED_DATA_DIRECTORY, mouse_id)
     session_list = []
     for s in os.listdir(sessions_path):
@@ -19,7 +18,7 @@ def load_sessions(mouse_id):
         date = datetime.strptime(s, '%Y%m%d_%H_%M_%S')
         s = session.Session(dt=date, mouse_id=mouse_id)
         session_list.append(s)
-    return session_list
+    return sorted(session_list)
 
 
 def load_experiment_from_groups(groups, group_labels):

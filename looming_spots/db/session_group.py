@@ -4,9 +4,47 @@ import numpy as np
 from looming_spots.analysis import plotting
 from looming_spots.db import session
 from looming_spots.util import generic_functions
+from looming_spots.db import load
+
 
 ARENA_SIZE_CM = 50
 FRAME_RATE = 30
+
+
+class MouseSessionGroup(object):
+    def __init__(self, mouse_id):
+        self.mouse_id = mouse_id
+        self.sessions = np.array(load.load_sessions(mouse_id))
+        self.protocols = np.array([s.protocol for s in self.sessions])
+
+    @property
+    def habituation_session(self):
+        return self.sessions[self.habituation_index]
+
+    @property
+    def habituation_index(self):
+        is_habituation = np.array(self.protocols == 'habituation_only')
+
+        if not any(is_habituation):
+            print('no habituations detected')
+            return None
+        else:
+            print('habituation detected {}'.format(np.where(is_habituation)[0][0]))
+            return np.where(is_habituation)[0][0]
+
+    @property
+    def pre_tests(self):
+        return self.sessions[0:self.habituation_index]
+
+    @property
+    def post_tests(self):
+        return self.sessions[self.habituation_index+1:]
+
+    def nth_pre_test(self, n):
+        return self.pre_tests[n]
+
+    def nth_post_test(self, n):
+        return self.post_tests[n]
 
 
 class SessionGroup(object):
