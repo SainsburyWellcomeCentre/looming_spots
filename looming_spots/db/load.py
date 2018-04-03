@@ -9,7 +9,7 @@ from looming_spots.db.paths import PROCESSED_DATA_DIRECTORY
 from looming_spots.db import session_group, experiment
 
 
-def load_sessions(mouse_id, tests_only=False):
+def load_sessions(mouse_id):
     sessions_path = os.path.join(PROCESSED_DATA_DIRECTORY, mouse_id)
     session_list = []
     for s in os.listdir(sessions_path):
@@ -26,8 +26,8 @@ def load_experiment_from_groups(groups, group_labels):
     for ids, label in zip(groups, group_labels):
         sessions = []
         for mid in ids:
-            mouse_sessions = load_sessions(mid)
-            s = max(mouse_sessions)
+            ms = session_group.MouseSessionGroup(mid)
+            s = ms.nth_post_test(0)
             sessions.append(s)
         sgs.append(session_group.SessionGroup(sessions, group_key=label))
     exp = experiment.Experiment(sgs)

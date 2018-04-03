@@ -15,7 +15,7 @@ from looming_spots.db.paths import PROCESSED_DATA_DIRECTORY
 
 class Session(object):
 
-    def __init__(self, dt=None, mouse_id=None):
+    def __init__(self, dt, mouse_id=None):
         self.dt = dt
         self.mouse_id = mouse_id
 
@@ -41,7 +41,7 @@ class Session(object):
             if os.path.isdir(loom_folder) and 'loom' in name:
                 paths.append(loom_folder)
         if len(paths) == 0:
-            raise LoomsNotTrackedError()
+            raise LoomsNotTrackedError(self.path)
         loom_indices = [int(path[-1]) for path in paths]
         sorted_paths, idx = generic_functions.sort_by(paths, loom_indices,descend=False)
         return sorted_paths
@@ -132,5 +132,5 @@ class Session(object):
 
 
 class LoomsNotTrackedError(Exception):
-    def __init__(self):
-        print('no loom folder paths, please check you have tracked this session')
+    def __init__(self, msg):
+        print('no loom folder paths, please check you have tracked this session: {}'.format(msg))

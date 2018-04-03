@@ -12,6 +12,8 @@ FRAME_RATE = 30
 
 
 class MouseSessionGroup(object):
+    """this class is for selecting the right session from a mouse that has had multiple sessions"""
+
     def __init__(self, mouse_id):
         self.mouse_id = mouse_id
         self.sessions = np.array(load.load_sessions(mouse_id))
@@ -23,14 +25,16 @@ class MouseSessionGroup(object):
 
     @property
     def habituation_index(self):
-        is_habituation = np.array(self.protocols == 'habituation_only')
-
-        if not any(is_habituation):
+        is_habituation_only = np.array(['habituation_only' in p for p in self.protocols])
+        is_habituation_and_test = np.array(['habituation_and_test' in p for p in self.protocols])
+        if not any(is_habituation_only) and not any(is_habituation_and_test):
             print('no habituations detected')
             return None
+        elif any(is_habituation_and_test):
+            return np.where(is_habituation_and_test)[0][0] - 1
         else:
-            print('habituation detected {}'.format(np.where(is_habituation)[0][0]))
-            return np.where(is_habituation)[0][0]
+            print('habituation detected {}'.format(np.where(is_habituation_only)[0][0]))
+            return np.where(is_habituation_only)[0][0]
 
     @property
     def pre_tests(self):
@@ -38,6 +42,9 @@ class MouseSessionGroup(object):
 
     @property
     def post_tests(self):
+        if self.habituation_index is None:
+            print('no habituation {}'.format(self.mouse_id))
+            return self.sessions
         return self.sessions[self.habituation_index+1:]
 
     def nth_pre_test(self, n):
@@ -48,11 +55,15 @@ class MouseSessionGroup(object):
 
 
 class SessionGroup(object):
+    """this class if for experimentally similar groups of sessions. a single session group can be considered
+    to be a group of sessions that belong in the same plot together"""
+
     def __init__(self, sessions=None, group_key=None, fig=None):
         self.sessions = sessions
         self.group_key = group_key
         self.fig = fig
-        self.title = '{} (n = {} mice)'.format(self.group_key, len(self.sessions))
+        self.n_trials = sum([len(s.trials) for s in self.sessions])
+        self.title = '{} (n = {} trials, {} mice)'.format(self.group_key, self.n_trials, len(self.sessions))
 
     @property
     def heatmap_data(self):

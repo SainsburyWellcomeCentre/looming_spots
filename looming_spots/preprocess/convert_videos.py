@@ -98,10 +98,13 @@ def copy_directory(src, dest):
 
 def apply_all_preprocessing(mouse_dir):
     for session_folder, dirs, files in os.walk(mouse_dir, topdown=False):
+        print(session_folder)
         for name in files:
             if ".avi" in name:
                 convert_to_mp4(name, session_folder, remove_avi=True)
                 initialise_metadata(session_folder, remove_txt=True)
+                extract_looms.auto_extract_all_looms(session_folder)
+            if ".mp4" in name:
                 extract_looms.auto_extract_all_looms(session_folder)
 
 
