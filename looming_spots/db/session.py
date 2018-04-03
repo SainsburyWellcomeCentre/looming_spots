@@ -15,11 +15,8 @@ from looming_spots.db.paths import PROCESSED_DATA_DIRECTORY
 
 class Session(object):
 
-    def __init__(self, dt=None, protocol=None, stimulus=None, context=None, mouse_id=None):
+    def __init__(self, dt=None, mouse_id=None):
         self.dt = dt
-        self.protocol = protocol
-        self.stimulus = stimulus
-        self.context = context
         self.mouse_id = mouse_id
 
     @property
@@ -105,8 +102,24 @@ class Session(object):
             pd, clock = photodiode.load_pd_and_clock_raw(self.path)
         else:
             pd = photodiode.load_pd_on_clock_ups(self.path)
-
         return pd
+
+    def metadata(self):
+        return experiment_metadata.load_metadata(self.path)
+
+    def loom_idx(self):
+        return self.metadata()['loom_idx']
+
+    def manual_loom_idx(self):
+        return self.metadata()['manual_loom_idx']
+
+    @property
+    def context(self):
+        return experiment_metadata.get_context_from_stimulus_mat(self.path)
+
+    @property
+    def protocol(self):
+        return experiment_metadata.get_session_label_from_loom_idx(self.loom_idx())
 
     def __lt__(self, other):
         return self.dt < other.dt

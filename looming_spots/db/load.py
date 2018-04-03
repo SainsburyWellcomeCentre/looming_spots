@@ -17,13 +17,8 @@ def load_sessions(mouse_id):
         if not looming_spots.util.generic_functions.is_datetime(s):
             continue
         date = datetime.strptime(s, '%Y%m%d_%H_%M_%S')
-        s_path = os.path.join(sessions_path, s)
-        context = get_context(s_path)
-        loom_idx = get_loom_idx(s_path)
-        protocol = get_session_label_from_loom_idx(loom_idx)
-        s = session.Session(dt=date, protocol=protocol, stimulus='looming_spot', context=context, mouse_id=mouse_id)
+        s = session.Session(dt=date, mouse_id=mouse_id)
         session_list.append(s)
-        print('session path: {}, context: {}'.format(s.path, s.context))
     return session_list
 
 
