@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from datetime import datetime
 
+from looming_spots.preprocess import photodiode
 from looming_spots.util import generic_functions
 from looming_spots.analysis import tracks
 from looming_spots.db.metadata import experiment_metadata
@@ -98,6 +99,14 @@ class Session(object):
             color = 'r' if t.is_flee() else 'k'
             plt.plot(t.normalised_x_track, color=color)
             t.plot_peak_acceleration()
+
+    def photodiode_trace(self, raw=False):
+        if raw:
+            pd, clock = photodiode.load_pd_and_clock_raw(self.path)
+        else:
+            pd = photodiode.load_pd_on_clock_ups(self.path)
+
+        return pd
 
     def __lt__(self, other):
         return self.dt < other.dt

@@ -73,7 +73,7 @@ def load_pd_on_clock_ups(directory, pd_threshold=2.5):
         downsampled_processed_ai = np.load(path)
         return downsampled_processed_ai
     else:
-        clock, pd = load_pd_and_clock_raw(directory)
+        pd, clock = load_pd_and_clock_raw(directory)
         clock_ups = get_pd_clock_ups(clock, pd_threshold)
         print('number of clock ups found: {}'.format(len(clock_ups)))
         return pd[clock_ups]
@@ -147,7 +147,7 @@ def load_pd_and_clock_raw(directory):
     raw_ai = raw_ai.reshape(int(raw_ai.shape[0] / 2), 2)
     pd = raw_ai[:, 0]
     clock = raw_ai[:, 1]
-    return clock, pd
+    return pd, clock
 
 
 def get_loom_idx_from_raw(directory):  # TODO: save npy file instead
