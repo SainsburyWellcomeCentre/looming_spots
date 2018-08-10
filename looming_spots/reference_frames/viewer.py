@@ -10,7 +10,7 @@ import looming_spots.db.metadata.experiment_metadata
 import looming_spots.util.video_processing
 
 DEFAULT_VIDEO_PATH = './camera.mp4'
-VIEWER_N_FRAMES_LIMIT = 18000
+VIEWER_N_FRAMES_LIMIT = 8000
 
 
 def get_digit_from_string(string):
@@ -114,6 +114,13 @@ class Viewer(object):
         elif event.key == 'x':
             self.ref.metadata['grid_location'] = 'right'
             self.ref.write_metadata()
+        elif event.key == ',':
+            self.ref.metadata['time_of_mouse_entry'] = self.frame_idx
+            self.ref.write_metadata()
+        elif event.key == 'i':
+            self.video_idx += 5
+            self.video = self.load_video()
+            self.update()
 
     def on_scroll(self, event, step_size=20):
         if event.button == 'up':
