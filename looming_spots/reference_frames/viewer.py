@@ -29,11 +29,12 @@ class Viewer(object):
     text file called Metadata.txt, and also saves the composite frame. If there are a series of videos that change
     by increment only then 'w' and 'q' enable toggling between videos.
     """
-    def __init__(self, directory, video=None, video_fname='loom0.h264'):
+    def __init__(self, directory, video=None, video_fname='loom0.h264', trial_type='test'):
         self.frame_idx = 0
         self.directory = directory
         self.video_idx = None
         self.mirror_idx = 300
+        self.namestr = trial_type
 
         if video is not None:
             self.video = video
@@ -148,7 +149,7 @@ class Viewer(object):
                                                     mirror_plane_idx=self.mirror_idx)
         plt.imshow(reference_frame); plt.show()
         ref_array = np.mean(reference_frame, axis=2)
-        save_fpath = os.path.join(self.directory, 'ref.png')
+        save_fpath = os.path.join(self.directory, '{}_ref.png'.format(self.namestr))
         print('saving reference frame to: {}'.format(save_fpath))
         scipy.misc.imsave(save_fpath, ref_array, format='png')
         np.save(save_fpath[:-4] + '.npy', ref_array)
