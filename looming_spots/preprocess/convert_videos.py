@@ -5,8 +5,8 @@ import subprocess
 
 import numpy as np
 
+from looming_spots.db import load
 from looming_spots.db.metadata import experiment_metadata
-from looming_spots.preprocess import extract_looms
 from looming_spots.preprocess import photodiode
 from looming_spots.db.paths import RAW_DATA_DIRECTORY, PROCESSED_DATA_DIRECTORY
 
@@ -46,7 +46,7 @@ def compare_pd_and_video(directory):
             np.save(save_path, downsampled_ai)
 
 
-def get_processed_path(mouse_id):
+def get_processed_mouse_directory(mouse_id):
     return os.path.join(PROCESSED_DATA_DIRECTORY, mouse_id)
 
 
@@ -58,14 +58,13 @@ def convert_avi_to_mp4(avi_path):
     mp4_path = avi_path[:-4] + '.mp4'
     print('avi: {} mp4: {}'.format(avi_path, mp4_path))
     #subprocess.check_call(['ffmpeg -i {} -c:v libx264 -preset fast -crf 18 {}'.format(avi_path, mp4_path)], shell=True)
-    subprocess.check_call(['ffmpeg -i {} -c:v mpeg4 -preset fast -crf 18 -b 5000k {}'.format(avi_path,
-                                                                                             mp4_path)], shell=True)
-    os.remove(avi_path)
+    subprocess.check_call(['ffmpeg -i {} -c:v mpeg4 -preset fast -crf 18 -b 5000k {}'.format(avi_path, mp4_path)], shell=True)
+    #os.remove(avi_path)
 
 
 def copy_mouse_directory_to_processed(mouse_id):
     path_to_mouse_raw = get_raw_path(mouse_id)
-    path_to_mouse_processed = get_processed_path(mouse_id)
+    path_to_mouse_processed = get_processed_mouse_directory(mouse_id)
     if 'test' in mouse_id:
         return 'test data... skipping'
     if 'probe.txt' in path_to_mouse_raw:
@@ -96,20 +95,30 @@ def copy_directory(src, dest):
             print('Directory not copied. Error: %s' % e)
 
 
-def apply_all_preprocessing(mouse_dir):
-    for session_folder, dirs, files in os.walk(mouse_dir, topdown=False):
-        print(session_folder)
-        for name in files:
-            if ".avi" in name:
-                convert_to_mp4(name, session_folder, remove_avi=True)
-                initialise_metadata(session_folder, remove_txt=True)
-                extract_looms.auto_extract_all_looms(session_folder)
-            if ".mp4" in name:
-                extract_looms.auto_extract_all_looms(session_folder)
+def apply_all_preprocessing(mouse_id, video_name='camera'):
+    raw_video_name = video_name + '.avi'
+    processed_video_name = video_name + '.mp4'
+
+    sessions = load.load_sessions(mouse_id)
+    for s in sessions:
+        raw_video_path = os.path.join(s.path, raw_video_name)
+        processed_video_path = os.path.join(s.path, processed_video_name)
+        if not os.path.isfile(processed_video_path) and os.path.isfile(raw_video_path):
+            convert_to_mp4(raw_video_name, s.path, remove_avi=True)
+            initialise_metadata(s.path, remove_txt=True)
+        if not os.path.isfile(processed_video_path):
+            raise NoProcessedVideoError
+
+        s.extract_all_trials()
+
+
+class NoProcessedVideoError(Exception):
+    def __str__(self):
+        print('there is no mp4 video')
 
 
 def apply_all_preprocessing_to_mouse_id(mouse_id):
-    mouse_dir = get_processed_path(mouse_id)
+    mouse_dir = get_processed_mouse_directory(mouse_id)
     copy_mouse_directory_to_processed(mouse_id)
     apply_all_preprocessing(mouse_dir)
 
@@ -130,7 +139,7 @@ def convert_to_mp4(name, directory, remove_avi=False):  # TODO: remove duplicati
     avi_path = os.path.join(directory, name)
     if os.path.isfile(mp4_path):
         print("{} already exists".format(mp4_path))
-        if remove_avi:
+        if remove_avi:  # FIXME: does not seem to work
             if os.path.isfile(avi_path):
                 print("{} present in processed data, deleting...".format(avi_path))
                 os.remove(avi_path)
