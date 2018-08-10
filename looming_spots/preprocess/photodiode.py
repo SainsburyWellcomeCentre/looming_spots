@@ -8,12 +8,16 @@ from looming_spots.db.metadata import experiment_metadata
 from looming_spots.preprocess import convert_videos
 
 N_HABITUATION_LOOMS = 120
+N_LOOMS = 5
 # PATH_TO_TRACES = '/home/slenzi/spine_shares/loomer/20180311_20_48_18/probe_data_g0_t0.imec.ap.bin'
+# PATH_TO_TRACES = '/home/slenzi/spine_shares/loomer/20180411_17_15_05/probe_data_g1_t0.imec.ap.bin'
+PATH_TO_TRACES = '/home/slenzi/spine_shares/loomer/v2/20180413_17_55_37/probe_data_g1_t0.imec.ap.bin'  # FIXME:
+
 FRAME_RATE = 30
 
 
 def get_manual_looms_raw(directory):
-    loom_idx = get_loom_idx_from_raw(directory)
+    loom_idx, _ = get_loom_idx_from_raw(directory)
     return get_manual_looms(loom_idx)
 
 
@@ -22,28 +26,54 @@ def get_manual_looms_from_metadata(directory):
     return get_manual_looms(loom_idx)
 
 
+def get_test_loom_idx(loom_idx,  n_looms_per_stimulus=5):  #WARNING: THIS DOES NOT DO WHAT THE USER EXPECTS
+    if contains_habituation(loom_idx):
+        loom_burst_onsets = np.diff(loom_idx[:: n_looms_per_stimulus])
+        min_ili = min(loom_burst_onsets)
+        test_loom_idx = np.where(loom_burst_onsets > min_ili + 5)[0]
+        return test_loom_idx*n_looms_per_stimulus
+
+
+def get_habituation_loom_idx(loom_idx,  n_looms_per_stimulus=5):
+    if contains_habituation(loom_idx):
+        loom_burst_onsets = np.diff(loom_idx[::n_looms_per_stimulus])
+        min_ili = min(loom_burst_onsets)
+        habituation_loom_idx = np.where(loom_burst_onsets < min_ili + 25)[0]  # FIXME: this value is chosen for.. reasons
+        habituation_loom_idx = np.concatenate([habituation_loom_idx, [max(habituation_loom_idx)+1]])  # adds last loom as ILI will always be bigger
+        return loom_idx[habituation_loom_idx*n_looms_per_stimulus]
+
+
+def get_habituation_start(loom_idx,  n_looms_per_stimulus=5):
+    return get_habituation_loom_idx(loom_idx, n_looms_per_stimulus)[0]
+
+
+def is_pre_test(loom_idx):
+    test_loom_idx = get_test_loom_idx(loom_idx)
+    if 0 in test_loom_idx:
+        return True
+    return False
+
+
+def is_post_test(loom_idx):
+    test_loom_idx = get_test_loom_idx(loom_idx)
+    if len(test_loom_idx) in test_loom_idx:
+        return True
+    return False
+
+
+def contains_habituation(loom_idx, n_looms_per_stimulus=5):
+    ili = np.diff(np.diff(loom_idx[::n_looms_per_stimulus]))
+    if np.count_nonzero([np.abs(x) < 5 for x in ili]) >= 3:
+        return True
+    return False
+
+
 def get_manual_looms(loom_idx, n_looms_per_stimulus=5):
-
-    if isinstance(loom_idx, list):
-        loom_idx = np.array(loom_idx).astype(int)
-
-    ilis = np.roll(loom_idx, -1) - loom_idx
-
-    if len(ilis) > N_HABITUATION_LOOMS:
-        first_loom_idx = N_HABITUATION_LOOMS
-        n_manual_looms = len(ilis) - N_HABITUATION_LOOMS
-
-    elif len(ilis) == N_HABITUATION_LOOMS:
-        print('HABITUATION ONLY, {} looms detected'.format(len(ilis)))
-        return
-
+    if not contains_habituation(loom_idx, n_looms_per_stimulus):
+        return loom_idx[::n_looms_per_stimulus]
     else:
-        first_loom_idx = 0
-        n_manual_looms = len(ilis)
-
-    manual_looms = check_n_manual_looms(n_manual_looms, first_loom_idx,n_looms_per_stimulus)
-    if manual_looms is not None:
-        return loom_idx[manual_looms]
+        test_loom_idx = get_test_loom_idx(loom_idx,  n_looms_per_stimulus)
+        return loom_idx[test_loom_idx[1:]]
 
 
 def check_n_manual_looms(n_manual_looms, first_loom_idx, n_looms_per_stimulus):
@@ -79,14 +109,26 @@ def load_pd_on_clock_ups(directory, pd_threshold=2.5):
         return pd[clock_ups]
 
 
-def manually_correct_ai(directory, start=0, end=None):
+def manually_correct_ai(directory, start, end):
     ai = load_pd_on_clock_ups(directory)
-    ai[:start] = np.median(ai)
-    if end is None:
-        end = len(ai)
-    ai[end:] = np.median(ai)
+    ai[start:end] = np.median(ai)
     save_path = os.path.join(directory, 'AI_corrected')
     np.save(save_path, ai)
+
+
+def auto_fix_ai(directory, n_samples_to_replace=500):
+    ai = load_pd_on_clock_ups(directory)
+    screen_off_locs = np.where(ai < 0.02)[0]  # TODO: remove hard var
+
+    if len(screen_off_locs) == 0:
+        return
+
+    start = screen_off_locs[0]
+    end = start + n_samples_to_replace
+    ai[start:end] = np.median(ai)
+    save_path = os.path.join(directory, 'AI_corrected')
+    np.save(save_path, ai)
+    auto_fix_ai(directory, n_samples_to_replace=n_samples_to_replace)
 
 
 def get_nearest_clock_up(raw_pd_value, clock_ups_pd):
@@ -102,14 +144,14 @@ def get_nearest_clock_up(raw_pd_value, clock_ups_pd):
     return nearest_clock_up_idx, distance_from_clock_up
 
 
-def get_loom_idx_on_probe(directory, upsample_factor=3):
-    clock, pd = load_pd_and_clock_raw(directory)
-    raw_pd_crossings = find_pd_threshold_crossings(pd)
+def get_loom_idx_on_probe(directory, path_to_traces, upsample_factor=3):
+    pd, clock = load_pd_and_clock_raw(directory)
+    raw_pd_ups, raw_pd_downs = find_pd_threshold_crossings(pd)
     clock_ups_pd = get_pd_clock_ups(clock, 2.5)
-    clock_ups_probe = get_probe_clock_ups()
+    clock_ups_probe = get_probe_clock_ups(path_to_traces)
 
     stimulus_onsets_on_probe = []
-    for pd_crossing in raw_pd_crossings:
+    for pd_crossing in raw_pd_ups:
         nearest_clock_up_idx, distance_from_clock_up = get_nearest_clock_up(pd_crossing, clock_ups_pd)
         probe_nth_clock_up_sample = clock_ups_probe[nearest_clock_up_idx]
         new_stimulus_idx = probe_nth_clock_up_sample + distance_from_clock_up * upsample_factor
@@ -120,9 +162,9 @@ def get_loom_idx_on_probe(directory, upsample_factor=3):
 
 
 def get_probe_clock_ups(path_to_traces, n_chan=385):
+    print('getting clock ups from probe trace... this can take a while')
     clock_input = get_clock_from_traces(path_to_traces, n_chan=n_chan)
     clock_ups = np.where(np.diff(clock_input) == 1)[0]
-    print('getting clock ups from probe trace... this can take a while')
     return clock_ups
 
 
@@ -150,22 +192,30 @@ def load_pd_and_clock_raw(directory):
     return pd, clock
 
 
-def get_loom_idx_from_raw(directory):  # TODO: save npy file instead
+def get_loom_idx_from_raw(directory, save=True):  # TODO: save npy file instead
     convert_videos.compare_pd_and_video(directory)
     ai = load_pd_on_clock_ups(directory)
-    loom_starts = find_pd_threshold_crossings(ai)
+    loom_starts, loom_ends = find_pd_threshold_crossings(ai)
     if len(loom_starts) % 5 != 0:
+        print(directory, len(loom_starts))
+        #auto_fix_ai(directory)
         raise LoomNumberError(Exception)
-    return loom_starts
+    dest = os.path.join(directory, 'loom_starts.npy')
+    if save:
+        np.save(dest, loom_starts)
+    return loom_starts, loom_ends
 
 
 def find_pd_threshold_crossings(ai):
-    filtered_pd = filter_pd(ai)
-    threshold = np.nanstd(filtered_pd)*3
+    filtered_pd = filter_pd(ai)   # FIXME: case of no looms is buggy - see /home/slenzi/spine_shares/loomer/processed_data/CA186_4/20180327_17_24_16
+    threshold = np.median(filtered_pd) + np.nanstd(filtered_pd)*3
+    print('threshold: {}'.format(threshold))
     loom_on = (filtered_pd > threshold).astype(int)
     loom_ups = np.diff(loom_on) == 1
     loom_starts = np.where(loom_ups)[0]
-    return loom_starts
+    loom_downs = np.diff(loom_on) == -1
+    loom_ends = np.where(loom_downs)[0]
+    return loom_starts, loom_ends
 
 
 def filter_pd(pd_trace, fs=10000):
@@ -185,6 +235,7 @@ def get_fpath(directory, extension):
 
 def get_ILI(loom_idx):
     return (int(loom_idx[5])-int(loom_idx[4]))/FRAME_RATE
+
 
 
 class LoomNumberError(Exception):
