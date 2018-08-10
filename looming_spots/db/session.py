@@ -19,9 +19,11 @@ from looming_spots.db.paths import PROCESSED_DATA_DIRECTORY
 
 class Session(object):
 
-    def __init__(self, dt, mouse_id=None):
+    def __init__(self, dt, mouse_id=None, n_looms_to_view=0, n_habituation_looms=120):
         self.dt = dt
         self.mouse_id = mouse_id
+        self.n_looms_to_view = n_looms_to_view
+        self.n_habituation_looms = n_habituation_looms
 
     @property
     def data_path(self):
