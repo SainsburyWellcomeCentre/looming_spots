@@ -3,12 +3,16 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 from datetime import datetime
+import scipy.ndimage
+from cached_property import cached_property
 
 from looming_spots.preprocess import photodiode
 from looming_spots.util import generic_functions
 from looming_spots.analysis import tracks
 from looming_spots.db.metadata import experiment_metadata
-from looming_spots.db.trial import Trial
+from looming_spots.db.loomtrial import LoomTrial
+from looming_spots.analysis import plotting
+from looming_spots.reference_frames import viewer
 
 from looming_spots.db.paths import PROCESSED_DATA_DIRECTORY
 
