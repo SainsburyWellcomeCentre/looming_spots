@@ -10,12 +10,18 @@ PYTHON_PATH = '/home/slenzi/miniconda3/envs/pyper_env/bin/python2.7'
 PYPER_COMMAND = 'pyper.cli.tracking_cli'
 
 
-def pyper_cli_track(directory):
+def pyper_cli_track(directory, ref_fname='ref.npy'):
     for fname in os.listdir(directory):
         if 'loom' in fname and '.h264' in fname:
             video_path = os.path.join(directory, fname)
             print(video_path)
-            subprocess.check_call('{} -m {} {}'.format(PYTHON_PATH, PYPER_COMMAND, video_path), shell=True)
+            subprocess.check_call('{} -m {} {} --bg-fname {}'.format(PYTHON_PATH, PYPER_COMMAND,
+                                                                     video_path, ref_fname), shell=True)
+
+
+def pyper_cli_track_trial(video_path, ref_fname='ref.npy'):
+    subprocess.check_call('{} -m {} {} --bg-fname {}'.format(PYTHON_PATH, PYPER_COMMAND,
+                                                             video_path, ref_fname), shell=True)
 
 
 def pyper_cli_track_video_path(session_path, start=0, n_frames=18000, video_name='camera.mp4'):
