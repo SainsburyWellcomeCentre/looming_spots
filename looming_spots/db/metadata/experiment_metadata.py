@@ -51,7 +51,7 @@ def initialise_metadata(directory):  # TODO: extract configobj boilerplate
     metadata['video_name'] = './camera.mp4'
     left_frame_idx, right_frame_idx = _parse_ref_idx_from_exp_metadata(directory)
     context = get_context_from_stimulus_mat(directory)
-    loom_idx = photodiode.get_loom_idx_from_raw(directory)
+    loom_idx, _ = photodiode.get_loom_idx_from_raw(directory)
     session_label = get_session_label_from_loom_idx(loom_idx)
 
     if left_frame_idx:
@@ -68,10 +68,10 @@ def get_loom_idx(directory):  # TODO: move to extract looms?
     mtd = load_metadata(directory)
     if 'loom_idx' not in load_metadata(directory):
         print('loom_idx not found in {}'.format(directory))
-        loom_idx = photodiode.get_loom_idx_from_raw(directory)
+        loom_idx, _ = photodiode.get_loom_idx_from_raw(directory)
         save_key_to_metadata(mtd, 'loom_idx', list(loom_idx))
-
-    return load_from_metadata(mtd, 'loom_idx')
+    loom_idx = np.array(load_from_metadata(mtd, 'loom_idx')).astype(int)
+    return loom_idx
 
 
 def _parse_ref_idx_from_exp_metadata(directory, fname='metadata.txt'):  # TODO: remove?
@@ -112,9 +112,11 @@ def get_context(directory):
 
 def get_session_label_from_loom_idx(loom_idx, n_habituation_looms=120):
     print("{} looms detected".format(len(loom_idx)))
-    if len(loom_idx) == n_habituation_looms:
+    if len(loom_idx) == 0:
+        return 'no_stimuli'
+    elif len(loom_idx) == n_habituation_looms:
         return 'habituation_only'
-    elif len(loom_idx) < 50:
+    elif len(loom_idx) < n_habituation_looms:
         return 'test_only'
     elif len(loom_idx) > n_habituation_looms:
         return 'habituation_and_test'
