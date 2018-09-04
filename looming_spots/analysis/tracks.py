@@ -10,6 +10,8 @@ from zarchive.track.retrack_variables import convert_tracks_from_dat
 
 STIMULUS_ONSETS = [200, 228, 256, 284, 312]
 NORM_FRONT_OF_HOUSE_A = 0.1
+NORM_FRONT_OF_HOUSE_A9 = 0.19
+
 NORM_FRONT_OF_HOUSE_B = 0.135
 FRAME_RATE = 30
 
@@ -43,24 +45,36 @@ def load_normalised_track(loom_folder, context):
     return norm_x
 
 
-def normalise_track(x_track, context):
-    if context == 'A':
-        x_track = 640 - x_track
-        return (x_track - 143)/(613-143)  # FIXME: remove magic numbers
-    elif context == 'B':
-        return (x_track - 39)/(600-39)
-    elif context == 'split':
-        return(x_track - 30)/(550-30)
+def get_box_boundaries(context):
+    box_boundaries_dictionary = {
+        'A':     (143, 613),
+        'B':     (39, 600),
+        'split': (30, 550),
+        'A9':    (32, 618)
+    }
+    return box_boundaries_dictionary[context]
+
+
+def normalise_track(x_track, context, image_shape=(480, 640)):
+    # if context == 'A':
+    #     x_track = image_width - x_track
+    #     return (x_track - 143)/(613-143)  # FIXME: remove magic numbers
+    context = 'A9'
+    left_wall_pixel, right_wall_pixel = get_box_boundaries(context)
+    x_track = image_shape[1] - x_track
+    arena_length = right_wall_pixel - left_wall_pixel
+    return (x_track - left_wall_pixel) / arena_length
 
 
 def classify_flee(loom_folder, context):
     track = gaussian_filter(load_normalised_track(loom_folder, context), 3)
     speed = np.diff(track)
 
-    home_front = NORM_FRONT_OF_HOUSE_B if context == 'B' else NORM_FRONT_OF_HOUSE_A
+    #home_front = NORM_FRONT_OF_HOUSE_B if context == 'B' else NORM_FRONT_OF_HOUSE_A
+    home_front = NORM_FRONT_OF_HOUSE_A9
     fast_enough = any([x < CLASSIFICATION_SPEED for x in speed[CLASSIFICATION_WINDOW_START:CLASSIFICATION_WINDOW_END]])  # -0.031
     reaches_home = any([x < home_front for x in track[CLASSIFICATION_WINDOW_START:CLASSIFICATION_WINDOW_END]])
-    #print('fast enough: {}, reaches home: {}'.format(fast_enough, reaches_home))
+    print('fast enough: {}, reaches home: {}'.format(fast_enough, reaches_home))
     if fast_enough and reaches_home:
         return True
 

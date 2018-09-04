@@ -62,13 +62,16 @@ def convert_avi_to_mp4(avi_path):
     #os.remove(avi_path)
 
 
-def copy_mouse_directory_to_processed(mouse_id):
+def copy_mouse_directory_to_processed(mouse_id, copy_probe=False):
     path_to_mouse_raw = get_raw_path(mouse_id)
     path_to_mouse_processed = get_processed_mouse_directory(mouse_id)
+
     if 'test' in mouse_id:
         return 'test data... skipping'
+
     if 'probe.txt' in path_to_mouse_raw:
         return 'this is a probe experiment... skipping all sessions'
+
     if not os.path.isdir(path_to_mouse_processed):
         copy_directory(path_to_mouse_raw, path_to_mouse_processed)
     else:
@@ -84,9 +87,25 @@ def copy_mouse_directory_to_processed(mouse_id):
     return '{} has already been copied'.format(path_to_mouse_raw)
 
 
+def copy_mouse(mouse_id, copy_probe=False):  # TODO: test
+    path_to_mouse_raw = get_raw_path(mouse_id)
+    path_to_mouse_processed = get_processed_mouse_directory(mouse_id)
+    if not os.path.isdir(path_to_mouse_processed):
+        for fname in os.listdir(path_to_mouse_raw):
+            session_folder_raw = os.path.join(path_to_mouse_raw, fname)
+            session_folder_processed = os.path.join(path_to_mouse_processed, fname)
+            copy_recording_session(copy_probe, session_folder_processed, session_folder_raw)
+
+
+def copy_recording_session(copy_probe, session_folder_processed, session_folder_raw):
+    if not os.path.isdir(session_folder_processed):
+        if copy_probe or not any('imec' in name for name in os.listdir(session_folder_raw)):
+            copy_directory(session_folder_raw, session_folder_processed)
+
+
 def copy_directory(src, dest):
     try:
-        shutil.copytree(src, dest)
+        shutil.copytree(src, dest, ignore=shutil.ignore_patterns('*.imec*'))
     except OSError as e:
         # If the error was caused because the source wasn't a directory
         if e.errno == errno.ENOTDIR:
