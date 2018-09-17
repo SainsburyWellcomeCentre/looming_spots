@@ -6,21 +6,7 @@ import pandas as pd
 from scipy.ndimage import gaussian_filter
 
 from looming_spots.preprocess import photodiode
-from zarchive.track.retrack_variables import convert_tracks_from_dat
-
-STIMULUS_ONSETS = [200, 228, 256, 284, 312]
-NORM_FRONT_OF_HOUSE_A = 0.1
-NORM_FRONT_OF_HOUSE_A9 = 0.19
-
-NORM_FRONT_OF_HOUSE_B = 0.135
-FRAME_RATE = 30
-
-CLASSIFICATION_WINDOW_START = STIMULUS_ONSETS[0]
-CLASSIFICATION_WINDOW_END = 350 #345
-CLASSIFICATION_SPEED = -0.027
-DISTANCE_THRESHOLD = 0.05
-SPEED_THRESHOLD = -0.01
-CLASSIFICATION_LATENCY = 5
+from looming_spots.db.constants import *
 
 
 def load_raw_track(loom_folder, name='tracks.csv'):

@@ -1,7 +1,6 @@
 from matplotlib import pyplot as plt, patches as patches
 
-from looming_spots.analysis.tracks import STIMULUS_ONSETS, NORM_FRONT_OF_HOUSE_B, NORM_FRONT_OF_HOUSE_A
-
+from looming_spots.db.constants import STIMULUS_ONSETS, NORM_FRONT_OF_HOUSE_B, NORM_FRONT_OF_HOUSE_A
 
 def plot_looms(fig):
     for ax in fig.axes:
