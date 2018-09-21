@@ -44,7 +44,7 @@ class MouseSessionGroup(object):
 
     @property
     def habituation_idx(self):
-        print(self.protocols)
+        #print(self.protocols)
         habituations = np.array(['habituation' in p for p in self.protocols])
         return np.where(habituations)[0][0]
 
@@ -57,12 +57,20 @@ class MouseSessionGroup(object):
     @property
     def post_tests(self):
         if self.habituation_idx is None:
-            print('no habituation {}'.format(self.mouse_id))
-            return self.sessions
+            #print('no habituation {}'.format(self.mouse_id))
+            sessions = self.sessions
         elif self.habituation_type == 'habituation_and_test':
-            return self.sessions[self.habituation_idx:]
+            sessions = self.sessions[self.habituation_idx:]
         else:
-            return self.sessions[self.habituation_idx + 1:]
+            sessions = self.sessions[self.habituation_idx + 1:]
+        return self.filter_no_test_trials(sessions)
+
+    def filter_no_test_trials(self, sessions):
+        sessions=list(sessions)
+        for i, s in enumerate(sessions):
+            if len(s.trials) == 0:
+                sessions.pop(i)
+        return np.array(sessions)
 
     def nth_pre_test(self, n):
         return self.pre_tests[n]
