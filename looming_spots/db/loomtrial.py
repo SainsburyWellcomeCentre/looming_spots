@@ -226,6 +226,9 @@ class LoomTrialGroup(object):
             times_to_first_loom.append(t.time_to_first_loom)
         return times_to_first_loom
 
+    def plot_probable_jumps(self):
+        pass
+
 
 class NoReferenceFrameError(Exception):
     pass
