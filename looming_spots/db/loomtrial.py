@@ -138,6 +138,10 @@ class LoomTrial(object):
             #raise NoReferenceFrameError
         pyper_cli_track_trial(self.video_path, '{}_ref.npy'.format(self.trial_type))
 
+    def make_reference_frames(self):
+        if self.session.get_reference_frame(self.trial_type) is None:
+            Viewer(self.directory, video_fname='loom{}.h264'.format(self.loom_number), trial_type=self.trial_type)
+
     def __gt__(self, other):
         return self.time > other.time
 
