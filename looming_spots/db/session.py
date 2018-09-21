@@ -12,7 +12,6 @@ from looming_spots.analysis import tracks
 from looming_spots.db.metadata import experiment_metadata
 from looming_spots.db.loomtrial import LoomTrial
 from looming_spots.analysis import plotting
-from looming_spots.reference_frames import viewer
 
 from looming_spots.db.paths import PROCESSED_DATA_DIRECTORY
 
