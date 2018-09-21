@@ -23,6 +23,7 @@ class LoomTrial(object):
         self.folder = os.path.join(self.directory, 'loom{}'.format(self.loom_number))
         self.context = session.context
         self.time_to_first_loom = None  # TODO: this is quite specific, consider better implementation
+        self.name = '{}_{}'.format(self.session.mouse_id, self.loom_number)
 
     @property
     def loom_number(self):
