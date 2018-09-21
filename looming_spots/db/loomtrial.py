@@ -151,9 +151,34 @@ class LoomTrial(object):
         elif self.sample_number > self.session.habituation_loom_idx[-1]:
             return 'post_test'
 
-    def plot_track(self):
+    def plot_track(self, ax=None):
+        if ax is None:
+            ax = plt.gca()
+
         color = 'r' if self.is_flee() else 'k'
         plt.plot(self.normalised_x_track, color=color)
+        plt.ylabel('x position in box (cm)')
+        plt.xlabel('time (s)')
+
+        track_length = self.get_x_length(ax)
+
+        self.convert_y_axis(0, 1, 0, ARENA_SIZE_CM, n_steps=6)
+        self.convert_x_axis(track_length, n_steps=11)
+        sns.despine(ax=ax, top=True, right=True, left=False, bottom=False)
+
+    def get_x_length(self, ax=None):
+        if ax is None:
+            ax = plt.gca()
+        line = ax.lines[0]
+        xdata = line.get_xdata()
+        return len(xdata)
+
+    def convert_x_axis(self, track_length, n_steps):
+        plt.xticks(np.linspace(0, track_length - 1, n_steps), np.linspace(0, (track_length - 1) / FRAME_RATE, n_steps))
+
+    @staticmethod
+    def convert_y_axis(old_min, old_max, new_min, new_max, n_steps):
+        plt.yticks(np.linspace(old_min, old_max, n_steps), np.linspace(new_min, new_max, n_steps))
 
     def get_reference_frame(self):
         return self.session.get_reference_frame(self.trial_type)
