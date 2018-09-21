@@ -5,6 +5,8 @@ import scipy.misc
 import skvideo
 import skvideo.io
 
+STIMULUS_ONSETS = [200, 228, 256, 284, 312]
+
 
 def load_video_from_path(vid_path):
     rdr = skvideo.io.vreader(vid_path)
@@ -56,3 +58,29 @@ def get_frames(rdr_path, idx):
 
 def save_video(video, path):
     skvideo.io.vwrite(path, video)
+
+
+def crop_video(video, width, height, origin=(0, 0)):
+    n_frames = video.shape[0]
+    new_video = np.full((n_frames, height-origin[1], width-origin[0]), np.nan)
+
+    for i, frame in enumerate(video):
+        new_video[i, :, :] = frame[origin[1]:height, origin[0]:width]
+    return new_video
+
+
+def plot_loom_on_video(video, radius_profile):
+    new_video = np.empty_like(video)
+
+    for i, (frame, radius) in enumerate(zip(video, radius_profile)):
+        cv2.circle(frame, (150, 120), int(radius), -1)
+        new_video[i, :, :] = frame
+
+    return new_video
+
+
+def loom_radius_profile(n_frames):
+    radius_profile = np.zeros(n_frames)
+    for onset in STIMULUS_ONSETS:
+        radius_profile[onset:onset+14] = np.linspace(5, 140, 14)
+    return radius_profile
