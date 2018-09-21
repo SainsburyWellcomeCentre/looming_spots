@@ -1,6 +1,7 @@
 import os
 
 import numpy as np
+import pims
 import skvideo
 import skvideo.io
 
@@ -62,15 +63,10 @@ def extract_loom_video_trial(path_in, path_out, loom_start, n_samples_before=200
     extract_video(path_in, path_out, loom_start-n_samples_before, loom_start + n_samples_after)
 
 
-def extract_video(fin_path, fout_path, start, end, shape=VIDEO_SHAPE):
-    rdr = skvideo.io.vreader(fin_path)
-    video = np.zeros((end - start + 1, shape[0], shape[1], 3))
-    a = 0
-    for i, frame in enumerate(rdr):
-        if start < i < end + 1:
-            video[a, :, :, :] = frame
-            a += 1
-    skvideo.io.vwrite(fout_path, video)
+def extract_video(fin_path, fout_path, start, end):
+    v = pims.Video(fin_path)
+    out_video = v[start:end]
+    skvideo.io.vwrite(fout_path, out_video)
 
 
 def upsample_video(path):
