@@ -2,7 +2,7 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.ndimage import gaussian_filter
-from looming_spots.analysis import tracks
+from looming_spots.analysis import tracks, plotting
 import datetime
 
 from looming_spots.preprocess import extract_looms
