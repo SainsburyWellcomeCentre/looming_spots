@@ -144,6 +144,20 @@ class LoomTrial(object):
     def viewer(self):
         Viewer(self.directory, trial_type=self.trial_type, video_fname=self.video_name)
 
+    def loom_superimposed_video(self, out_folder='/home/slenzi/Desktop/video_analysis/'):
+        video_path = os.path.join(self.folder, 'overlay_video.h264')
+        if not os.path.isfile(video_path):
+            vid = video_processing.load_video_from_path(self.video_path)
+            vid = video_processing.crop_video(vid, 640, 250, (0, 40))
+            rprof = video_processing.loom_radius_profile(len(vid))
+            new_vid = video_processing.plot_loom_on_video(vid, rprof)
+            print(self.name)
+            out_path = os.path.join(out_folder, self.name) + '.h264'
+            print(out_path)
+            video_processing.save_video(new_vid, out_path)
+
+        return video_processing.load_video_from_path(out_path)
+
 
 class LoomTrialGroup(object):
     def __init__(self, trials):
