@@ -207,7 +207,12 @@ def get_loom_idx_from_raw(directory, save=True):  # TODO: save npy file instead
 
 
 def find_pd_threshold_crossings(ai):
-    filtered_pd = filter_pd(ai)   # FIXME: case of no looms is buggy - see /home/slenzi/spine_shares/loomer/processed_data/CA186_4/20180327_17_24_16
+
+    filtered_pd = filter_pd(ai)
+
+    if not (filtered_pd > 0.4).any():
+        return [], []
+
     threshold = np.median(filtered_pd) + np.nanstd(filtered_pd)*3
     print('threshold: {}'.format(threshold))
     loom_on = (filtered_pd > threshold).astype(int)
