@@ -4,11 +4,17 @@ import matplotlib.pyplot as plt
 from scipy.ndimage import gaussian_filter
 from looming_spots.analysis import tracks
 import datetime
+
 from looming_spots.preprocess import extract_looms
 from looming_spots.tracking.pyper_backend.auto_track import pyper_cli_track_trial
 from looming_spots.reference_frames.viewer import Viewer
+from looming_spots.util import video_processing
+import seaborn as sns
+
 LOOM_ONSET = 200
 END_OF_CLASSIFICATION_WINDOW = 550
+ARENA_SIZE_CM = 50
+FRAME_RATE = 30
 
 # TODO: implement pre/post test attribute
 
