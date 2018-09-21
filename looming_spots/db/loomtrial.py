@@ -112,10 +112,33 @@ class LoomTrial(object):
         x_track, y_track = self.raw_track
         return x_track[LOOM_ONSET], y_track[LOOM_ONSET]
 
-    def plot_loom_location_on_image(self):
-        plt.imshow(self.session.reference_frame)
+    def loom_start_end_pos(self):
+        start = self.get_start_pos()
+        end = self.get_end_pos()
+        return start, end
+
+    def get_start_pos(self):
+        x_track, y_track = self.raw_track
+        for coord in zip(x_track, y_track):
+            if not np.isnan(coord).any():
+                return coord
+
+    def get_end_pos(self):
+        x_track, y_track = self.raw_track
+        for coord in zip(x_track[::-1], y_track[::-1]):
+            if not np.isnan(coord).any():
+                return coord
+
+    def max_speed(self):
+        return np.nanmax(np.abs(self.normalised_x_speed))
+
+    def plot_loom_location(self):
+        #plt.imshow(self.session.reference_frame)
         x, y = self.loom_location
-        plt.plot(x, y, color='b')
+        start, end = self.loom_start_end_pos()
+        plt.plot(x, y, 'o', color='k', markersize=20)
+        #plt.plot(start[0], start[1], 'o', color='g')
+        #plt.plot(end[0], end[1], 'o', color='r')
 
     @property
     def trial_type(self):
