@@ -17,7 +17,7 @@ from looming_spots.db.paths import PROCESSED_DATA_DIRECTORY
 
 class Session(object):
 
-    def __init__(self, dt, mouse_id=None, n_looms_to_view=0, n_habituation_looms=120):
+    def __init__(self, dt, mouse_id=None, n_looms_to_view=0, n_habituation_looms=120, n_trials_to_consider=3):
         self.dt = dt
         self.mouse_id = mouse_id
         self.n_looms_to_view = n_looms_to_view
@@ -92,19 +92,20 @@ class Session(object):
 
     @property
     def trials_results(self):
-        return np.array([tracks.classify_flee(p, self.context) for p in self.loom_paths])
+        test_trials = [t for t in self.trials if 'test' in t.trial_type]
+        return np.array([t.is_flee() for t in test_trials[:self.n_trials_to_include]])
 
     @property
-    def n_trials(self):
+    def n_trials_total(self):
         return len(self.trials)
 
     @property
     def n_test_trials(self):
-        return len([t for t in self.trials if t.trial_type == 'test'])
+        return len(self.test_trials())
 
     @property
     def n_habituation_trials(self):
-        return len([t for t in self.trials if t.trial_type == 'habituation'])
+        return len(self.test_trials())
 
     def hours(self):
         return self.dt.hour + self.dt.minute/60
@@ -115,7 +116,10 @@ class Session(object):
 
     @property
     def n_non_flees(self):
-        return self.n_trials - self.n_flees
+        n_trials = len(self.trials_results)
+        print(n_trials)
+        print(np.count_nonzero(self.trials_results))
+        return n_trials - np.count_nonzero(self.trials_results)
 
     @property
     def n_looms(self):
@@ -136,10 +140,19 @@ class Session(object):
     def trials(self):
         trials = []
         for i, idx in enumerate(self.loom_idx[::5]):
-            t = LoomTrial(self, directory=self.path, sample_number=idx)
+            t = loomtrial.LoomTrial(self, directory=self.path, sample_number=idx)
             t.time_to_first_loom = self.time_to_first_loom()
             trials.append(t)
         return trials
+
+    def get_trials(self, key):
+        return [t for t in self.trials if t.trial_type == key]
+
+    def test_trials(self):
+        return [t for t in self.trials if 'test' in t.trial_type]
+
+    def habituation_trials(self):
+        return [t for t in self.trials if 'habituation' in t.trial_type]
 
     def plot_trials(self):
         for t in self.trials[0:3]:
@@ -197,18 +210,11 @@ class Session(object):
         return photodiode.get_manual_looms(self.loom_idx)
 
     @property
-    def manual_loom_idx(self):
-        return self.metadata['manual_loom_idx']
-
-    @property
     def habituation_protocol_start(self):
         return photodiode.get_habituation_start(self.loom_idx)
 
     def habituation_speeds(self):
-        all_speeds = []
-        for t in self.get_trials('habituation'):
-            all_speeds.append(t.smoothed_x_speed)
-        return all_speeds
+        return [t.smoothed_x_speed for t in self.habituation_trials()]
 
     @property
     def contains_habituation(self):
@@ -238,7 +244,7 @@ class Session(object):
             return int(self.loom_idx[0])/30/60
 
     def plot_all_separate_plots(self):
-        fig, axes = plt.subplots(self.n_trials)
+        fig, axes = plt.subplots(self.n_trials_total)
         for t, ax in zip(self.trials, axes):
             plt.axes(ax)
             t.plot_track()
