@@ -15,6 +15,7 @@ from looming_spots.analysis import plotting
 
 from looming_spots.db.paths import PROCESSED_DATA_DIRECTORY
 
+
 class Session(object):
 
     def __init__(self, dt, mouse_id=None, n_looms_to_view=0, n_habituation_looms=120, n_trials_to_consider=3):
