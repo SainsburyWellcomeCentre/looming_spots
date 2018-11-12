@@ -4,7 +4,8 @@ from matplotlib import pyplot as plt, patches as patches
 
 from matplotlib.collections import LineCollection
 
-from looming_spots.analysis.tracks import STIMULUS_ONSETS, NORM_FRONT_OF_HOUSE_B, NORM_FRONT_OF_HOUSE_A, NORM_FRONT_OF_HOUSE_A9
+from looming_spots.db.constants import STIMULUS_ONSETS, NORM_FRONT_OF_HOUSE_A, NORM_FRONT_OF_HOUSE_A9, \
+    NORM_FRONT_OF_HOUSE_B
 
 
 def plot_looms(fig):

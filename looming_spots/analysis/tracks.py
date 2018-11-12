@@ -5,22 +5,27 @@ import numpy as np
 import pandas as pd
 from scipy.ndimage import gaussian_filter
 
+from looming_spots.db import constants
+from looming_spots.db.constants import STIMULUS_ONSETS, NORM_FRONT_OF_HOUSE_A, NORM_FRONT_OF_HOUSE_A9, \
+    NORM_FRONT_OF_HOUSE_B, FRAME_RATE, CLASSIFICATION_WINDOW_START, CLASSIFICATION_WINDOW_END, CLASSIFICATION_SPEED, \
+    SPEED_THRESHOLD, CLASSIFICATION_LATENCY
+
 from looming_spots.preprocess import photodiode
 from zarchive.track.retrack_variables import convert_tracks_from_dat
 
-STIMULUS_ONSETS = [200, 228, 256, 284, 312]
-NORM_FRONT_OF_HOUSE_A = 0.1
-NORM_FRONT_OF_HOUSE_A9 = 0.19
+BOX_BOUNDARIES = {
+                  'A':     (143, 613),
+                  'B':     (39, 600),
+                  'split': (30, 550),
+                  'A9':    (32, 618),
+                  'C':     (0, 615)
+                   }
 
-NORM_FRONT_OF_HOUSE_B = 0.135
-FRAME_RATE = 30
-
-CLASSIFICATION_WINDOW_START = STIMULUS_ONSETS[0]
-CLASSIFICATION_WINDOW_END = 350 #345
-CLASSIFICATION_SPEED = -0.027
-DISTANCE_THRESHOLD = 0.05
-SPEED_THRESHOLD = -0.01
-CLASSIFICATION_LATENCY = 5
+HOME_FRONTS = {
+               'A': NORM_FRONT_OF_HOUSE_A,
+               'B': NORM_FRONT_OF_HOUSE_B,
+               'A9': NORM_FRONT_OF_HOUSE_A9,
+               }
 
 
 def load_raw_track(loom_folder, name='tracks.csv'):
@@ -45,35 +50,36 @@ def load_normalised_track(loom_folder, context):
     return norm_x
 
 
-def get_box_boundaries(context):
-    box_boundaries_dictionary = {
-        'A':     (143, 613),
-        'B':     (39, 600),
-        'split': (30, 550),
-        'A9':    (32, 618)
-    }
-    return box_boundaries_dictionary[context]
+def normalised_home_front(context):
+    house_front_raw = constants.context_params[context].house_front
+    house_front_normalised = normalise_track(house_front_raw, context)
+    print(house_front_normalised)
+    return house_front_normalised
 
 
 def normalise_track(x_track, context, image_shape=(480, 640)):
-    # if context == 'A':
-    #     x_track = image_width - x_track
-    #     return (x_track - 143)/(613-143)  # FIXME: remove magic numbers
-    context = 'A9'
-    left_wall_pixel, right_wall_pixel = get_box_boundaries(context)
-    x_track = image_shape[1] - x_track
+
+    left_wall_pixel = constants.context_params[context].left
+    right_wall_pixel = constants.context_params[context].right
+
     arena_length = right_wall_pixel - left_wall_pixel
-    return (x_track - left_wall_pixel) / arena_length
+    normalised_track = (x_track - left_wall_pixel) / arena_length
+
+    if constants.context_params[context].flip:
+        return 1 - normalised_track
+
+    return normalised_track
 
 
 def classify_flee(loom_folder, context):
     track = gaussian_filter(load_normalised_track(loom_folder, context), 3)
+    print(context)
     speed = np.diff(track)
 
-    #home_front = NORM_FRONT_OF_HOUSE_B if context == 'B' else NORM_FRONT_OF_HOUSE_A
-    home_front = NORM_FRONT_OF_HOUSE_A9
+    house_front = normalised_home_front(context)
+
     fast_enough = any([x < CLASSIFICATION_SPEED for x in speed[CLASSIFICATION_WINDOW_START:CLASSIFICATION_WINDOW_END]])  # -0.031
-    reaches_home = any([x < home_front for x in track[CLASSIFICATION_WINDOW_START:CLASSIFICATION_WINDOW_END]])
+    reaches_home = any([x < house_front for x in track[CLASSIFICATION_WINDOW_START:CLASSIFICATION_WINDOW_END]])
     print('fast enough: {}, reaches home: {}'.format(fast_enough, reaches_home))
     if fast_enough and reaches_home:
         return True
@@ -458,7 +464,7 @@ def plot_durations(sessions, ax, color='r', label='', highlight_flees=False):
 
     if len(durations_in_frames) == 0:
         return
-    durations_in_seconds = durations_in_frames/FRAME_RATE
+    durations_in_seconds = durations_in_frames / FRAME_RATE
 
     if highlight_flees:
         ax.scatter(durations_in_seconds, speeds, c=colors, edgecolor='None', s=45, label=label)
