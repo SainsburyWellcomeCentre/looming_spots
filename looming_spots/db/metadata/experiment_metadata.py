@@ -1,4 +1,6 @@
 import os
+import warnings
+
 import scipy
 import scipy.io
 from configobj import ConfigObj
@@ -97,6 +99,7 @@ def get_context_from_stimulus_mat(directory):
     if os.path.isfile(stimulus_path):
         stimulus_params = scipy.io.loadmat(stimulus_path)['params']
         dot_locations = [x[0] for x in stimulus_params[0][0] if len(x[0]) == 2]  # only spot position has length 2
+
         return 'B' if any(CONTEXT_B_SPOT_POSITION in x for x in dot_locations) else 'A'
     else:
         print('no stimulus parameters file')
@@ -111,6 +114,9 @@ def get_context(directory):
 
 
 def get_session_label_from_loom_idx(loom_idx, n_habituation_looms=120):
+
+    warnings.warn('deprecated')
+
     print("{} looms detected".format(len(loom_idx)))
     if len(loom_idx) == 0:
         return 'no_stimuli'
