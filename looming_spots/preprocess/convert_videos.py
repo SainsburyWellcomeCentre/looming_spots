@@ -4,7 +4,7 @@ import shutil
 import subprocess
 
 import numpy as np
-
+import pims
 from looming_spots.db import load
 from looming_spots.db.metadata import experiment_metadata
 from looming_spots.preprocess import photodiode
@@ -34,8 +34,10 @@ def compare_pd_and_video(directory):
     pd_trace = photodiode.load_pd_on_clock_ups(directory)
     n_samples_pd = len(pd_trace)
     video_path = os.path.join(directory, 'camera.mp4')
-    n_samples_video = get_frame_number(video_path)
+    n_samples_video = len(pims.Video(video_path))
+
     print('pd found {} samples, there are {} frames in the video'.format(n_samples_pd, n_samples_video))
+
     if n_samples_pd != n_samples_video:
         n_samples_ratio = round(n_samples_pd/n_samples_video, 2)
         if n_samples_ratio.is_integer():
@@ -58,7 +60,8 @@ def convert_avi_to_mp4(avi_path):
     mp4_path = avi_path[:-4] + '.mp4'
     print('avi: {} mp4: {}'.format(avi_path, mp4_path))
     #subprocess.check_call(['ffmpeg -i {} -c:v libx264 -preset fast -crf 18 {}'.format(avi_path, mp4_path)], shell=True)
-    subprocess.check_call(['ffmpeg -i {} -c:v mpeg4 -preset fast -crf 18 -b 5000k {}'.format(avi_path, mp4_path)], shell=True)
+    subprocess.check_call(['ffmpeg -i {} -c:v mpeg4 -preset fast -crf 18 -b 5000k {}'.format(avi_path, mp4_path)],
+                          shell=True)
     #os.remove(avi_path)
 
 
