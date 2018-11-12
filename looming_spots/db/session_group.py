@@ -23,7 +23,7 @@ class MouseSessionGroup(object):
         self.pre_trials, self.post_trials = self.get_pre_and_post_test_trials()
 
     @property
-    def habituation_session(self):  # TODO: remove all session references
+    def habituation_sessions(self):  # TODO: remove all session references
         return self.sessions[self.habituation_idx]
 
     @property
@@ -46,27 +46,35 @@ class MouseSessionGroup(object):
     def habituation_idx(self):
         #print(self.protocols)
         habituations = np.array(['habituation' in p for p in self.protocols])
-        return np.where(habituations)[0][0]
+        return np.where(habituations)[0]
 
     @property
     def pre_tests(self):  # FIXME: pre test in habituation recording
         if self.habituation_type is None:
             return self.sessions
-        return self.sessions[0:self.habituation_idx]
+        elif len(self.habituation_idx) == 1:
+            return self.sessions[0:self.habituation_idx[0]]
+        else:
+            return self.sessions[0:self.habituation_idx[0]]
 
     @property
     def post_tests(self):
         if self.habituation_idx is None:
             #print('no habituation {}'.format(self.mouse_id))
             sessions = self.sessions
+        elif len(self.habituation_idx) == 0:
+            sessions=self.sessions
         elif self.habituation_type == 'habituation_and_test':
-            sessions = self.sessions[self.habituation_idx:]
+            sessions = self.sessions[self.habituation_idx[0]:]
+        elif len(self.habituation_idx) > 1:
+            sessions = self.sessions[self.habituation_idx[0] + 1:]
+            sessions = [s for s in sessions if s.test_trials()]
         else:
-            sessions = self.sessions[self.habituation_idx + 1:]
+            sessions = self.sessions[self.habituation_idx[0] + 1:]
         return self.filter_no_test_trials(sessions)
 
     def filter_no_test_trials(self, sessions):
-        sessions=list(sessions)
+        sessions = list(sessions)
         for i, s in enumerate(sessions):
             if len(s.trials) == 0:
                 sessions.pop(i)
