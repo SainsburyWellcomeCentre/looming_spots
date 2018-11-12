@@ -113,12 +113,12 @@ def any_flee(s):
 
 
 def n_flees_all_sessions(sessions):
-    n_flees_total = [s.n_flees for s in sessions]
+    n_flees_total = [s.n_flees for s in sessions if s.test_trials()]
     return n_flees_total
 
 
 def n_non_flees_all_sessions(sessions):
-    n_non_flees_total = [s.n_non_flees for s in sessions]
+    n_non_flees_total = [s.n_non_flees for s in sessions if s.test_trials()]
     return n_non_flees_total
 
 
@@ -357,10 +357,6 @@ def plot_session_avg(s, color='b', label=''):
     track, speeds, _ = get_tracks_and_speeds([s])
     avg_track = np.nanmean(track, axis=0)
     plt.plot(avg_track, linewidth=3, label=label, zorder=0, color=color, alpha=0.7)
-    #std_track = np.nanstd(track, axis=0)
-    #plt.fill_between(np.arange(0, 399), avg_track + std_track, avg_track - std_track, alpha=0.5, color=color, zorder=0)
-    #plt.plot(avg_track + std_track, color='k', alpha=0.4, linewidth=0.25)
-    #plt.plot(avg_track - std_track, color='k', alpha=0.4, linewidth=0.25)
 
 
 def plot_each_mouse(sessions, color=None, label=None):
