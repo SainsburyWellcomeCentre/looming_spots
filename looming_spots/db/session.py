@@ -6,15 +6,14 @@ from datetime import datetime
 import scipy.ndimage
 from cached_property import cached_property
 
+from looming_spots.db import loomtrial
+
 from looming_spots.preprocess import photodiode
 from looming_spots.util import generic_functions
-from looming_spots.analysis import tracks
 from looming_spots.db.metadata import experiment_metadata
-from looming_spots.db.loomtrial import LoomTrial
 from looming_spots.analysis import plotting
 
 from looming_spots.db.paths import PROCESSED_DATA_DIRECTORY
-
 
 class Session(object):
 
@@ -23,6 +22,13 @@ class Session(object):
         self.mouse_id = mouse_id
         self.n_looms_to_view = n_looms_to_view
         self.n_habituation_looms = n_habituation_looms
+        self.n_trials_to_include = n_trials_to_consider
+
+    def __lt__(self, other):
+        return self.dt < other.dt
+
+    def __gt__(self, other):
+        return self.dt > other.dt
 
     @property
     def data_path(self):
@@ -163,14 +169,6 @@ class Session(object):
         plotting.plot_looms_ax(axes[1])
         #plotting.plot_looms_ax(axes[2])
 
-    def plot_habituation_reaction_metric(self, color):
-        trials = self.get_trials('habituation')
-        reactions = [max(t.smoothed_x_speed[200:400]) for t in trials]
-        plt.plot(reactions, color=color, linewidth=0.5)
-
-    def get_trials(self, key):
-        return [t for t in self.trials if t.trial_type == key]
-
     @property
     def photodiode_trace(self, raw=False):
         if raw:
@@ -233,12 +231,6 @@ class Session(object):
         grid_location = mtd['grid_location']
         return grid_location
 
-    def histology(self, histology_name='injection_site.png'):
-        histology_path = os.path.join(self.parent_path, histology_name)
-        if os.path.isfile(histology_path):
-            return scipy.ndimage.imread(histology_path)
-        return False
-
     def time_to_first_loom(self):
         if len(self.loom_idx) > 0:
             if 'time_of_mouse_entry' in self.metadata:
@@ -256,17 +248,14 @@ class Session(object):
             t.extract_video()
 
     def track_all_trials(self):
-        #try:
         for t in self.trials:
             t.track_trial()
-        #except NoReferenceFrameError as e:
-        #    viewer.Viewer(self.path)
 
-    def __lt__(self, other):
-        return self.dt < other.dt
-
-    def __gt__(self, other):
-        return self.dt > other.dt
+    def histology(self, histology_name='injection_site.png'):
+        histology_path = os.path.join(self.parent_path, histology_name)
+        if os.path.isfile(histology_path):
+            return scipy.ndimage.imread(histology_path)
+        return False
 
 
 class LoomsNotTrackedError(Exception):
