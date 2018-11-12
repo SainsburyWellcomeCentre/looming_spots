@@ -7,7 +7,7 @@ from looming_spots.db import session
 
 from looming_spots.db.paths import PROCESSED_DATA_DIRECTORY
 from looming_spots.db import session_group, experiment
-
+import warnings
 
 class NotExtractedError(Exception):
     pass
@@ -24,7 +24,8 @@ def load_sessions(mouse_id):
             s = session.Session(dt=date, mouse_id=mouse_id)
             session_list.append(s)
         return sorted(session_list)
-    raise(NotExtractedError)
+    warnings.warn('the mouse: {} has not been processed'.format(mouse_id))
+    #raise(NotExtractedError('{}'.format(mouse_id)))
 
 
 def load_experiment_from_groups(groups, group_labels, test_type='post'):
