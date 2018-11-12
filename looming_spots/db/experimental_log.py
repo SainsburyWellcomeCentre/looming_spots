@@ -6,6 +6,7 @@ file_path = '/home/slenzi/Downloads/updated_loom_sheet_format.csv'
 
 def load_df(file_path=file_path):
     df = pd.DataFrame.from_csv(file_path)
+    df = df[~df['exclude']]
     return df
 
 
