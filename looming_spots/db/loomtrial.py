@@ -27,9 +27,18 @@ class LoomTrial(object):
         self.video_name = 'loom{}.h264'.format(self.loom_number)
         self.video_path = os.path.join(self.directory, self.video_name)
         self.folder = os.path.join(self.directory, 'loom{}'.format(self.loom_number))
-        self.context = session.context
         self.time_to_first_loom = None  # TODO: this is quite specific, consider better implementation
         self.name = '{}_{}'.format(self.session.mouse_id, self.loom_number)
+
+    @property
+    def context(self):
+
+        if 'A' in self.session.context and self.session.get_reference_frame(self.trial_type) is not None:
+            if self.is_a9():
+                return 'A9'
+            return self.session.context
+        else:
+            return self.session.context
 
     @property
     def loom_number(self):
@@ -41,6 +50,10 @@ class LoomTrial(object):
                 return 'video already exists... skipping'
         extract_looms.extract_loom_video_trial(self.session.video_path, self.video_path,
                                                self.sample_number, overwrite=overwrite)
+
+    def is_a9(self):
+        if np.mean(self.get_reference_frame()[340:390, 200:250]) < 50:  # FIXME: hard code
+            return True
 
     @property
     def time(self):
