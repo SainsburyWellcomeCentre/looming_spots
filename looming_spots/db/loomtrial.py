@@ -65,7 +65,7 @@ class LoomTrial(object):
 
     @property
     def normalised_x_track(self):
-        return tracks.load_normalised_track(self.folder, self.context)
+        return tracks.load_normalised_track(self.folder, self.context)[:600]
 
     @property
     def smoothed_x_track(self):  # TODO: extract implementation to tracks
@@ -156,7 +156,7 @@ class LoomTrial(object):
     @property
     def trial_type(self):
         if not self.session.contains_habituation:
-            return 'test'
+            return 'test'  # FIXME: should probably be pre test here
         elif self.sample_number < self.session.habituation_loom_idx[0]:
             return 'pre_test'
         elif self.sample_number in self.session.habituation_loom_idx:
@@ -187,19 +187,21 @@ class LoomTrial(object):
         return len(xdata)
 
     def convert_x_axis(self, track_length, n_steps):
-        plt.xticks(np.linspace(0, track_length - 1, n_steps), np.linspace(0, (track_length - 1) / FRAME_RATE, n_steps))
+        plt.xticks(np.linspace(0, track_length - 1, n_steps), np.linspace(0, (track_length) / FRAME_RATE, n_steps))
 
     @staticmethod
     def convert_y_axis(old_min, old_max, new_min, new_max, n_steps):
         plt.yticks(np.linspace(old_min, old_max, n_steps), np.linspace(new_min, new_max, n_steps))
 
     def get_reference_frame(self):
+        self.make_reference_frames()
         return self.session.get_reference_frame(self.trial_type)
 
     def track_trial(self, overwrite=True):
         if not overwrite:
             if os.path.isdir(self.folder):
                 return 'skipping... already tracked'
+
         if self.get_reference_frame() is None:
             print(self.directory)
             Viewer(self.directory, video_fname='loom{}.h264'.format(self.loom_number), trial_type=self.trial_type)
@@ -232,8 +234,11 @@ class LoomTrial(object):
 
 
 class LoomTrialGroup(object):
-    def __init__(self, trials):
+    def __init__(self, trials, label):
         self.trials = trials
+        self.label = label
+        self.n_trials = self.n_non_flees + self.n_flees
+        self.n_mice = int(self.n_trials/3)
 
     def add_trials(self, trials):
         for trial in trials:
@@ -243,8 +248,10 @@ class LoomTrialGroup(object):
         return self.trials
 
     def plot_all_tracks(self):
+        fig = plt.gcf()
         for t in self.get_trials():
             t.plot_track()
+        plotting.plot_looms(fig)
 
     def plot_all_peak_acc(self):
         for t in self.get_trials():
@@ -262,12 +269,21 @@ class LoomTrialGroup(object):
             sorted_tracks = []
             for item, arg, sort_var in zip(order, args, values_to_sort_by):
                 trial_distances = self.all_tracks()[arg]
-                sorted_tracks.append(trial_distances)
+                sorted_tracks.append(trial_distances[:400])
             return sorted_tracks
 
     def plot_hm(self, values_to_sort_by):
+        fig = plt.figure(figsize=(7, 5))
         tracks = self.sorted_tracks(values_to_sort_by)
-        plt.imshow(tracks, cmap='Greys', aspect='auto', vmin=-0.03, vmax=0.03)
+        plt.imshow(tracks, cmap='coolwarm_r', aspect='auto', vmin=-0.05, vmax=0.05)
+        title = '{}, {} flees out of {} trials, n={} mice'.format(self.label, self.n_flees, self.n_trials, self.n_mice)
+        plt.title(title)
+        plt.axvline(200, color='k')
+        cbar = plt.colorbar()
+        cbar.set_label('velocity in x axis a.u.')
+        plt.ylabel('trial number')
+        plt.xlabel('n frames')
+        return fig
 
     @property
     def n_flees(self):
@@ -293,6 +309,13 @@ class LoomTrialGroup(object):
         for t in self.trials:
             times_to_first_loom.append(t.time_to_first_loom)
         return times_to_first_loom
+
+    def plot_latencies(self, i):
+        plt.gca()
+        for t in self.trials:
+            latency = int(t.peak_x_acc_idx())
+            color = 'r' if t.is_flee() else 'k'
+            plt.plot(i+np.random.rand(1)[0]/50, (latency-200)/30, 'o', color=color)
 
     def plot_probable_jumps(self):
         pass
