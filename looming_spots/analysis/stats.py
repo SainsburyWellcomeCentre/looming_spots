@@ -36,7 +36,7 @@ def get_all_group_contingencies(session_dictionary):
 def plot_contingency_stacked_bar(session_dictionary):
     fig = plt.figure()
     contingency_df = get_all_group_contingencies(session_dictionary)
-    contingency_df.T.plot(kind='bar', stacked=True)
+    contingency_df.T.plot(kind='bar', stacked=True, colors=['r', 'k'])
     return fig
 
 
