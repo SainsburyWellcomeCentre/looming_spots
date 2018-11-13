@@ -4,36 +4,18 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from scipy.ndimage import gaussian_filter
-
 from looming_spots.db import constants
 from looming_spots.db.constants import STIMULUS_ONSETS, NORM_FRONT_OF_HOUSE_A, NORM_FRONT_OF_HOUSE_A9, \
     NORM_FRONT_OF_HOUSE_B, FRAME_RATE, CLASSIFICATION_WINDOW_START, CLASSIFICATION_WINDOW_END, CLASSIFICATION_SPEED, \
     SPEED_THRESHOLD, CLASSIFICATION_LATENCY
 
 from looming_spots.preprocess import photodiode
-from zarchive.track.retrack_variables import convert_tracks_from_dat
-
-BOX_BOUNDARIES = {
-                  'A':     (143, 613),
-                  'B':     (39, 600),
-                  'split': (30, 550),
-                  'A9':    (32, 618),
-                  'C':     (0, 615)
-                   }
-
-HOME_FRONTS = {
-               'A': NORM_FRONT_OF_HOUSE_A,
-               'B': NORM_FRONT_OF_HOUSE_B,
-               'A9': NORM_FRONT_OF_HOUSE_A9,
-               }
 
 
 def load_raw_track(loom_folder, name='tracks.csv'):
     track_path = os.path.join(loom_folder, name)
-    if not os.path.isfile(track_path):  # TODO: remove this
-        convert_tracks_from_dat(loom_folder)
     df = pd.read_csv(track_path, sep='\t')
-    x_pos = np.array(df['x_position'])  # FIXME: pyper saving issue?
+    x_pos = np.array(df['x_position'])
     y_pos = np.array(df['y_position'])
     return x_pos, y_pos
 
@@ -73,7 +55,6 @@ def normalise_track(x_track, context, image_shape=(480, 640)):
 
 def classify_flee(loom_folder, context):
     track = gaussian_filter(load_normalised_track(loom_folder, context), 3)
-    print(context)
     speed = np.diff(track)
 
     house_front = normalised_home_front(context)
