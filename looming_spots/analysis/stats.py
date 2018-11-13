@@ -33,11 +33,13 @@ def get_all_group_contingencies(session_dictionary):
     return contingencies_df
 
 
-def plot_contingency_stacked_bar(session_dictionary):
-    fig = plt.figure()
+def plot_contingencies_from_session_dict(session_dictionary):
     contingency_df = get_all_group_contingencies(session_dictionary)
+    plot_contingency_df(contingency_df)
+
+
+def plot_contingency_df(contingency_df):
     contingency_df.T.plot(kind='bar', stacked=True, colors=['r', 'k'])
-    return fig
 
 
 def compare_all_groups_fisher(contingency_table):  # TODO: clean this
