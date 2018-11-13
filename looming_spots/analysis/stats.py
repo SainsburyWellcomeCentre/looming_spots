@@ -1,6 +1,6 @@
 import itertools
-import os
 import numpy as np
+import matplotlib.pyplot as plt
 import scipy.stats
 from looming_spots.analysis import tracks
 import itertools as it
@@ -28,7 +28,16 @@ def get_all_group_contingencies(session_dictionary):
 
     for label, sessions in session_dictionary.items():
         contingencies_dict.setdefault(label, get_contingencies(sessions))
-    return contingencies_dict
+    contingencies_df = pd.DataFrame.from_dict(contingencies_dict)
+    contingencies_df.set_index([['flees', 'non-flees']])
+    return contingencies_df
+
+
+def plot_contingency_stacked_bar(session_dictionary):
+    fig = plt.figure()
+    contingency_df = get_all_group_contingencies(session_dictionary)
+    contingency_df.T.plot(kind='bar', stacked=True)
+    return fig
 
 
 def compare_all_groups_fisher(contingency_table):  # TODO: clean this
