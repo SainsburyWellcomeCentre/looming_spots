@@ -1,13 +1,20 @@
 from collections import namedtuple
-
-STIMULUS_ONSETS = [200, 228, 256, 284, 312]  # TODO: make this generic and automatic not hardcode
 FRAME_RATE = 30
-CLASSIFICATION_WINDOW_START = STIMULUS_ONSETS[0]
+VIDEO_SHAPE = (480, 640)
+ARENA_SIZE_CM = 50
+
 CLASSIFICATION_WINDOW_END = 350  # 345
 CLASSIFICATION_SPEED = -0.027
 SPEED_THRESHOLD = -0.01
 CLASSIFICATION_LATENCY = 5
+END_OF_CLASSIFICATION_WINDOW = 550
 
+STIMULUS_ONSETS = [200, 228, 256, 284, 312]  # TODO: make this generic and automatic not hardcode
+LOOMING_STIMULUS_ONSET = STIMULUS_ONSETS[0]
+CLASSIFICATION_WINDOW_START = STIMULUS_ONSETS[0]
+N_LOOMS_PER_STIMULUS = len(STIMULUS_ONSETS)
+
+N_HABITUATION_LOOMS = 120
 
 ContextParams = namedtuple('ContextParams', ['left', 'right', 'house_front', 'flip'])
 
@@ -23,6 +30,3 @@ context_params = {
                   'A':  A2,
                   }
 METADATA_PATH = './metadata.cfg'
-VIDEO_SHAPE = (480, 640)
-N_HABITUATION_LOOMS = 120
-N_LOOMS = 5

@@ -5,18 +5,17 @@ from scipy.ndimage import gaussian_filter
 from looming_spots.analysis import tracks, plotting
 import datetime
 
+from looming_spots.db.constants import LOOMING_STIMULUS_ONSET, END_OF_CLASSIFICATION_WINDOW, ARENA_SIZE_CM, \
+    N_LOOMS_PER_STIMULUS, FRAME_RATE
 from looming_spots.preprocess import extract_looms
 from looming_spots.tracking.pyper_backend.auto_track import pyper_cli_track_trial
 from looming_spots.reference_frames.viewer import Viewer
 from looming_spots.util import video_processing
 import seaborn as sns
 
-LOOM_ONSET = 200
-END_OF_CLASSIFICATION_WINDOW = 550
-ARENA_SIZE_CM = 50
-FRAME_RATE = 30
-
 # TODO: implement pre/post test attribute
+
+TRACK_LENGTH = 600
 
 
 class LoomTrial(object):
@@ -42,7 +41,7 @@ class LoomTrial(object):
 
     @property
     def loom_number(self):
-        return int(np.where(self.session.loom_idx == self.sample_number)[0][0]/5)
+        return int(np.where(self.session.loom_idx == self.sample_number)[0][0] / N_LOOMS_PER_STIMULUS)
 
     def extract_video(self, overwrite=False):
         if not overwrite:
@@ -57,15 +56,23 @@ class LoomTrial(object):
 
     @property
     def time(self):
-        return self.session.dt + datetime.timedelta(0, int(self.sample_number/30))
+        return self.session.dt + datetime.timedelta(0, int(self.sample_number/FRAME_RATE))
 
     @property
     def raw_track(self):
         return tracks.load_raw_track(self.folder)
 
     @property
+    def x_track(self):
+        return self.raw_track[0][:TRACK_LENGTH]
+
+    @property
+    def y_track(self):
+        return self.raw_track[1][:TRACK_LENGTH]
+
+    @property
     def normalised_x_track(self):
-        return tracks.load_normalised_track(self.folder, self.context)[:600]
+        return tracks.normalise_track(self.x_track, self.context)
 
     @property
     def smoothed_x_track(self):  # TODO: extract implementation to tracks
@@ -93,11 +100,11 @@ class LoomTrial(object):
 
     def peak_x_acc_idx(self):  # TODO: extract implementation to tracks
         acc_window = self.get_accelerations_to_shelter()
-        return np.where(acc_window == min(acc_window))[0] + LOOM_ONSET
+        return np.where(acc_window == min(acc_window))[0] + LOOMING_STIMULUS_ONSET
 
     def get_accelerations_to_shelter(self):
-        acc_window = self.smoothed_x_acceleration[LOOM_ONSET:END_OF_CLASSIFICATION_WINDOW]
-        vel_window = self.smoothed_x_speed[LOOM_ONSET:END_OF_CLASSIFICATION_WINDOW]
+        acc_window = self.smoothed_x_acceleration[LOOMING_STIMULUS_ONSET:END_OF_CLASSIFICATION_WINDOW]
+        vel_window = self.smoothed_x_speed[LOOMING_STIMULUS_ONSET:END_OF_CLASSIFICATION_WINDOW]
         acc_window[np.where(vel_window > 0)] = 10
         return acc_window
 
@@ -123,7 +130,7 @@ class LoomTrial(object):
     @property
     def loom_location(self):
         x_track, y_track = self.raw_track
-        return x_track[LOOM_ONSET], y_track[LOOM_ONSET]
+        return x_track[LOOMING_STIMULUS_ONSET], y_track[LOOMING_STIMULUS_ONSET]
 
     def loom_start_end_pos(self):
         start = self.get_start_pos()
