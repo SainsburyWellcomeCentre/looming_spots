@@ -256,7 +256,7 @@ class Session(object):
 
     def track_all_trials(self):
         for t in self.trials:
-            t.track_trial()
+            t.extract_track()
 
     def histology(self, histology_name='injection_site.png'):
         histology_path = os.path.join(self.parent_path, histology_name)
