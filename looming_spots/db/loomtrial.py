@@ -29,6 +29,9 @@ class LoomTrial(object):
         self.time_to_first_loom = None  # TODO: this is quite specific, consider better implementation
         self.name = '{}_{}'.format(self.session.mouse_id, self.loom_number)
 
+    def __gt__(self, other):
+        return self.time > other.time
+
     @property
     def context(self):
 
