@@ -224,113 +224,33 @@ class LoomTrial(object):
         if self.session.get_reference_frame(self.trial_type) is None:
             Viewer(self.directory, video_fname='loom{}.h264'.format(self.loom_number), trial_type=self.trial_type)
 
-    def __gt__(self, other):
-        return self.time > other.time
-
     def viewer(self):
         Viewer(self.directory, trial_type=self.trial_type, video_fname=self.video_name)
 
-    def loom_superimposed_video(self, out_folder='/home/slenzi/Desktop/video_analysis/'):
+    def loom_superimposed_video(self, out_folder='/home/slenzi/Desktop/video_analysis/', width=640, height=250,
+                                origin=(0, 40)):
+        """
+
+        :param out_folder:
+        :param width: output video width
+        :param height: output video height
+        :param origin: origin for cropping
+
+        :return:
+        """
+
         video_path = os.path.join(self.folder, 'overlay_video.h264')
-        if not os.path.isfile(video_path):
+        out_path = os.path.join(out_folder, self.name) + '.h264'
+        if not os.path.isfile(out_path):
             vid = video_processing.load_video_from_path(self.video_path)
-            vid = video_processing.crop_video(vid, 640, 250, (0, 40))
+            vid = video_processing.crop_video(vid, width, height, origin)
+
             rprof = video_processing.loom_radius_profile(len(vid))
             new_vid = video_processing.plot_loom_on_video(vid, rprof)
-            print(self.name)
-            out_path = os.path.join(out_folder, self.name) + '.h264'
-            print(out_path)
+
             video_processing.save_video(new_vid, out_path)
 
         return video_processing.load_video_from_path(out_path)
-
-
-class LoomTrialGroup(object):
-    def __init__(self, trials, label):
-        self.trials = trials
-        self.label = label
-        self.n_trials = self.n_non_flees + self.n_flees
-        self.n_mice = int(self.n_trials/3)
-
-    def add_trials(self, trials):
-        for trial in trials:
-            self.trials.append(trial)
-
-    def get_trials(self):
-        return self.trials
-
-    def plot_all_tracks(self):
-        fig = plt.gcf()
-        for t in self.get_trials():
-            t.plot_track()
-        plotting.plot_looms(fig)
-
-    def plot_all_peak_acc(self):
-        for t in self.get_trials():
-            t.plot_peak_x_acceleration()
-
-    def all_tracks(self):
-        return [t.smoothed_x_speed for t in self.trials]
-
-    def sorted_tracks(self, values_to_sort_by=None):
-        if values_to_sort_by is None:
-            return self.all_tracks()
-        else:
-            args = np.argsort(values_to_sort_by)
-            order = [np.where(args == x)[0][0] for x in range(len(self.all_tracks()))]
-            sorted_tracks = []
-            for item, arg, sort_var in zip(order, args, values_to_sort_by):
-                trial_distances = self.all_tracks()[arg]
-                sorted_tracks.append(trial_distances[:400])
-            return sorted_tracks
-
-    def plot_hm(self, values_to_sort_by):
-        fig = plt.figure(figsize=(7, 5))
-        tracks = self.sorted_tracks(values_to_sort_by)
-        plt.imshow(tracks, cmap='coolwarm_r', aspect='auto', vmin=-0.05, vmax=0.05)
-        title = '{}, {} flees out of {} trials, n={} mice'.format(self.label, self.n_flees, self.n_trials, self.n_mice)
-        plt.title(title)
-        plt.axvline(200, color='k')
-        cbar = plt.colorbar()
-        cbar.set_label('velocity in x axis a.u.')
-        plt.ylabel('trial number')
-        plt.xlabel('n frames')
-        return fig
-
-    @property
-    def n_flees(self):
-        return np.count_nonzero([t.is_flee() for t in self.trials])
-
-    @property
-    def n_non_flees(self):
-        return len(self.trials) - self.n_flees
-
-    @property
-    def flee_rate(self):
-        return self.n_flees/len(self.trials)
-
-    def latencies(self):
-        latencies = []
-        for t in self.trials:
-            latency = int(t.peak_x_acc_idx())
-            latencies.append(latency)
-        return latencies
-
-    def times_to_first_loom(self):
-        times_to_first_loom = []
-        for t in self.trials:
-            times_to_first_loom.append(t.time_to_first_loom)
-        return times_to_first_loom
-
-    def plot_latencies(self, i):
-        plt.gca()
-        for t in self.trials:
-            latency = int(t.peak_x_acc_idx())
-            color = 'r' if t.is_flee() else 'k'
-            plt.plot(i+np.random.rand(1)[0]/50, (latency-200)/30, 'o', color=color)
-
-    def plot_probable_jumps(self):
-        pass
 
 
 class NoReferenceFrameError(Exception):
