@@ -38,7 +38,7 @@ def normalised_home_front(context):
     return house_front_normalised
 
 
-def normalise_track(x_track, context, image_shape=(480, 640)):
+def normalise_track(x_track, context):
 
     left_wall_pixel = constants.context_params[context].left
     right_wall_pixel = constants.context_params[context].right
