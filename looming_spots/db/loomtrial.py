@@ -83,7 +83,7 @@ class LoomTrial(object):
 
     @property
     def smoothed_y_track(self):  # TODO: extract implementation to tracks
-        return gaussian_filter(self.raw_track[1], 3)
+        return gaussian_filter(self.y_track, 3)
 
     @property
     def smoothed_x_speed(self):  # TODO: extract implementation to tracks
@@ -189,15 +189,17 @@ class LoomTrial(object):
         self.convert_x_axis(track_length, n_steps=11)
         sns.despine(ax=ax, top=True, right=True, left=False, bottom=False)
 
-    def get_x_length(self, ax=None):
+    @staticmethod
+    def get_x_length(ax=None):
         if ax is None:
             ax = plt.gca()
         line = ax.lines[0]
         xdata = line.get_xdata()
         return len(xdata)
 
-    def convert_x_axis(self, track_length, n_steps):
-        plt.xticks(np.linspace(0, track_length - 1, n_steps), np.linspace(0, (track_length) / FRAME_RATE, n_steps))
+    @staticmethod
+    def convert_x_axis(track_length, n_steps):
+        plt.xticks(np.linspace(0, track_length - 1, n_steps), np.linspace(0, track_length / FRAME_RATE, n_steps))
 
     @staticmethod
     def convert_y_axis(old_min, old_max, new_min, new_max, n_steps):
