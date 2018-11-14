@@ -2,7 +2,7 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.ndimage import gaussian_filter
-from looming_spots.analysis import tracks, plotting
+from looming_spots.analysis import tracks
 import datetime
 
 from looming_spots.db.constants import LOOMING_STIMULUS_ONSET, END_OF_CLASSIFICATION_WINDOW, ARENA_SIZE_CM, \
@@ -19,11 +19,11 @@ TRACK_LENGTH = 600
 
 
 class LoomTrial(object):
-    def __init__(self, session, directory, sample_number):
+    def __init__(self, session, directory, sample_number, trial_video_fname='loom{}.h264'):
         self.session = session
         self.sample_number = int(sample_number)
         self.directory = directory
-        self.video_name = 'loom{}.h264'.format(self.loom_number)
+        self.video_name = trial_video_fname.format(self.loom_number)
         self.video_path = os.path.join(self.directory, self.video_name)
         self.folder = os.path.join(self.directory, 'loom{}'.format(self.loom_number))
         self.time_to_first_loom = None  # TODO: this is quite specific, consider better implementation
