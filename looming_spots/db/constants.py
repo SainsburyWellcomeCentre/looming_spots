@@ -24,3 +24,5 @@ context_params = {
                   }
 METADATA_PATH = './metadata.cfg'
 VIDEO_SHAPE = (480, 640)
+N_HABITUATION_LOOMS = 120
+N_LOOMS = 5

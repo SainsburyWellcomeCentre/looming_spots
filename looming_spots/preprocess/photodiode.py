@@ -7,13 +7,7 @@ from looming_spots import exceptions
 from looming_spots.db.metadata import experiment_metadata
 from looming_spots.preprocess import convert_videos
 
-N_HABITUATION_LOOMS = 120
-N_LOOMS = 5
-# PATH_TO_TRACES = '/home/slenzi/spine_shares/loomer/20180311_20_48_18/probe_data_g0_t0.imec.ap.bin'
-# PATH_TO_TRACES = '/home/slenzi/spine_shares/loomer/20180411_17_15_05/probe_data_g1_t0.imec.ap.bin'
-PATH_TO_TRACES = '/home/slenzi/spine_shares/loomer/v2/20180413_17_55_37/probe_data_g1_t0.imec.ap.bin'  # FIXME:
-
-FRAME_RATE = 30
+from looming_spots.db.constants import FRAME_RATE
 
 
 def get_manual_looms_raw(directory):
