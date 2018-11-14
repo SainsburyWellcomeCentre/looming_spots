@@ -6,29 +6,56 @@ import sys
 
 import numpy as np
 import pims
+
 from looming_spots.db import load
 from looming_spots.db.metadata import experiment_metadata
 from looming_spots.preprocess import photodiode
 from looming_spots.db.paths import RAW_DATA_DIRECTORY, PROCESSED_DATA_DIRECTORY
 
 
-def process_all_data():  # TODO: look for recent folders first instead of looping over all
-    for mouse_id in os.listdir(RAW_DATA_DIRECTORY):
+def process_all_mids():  # TODO: look for recent folders first instead of looping over all
+    for mouse_directory in os.listdir(RAW_DATA_DIRECTORY):
         try:
-            mouse_dir = os.path.join(PROCESSED_DATA_DIRECTORY, mouse_id)
-            copy_mouse_directory_to_processed(mouse_id)
-            apply_all_preprocessing(mouse_dir)
+            apply_all_preprocessing_to_mouse_id(mouse_directory)
         except Exception as e:
             print(e)
             continue
 
 
-def get_frame_number(video_path):
-    from ffprobe3 import FFProbe
-    metadata = FFProbe(video_path)
-    for stream in metadata.streams:
-        if stream.is_video():
-                return stream.frames()
+def apply_all_preprocessing_to_mouse_id(mouse_id):
+    mouse_dir = get_processed_mouse_directory(mouse_id)
+    copy_mouse_directory_to_processed(mouse_id)
+    apply_all_preprocessing(mouse_dir)
+
+
+def copy_mouse_directory_to_processed(mouse_id):
+    path_to_mouse_raw = get_raw_path(mouse_id)
+    path_to_mouse_processed = get_processed_mouse_directory(mouse_id)
+
+    if 'test' in mouse_id:
+        return 'test data... skipping'
+
+    if not os.path.isdir(path_to_mouse_processed):
+        copy_directory(path_to_mouse_raw, path_to_mouse_processed)
+    else:
+        for fname in os.listdir(path_to_mouse_raw):
+            path_to_session_raw = os.path.join(path_to_mouse_raw, fname)
+            path_to_session_processed = os.path.join(path_to_mouse_processed, fname)
+            if os.path.isdir(path_to_session_processed):
+                print('{} has already been copied'.format(fname))
+                continue
+            else:
+                print('copying {} to {}'.format(path_to_session_raw, path_to_session_processed))
+                copy_directory(path_to_session_raw, path_to_session_processed)
+    return '{} has already been copied'.format(path_to_mouse_raw)
+
+
+def get_processed_mouse_directory(mouse_id):
+    return os.path.join(PROCESSED_DATA_DIRECTORY, mouse_id)
+
+
+def get_raw_path(mouse_id):
+    return os.path.join(RAW_DATA_DIRECTORY, mouse_id)
 
 
 def compare_pd_and_video(directory):
@@ -49,86 +76,6 @@ def compare_pd_and_video(directory):
             np.save(save_path, downsampled_ai)
 
 
-def get_processed_mouse_directory(mouse_id):
-    return os.path.join(PROCESSED_DATA_DIRECTORY, mouse_id)
-
-
-def get_raw_path(mouse_id):
-    return os.path.join(RAW_DATA_DIRECTORY, mouse_id)
-
-
-def convert_avi_to_mp4(avi_path):
-    mp4_path = avi_path[:-4] + '.mp4'
-    print('avi: {} mp4: {}'.format(avi_path, mp4_path))
-
-    supported_platforms = ['linux', 'windows']
-
-    if sys.platform == 'linux':
-        cmd = 'ffmpeg -i {} -c:v mpeg4 -preset fast -crf 18 -b 5000k {}'.format(avi_path, mp4_path)
-
-    elif sys.platform == 'windows':  # TODO: test on windows
-        cmd = 'ffmpeg -i {} -c:v mpeg4 -preset fast -crf 18 -b 5000k {}'.format(avi_path, mp4_path).split(' ')
-
-    else:
-        raise(OSError('platform {} not recognised, expected one of {}'.format(sys.platform, supported_platforms)))
-
-    subprocess.check_call([cmd],
-                          shell=True)
-    #os.remove(avi_path)
-
-
-def copy_mouse_directory_to_processed(mouse_id, copy_probe=False):
-    path_to_mouse_raw = get_raw_path(mouse_id)
-    path_to_mouse_processed = get_processed_mouse_directory(mouse_id)
-
-    if 'test' in mouse_id:
-        return 'test data... skipping'
-
-    if 'probe.txt' in path_to_mouse_raw:
-        return 'this is a probe experiment... skipping all sessions'
-
-    if not os.path.isdir(path_to_mouse_processed):
-        copy_directory(path_to_mouse_raw, path_to_mouse_processed)
-    else:
-        for fname in os.listdir(path_to_mouse_raw):
-            path_to_session_raw = os.path.join(path_to_mouse_raw, fname)
-            path_to_session_processed = os.path.join(path_to_mouse_processed, fname)
-            if os.path.isdir(path_to_session_processed):
-                print('{} has already been copied'.format(fname))
-                continue
-            else:
-                print('copying {} to {}'.format(path_to_session_raw, path_to_session_processed))
-                copy_directory(path_to_session_raw, path_to_session_processed)
-    return '{} has already been copied'.format(path_to_mouse_raw)
-
-
-def copy_mouse(mouse_id, copy_probe=False):  # TODO: test
-    path_to_mouse_raw = get_raw_path(mouse_id)
-    path_to_mouse_processed = get_processed_mouse_directory(mouse_id)
-    if not os.path.isdir(path_to_mouse_processed):
-        for fname in os.listdir(path_to_mouse_raw):
-            session_folder_raw = os.path.join(path_to_mouse_raw, fname)
-            session_folder_processed = os.path.join(path_to_mouse_processed, fname)
-            copy_recording_session(copy_probe, session_folder_processed, session_folder_raw)
-
-
-def copy_recording_session(copy_probe, session_folder_processed, session_folder_raw):
-    if not os.path.isdir(session_folder_processed):
-        if copy_probe or not any('imec' in name for name in os.listdir(session_folder_raw)):
-            copy_directory(session_folder_raw, session_folder_processed)
-
-
-def copy_directory(src, dest):
-    try:
-        shutil.copytree(src, dest, ignore=shutil.ignore_patterns('*.imec*'))
-    except OSError as e:
-        # If the error was caused because the source wasn't a directory
-        if e.errno == errno.ENOTDIR:
-            shutil.copy(src, dest)
-        else:
-            print('Directory not copied. Error: %s' % e)
-
-
 def apply_all_preprocessing(mouse_id, video_name='camera'):
     raw_video_name = video_name + '.avi'
     processed_video_name = video_name + '.mp4'
@@ -146,15 +93,47 @@ def apply_all_preprocessing(mouse_id, video_name='camera'):
         s.extract_all_trials()
 
 
-class NoProcessedVideoError(Exception):
-    def __str__(self):
-        print('there is no mp4 video')
+def convert_to_mp4(name, directory, remove_avi=False):  # TODO: remove duplication
+    mp4_path = os.path.join(directory, name[:-4] + '.mp4')
+    avi_path = os.path.join(directory, name)
+    if os.path.isfile(mp4_path):
+        print("{} already exists".format(mp4_path))
+        if remove_avi:  # TEST this
+            if os.path.isfile(avi_path):
+                print("{} present in processed data, deleting...".format(avi_path))
+                os.remove(avi_path)
+    else:
+        print("Creating: " + mp4_path)
+        convert_avi_to_mp4(avi_path)
 
 
-def apply_all_preprocessing_to_mouse_id(mouse_id):
-    mouse_dir = get_processed_mouse_directory(mouse_id)
-    copy_mouse_directory_to_processed(mouse_id)
-    apply_all_preprocessing(mouse_dir)
+def convert_avi_to_mp4(avi_path):
+    mp4_path = avi_path[:-4] + '.mp4'
+    print('avi: {} mp4: {}'.format(avi_path, mp4_path))
+
+    supported_platforms = ['linux', 'windows']
+
+    if sys.platform == 'linux':
+        cmd = 'ffmpeg -i {} -c:v mpeg4 -preset fast -crf 18 -b 5000k {}'.format(avi_path, mp4_path)
+
+    elif sys.platform == 'windows':  # TEST: on windows
+        cmd = 'ffmpeg -i {} -c:v mpeg4 -preset fast -crf 18 -b 5000k {}'.format(avi_path, mp4_path).split(' ')
+
+    else:
+        raise(OSError('platform {} not recognised, expected one of {}'.format(sys.platform, supported_platforms)))
+
+    subprocess.check_call([cmd], shell=True)
+
+
+def copy_directory(src, dest):
+    try:
+        shutil.copytree(src, dest, ignore=shutil.ignore_patterns('*.imec*'))
+    except OSError as e:
+        # If the error was caused because the source wasn't a directory
+        if e.errno == errno.ENOTDIR:
+            shutil.copy(src, dest)
+        else:
+            print('Directory not copied. Error: %s' % e)
 
 
 def initialise_metadata(session_folder, remove_txt=False):
@@ -168,15 +147,6 @@ def initialise_metadata(session_folder, remove_txt=False):
             print('deleting: {}'.format(metadata_txt_path))
 
 
-def convert_to_mp4(name, directory, remove_avi=False):  # TODO: remove duplication
-    mp4_path = os.path.join(directory, name[:-4] + '.mp4')
-    avi_path = os.path.join(directory, name)
-    if os.path.isfile(mp4_path):
-        print("{} already exists".format(mp4_path))
-        if remove_avi:  # FIXME: does not seem to work
-            if os.path.isfile(avi_path):
-                print("{} present in processed data, deleting...".format(avi_path))
-                os.remove(avi_path)
-    else:
-        print("Creating: " + mp4_path)
-        convert_avi_to_mp4(avi_path)
+class NoProcessedVideoError(Exception):
+    def __str__(self):
+        print('there is no mp4 video')
