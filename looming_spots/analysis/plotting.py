@@ -4,8 +4,8 @@ from matplotlib import pyplot as plt, patches as patches
 
 from matplotlib.collections import LineCollection
 
-from looming_spots.db.constants import STIMULUS_ONSETS, NORM_FRONT_OF_HOUSE_A, NORM_FRONT_OF_HOUSE_A9, \
-    NORM_FRONT_OF_HOUSE_B
+from looming_spots.analysis import tracks
+from looming_spots.db.constants import STIMULUS_ONSETS
 
 
 def plot_looms(fig):
@@ -18,9 +18,8 @@ def plot_looms(fig):
 def plot_home(fig, context):
     for ax in fig.axes:
         plt.sca(ax)
-        #home_front = NORM_FRONT_OF_HOUSE_B if context == 'B' else NORM_FRONT_OF_HOUSE_A
-        home_front = NORM_FRONT_OF_HOUSE_A9
-        plt.axhline(home_front, 0, 400, ls='--')
+        house_front = tracks.normalised_home_front(context)
+        plt.axhline(house_front, 0, 400, ls='--')
 
 
 def plot_looms_ax(ax=None):
@@ -39,6 +38,9 @@ def plot_line_with_color_variable(x, y, color_variable_array, start=None, normal
 
     """
     modified from: https://stackoverflow.com/questions/10252412/matplotlib-varying-color-of-line-to-capture-natural-time-parameterization-in-da
+
+    meant for plotting speeds on tracks
+
     :param x:
     :param y:
     :param color_variable_array:
@@ -65,7 +67,6 @@ def plot_line_with_color_variable(x, y, color_variable_array, start=None, normal
     color_variable_array /= norm_factor
 
     segs = np.concatenate([points[:-1], points[1:]], axis=1)
-
 
     lc = LineCollection(segs, cmap=plt.get_cmap('inferno'), norm=matplotlib.colors.Normalize(vmin=0, vmax=0.8))
     lc.set_array(color_variable_array)
