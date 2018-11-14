@@ -2,16 +2,16 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.ndimage import gaussian_filter
-from looming_spots.analysis import tracks
 import datetime
+import seaborn as sns
 
 from looming_spots.db.constants import LOOMING_STIMULUS_ONSET, END_OF_CLASSIFICATION_WINDOW, ARENA_SIZE_CM, \
     N_LOOMS_PER_STIMULUS, FRAME_RATE
+from looming_spots.analysis import tracks
 from looming_spots.preprocess import extract_looms
 from looming_spots.tracking.pyper_backend.auto_track import pyper_cli_track_trial
 from looming_spots.reference_frames.viewer import Viewer
 from looming_spots.util import video_processing
-import seaborn as sns
 
 # TODO: implement pre/post test attribute
 
@@ -209,7 +209,7 @@ class LoomTrial(object):
         self.make_reference_frames()
         return self.session.get_reference_frame(self.trial_type)
 
-    def track_trial(self, overwrite=True):
+    def extract_track(self, overwrite=True):
         if not overwrite:
             if os.path.isdir(self.folder):
                 return 'skipping... already tracked'
@@ -227,30 +227,12 @@ class LoomTrial(object):
     def viewer(self):
         Viewer(self.directory, trial_type=self.trial_type, video_fname=self.video_name)
 
-    def loom_superimposed_video(self, out_folder='/home/slenzi/Desktop/video_analysis/', width=640, height=250,
-                                origin=(0, 40)):
-        """
+    def make_loom_superimposed_video(self, width=640, height=250, origin=(0, 40)):
 
-        :param out_folder:
-        :param width: output video width
-        :param height: output video height
-        :param origin: origin for cropping
+        path_in = self.video_path
+        path_out = '_overlay.'.join(path_in.split('.'))
 
-        :return:
-        """
-
-        video_path = os.path.join(self.folder, 'overlay_video.h264')
-        out_path = os.path.join(out_folder, self.name) + '.h264'
-        if not os.path.isfile(out_path):
-            vid = video_processing.load_video_from_path(self.video_path)
-            vid = video_processing.crop_video(vid, width, height, origin)
-
-            rprof = video_processing.loom_radius_profile(len(vid))
-            new_vid = video_processing.plot_loom_on_video(vid, rprof)
-
-            video_processing.save_video(new_vid, out_path)
-
-        return video_processing.load_video_from_path(out_path)
+        video_processing.loom_superimposed_video(path_in, path_out, width=width, height=height, origin=origin)
 
 
 class NoReferenceFrameError(Exception):

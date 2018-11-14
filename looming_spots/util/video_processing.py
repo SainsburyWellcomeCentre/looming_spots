@@ -79,8 +79,31 @@ def plot_loom_on_video(video, radius_profile):
     return new_video
 
 
-def loom_radius_profile(n_frames):
+def loom_radius_profile(n_frames):  # TODO: make this using the maths
     radius_profile = np.zeros(n_frames)
     for onset in STIMULUS_ONSETS:
         radius_profile[onset:onset+14] = np.linspace(5, 140, 14)
     return radius_profile
+
+
+def loom_superimposed_video(path_in, path_out, width, height, origin):
+    """
+    function for overlaying illustrative looming stimulus on video and cropping
+
+    :param path_in:
+    :param path_out:
+    :param width:
+    :param height:
+    :param origin:
+    :return:
+    """
+
+    if not os.path.isfile(path_out):
+        vid = load_video_from_path(path_in)
+        vid = crop_video(vid, width, height, origin)
+
+        looming_stimulus_radius_profile = loom_radius_profile(len(vid))
+        new_vid = plot_loom_on_video(vid, looming_stimulus_radius_profile)
+
+        save_video(new_vid, path_out)
+    return load_video_from_path(path_out)
