@@ -22,3 +22,5 @@ context_params = {
                   'B':  C,
                   'A':  A2,
                   }
+METADATA_PATH = './metadata.cfg'
+VIDEO_SHAPE = (480, 640)
