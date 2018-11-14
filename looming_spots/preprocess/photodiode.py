@@ -232,9 +232,8 @@ def get_fpath(directory, extension):
                                          ' in directory {}'.format(extension, directory))
 
 
-def get_ILI(loom_idx):
+def get_inter_loom_interval(loom_idx):
     return (int(loom_idx[5])-int(loom_idx[4]))/FRAME_RATE
-
 
 
 class LoomNumberError(Exception):
