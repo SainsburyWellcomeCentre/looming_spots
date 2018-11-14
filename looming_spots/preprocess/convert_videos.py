@@ -2,6 +2,7 @@ import errno
 import os
 import shutil
 import subprocess
+import sys
 
 import numpy as np
 import pims
@@ -59,8 +60,19 @@ def get_raw_path(mouse_id):
 def convert_avi_to_mp4(avi_path):
     mp4_path = avi_path[:-4] + '.mp4'
     print('avi: {} mp4: {}'.format(avi_path, mp4_path))
-    #subprocess.check_call(['ffmpeg -i {} -c:v libx264 -preset fast -crf 18 {}'.format(avi_path, mp4_path)], shell=True)
-    subprocess.check_call(['ffmpeg -i {} -c:v mpeg4 -preset fast -crf 18 -b 5000k {}'.format(avi_path, mp4_path)],
+
+    supported_platforms = ['linux', 'windows']
+
+    if sys.platform == 'linux':
+        cmd = 'ffmpeg -i {} -c:v mpeg4 -preset fast -crf 18 -b 5000k {}'.format(avi_path, mp4_path)
+
+    elif sys.platform == 'windows':  # TODO: test on windows
+        cmd = 'ffmpeg -i {} -c:v mpeg4 -preset fast -crf 18 -b 5000k {}'.format(avi_path, mp4_path).split(' ')
+
+    else:
+        raise(OSError('platform {} not recognised, expected one of {}'.format(sys.platform, supported_platforms)))
+
+    subprocess.check_call([cmd],
                           shell=True)
     #os.remove(avi_path)
 
