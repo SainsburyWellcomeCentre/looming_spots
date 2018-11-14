@@ -5,9 +5,8 @@ import numpy as np
 import pandas as pd
 from scipy.ndimage import gaussian_filter
 from looming_spots.db import constants
-from looming_spots.db.constants import STIMULUS_ONSETS, NORM_FRONT_OF_HOUSE_A, NORM_FRONT_OF_HOUSE_A9, \
-    NORM_FRONT_OF_HOUSE_B, FRAME_RATE, CLASSIFICATION_WINDOW_START, CLASSIFICATION_WINDOW_END, CLASSIFICATION_SPEED, \
-    SPEED_THRESHOLD, CLASSIFICATION_LATENCY
+from looming_spots.db.constants import STIMULUS_ONSETS, FRAME_RATE, CLASSIFICATION_WINDOW_START,\
+    CLASSIFICATION_WINDOW_END, CLASSIFICATION_SPEED, SPEED_THRESHOLD, CLASSIFICATION_LATENCY
 
 from looming_spots.preprocess import photodiode
 
@@ -248,9 +247,10 @@ def get_flee_durations(sessions):
 
 def get_flee_duration(loom_folder, context):
     track = load_normalised_track(loom_folder, context)
-    home_front = NORM_FRONT_OF_HOUSE_B if context == 'B' else NORM_FRONT_OF_HOUSE_A
+    house_front = normalised_home_front(context)
+
     for i, x in enumerate(track[STIMULUS_ONSETS[0]:]):
-        if x < home_front:
+        if x < house_front:
             return i
     return np.nan
 
