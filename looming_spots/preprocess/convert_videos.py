@@ -90,7 +90,7 @@ def apply_all_preprocessing(mouse_id, video_name='camera'):
         if not os.path.isfile(processed_video_path):
             raise NoProcessedVideoError
 
-        s.extract_all_trials()
+        s.extract_trials()
 
 
 def convert_to_mp4(name, directory, remove_avi=False):  # TODO: remove duplication
