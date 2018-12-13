@@ -27,3 +27,12 @@ class SteveIsntHereError(LoomException):
 
 class CannotFormReferenceFrameError(LoomException):
     pass
+
+
+class LoomsNotTrackedError(Exception):
+    def __init__(self, msg):
+        print('no loom folder paths, please check you have tracked this session: {}'.format(msg))
+
+
+class NoReferenceFrameError(Exception):
+    pass
