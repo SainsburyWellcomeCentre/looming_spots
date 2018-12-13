@@ -9,7 +9,7 @@ from looming_spots.tracking.pyper_backend import auto_track
 class SessionGetter(object):
     def __init__(self, mouse_id_list=None, session_list=None):
         if mouse_id_list is not None:
-            self.mice = filter(None, [load_sessions(mid) for mid in mouse_id_list])  #FIXME: hacky
+            self.mice = filter(None, [load_sessions(mid) for mid in mouse_id_list])  #FIXME: hacky also wtf is it
             self.sessions = generic_functions.flatten_list(self.mice)
 
         elif session_list is not None:
@@ -34,10 +34,6 @@ class SessionGetter(object):
             if any(t.trial_type == 'test' for t in s.trials):
                 if 'test_ref.npy' not in os.listdir(s.path):
                     return s.path
-            # if 'ref.npy' in os.listdir(s.path):
-            #     loom_paths = [os.path.join(s.path, fname) for fname in os.listdir(s.path) if 'loom' in fname]
-            #     if not any(os.path.isdir(path) for path in loom_paths):
-            #         return s.path
         return None
 
     def get_next_session_start(self):
