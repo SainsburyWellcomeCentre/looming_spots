@@ -5,7 +5,7 @@ import pandas as pd
 
 
 from looming_spots.analysis import plotting
-from looming_spots.db.loom_trial_group import LoomTrialGroup
+from looming_spots.db.loom_trial_group import ExperimentalConditionGroup
 
 from looming_spots.db.experimental_log import get_mouse_ids_in_experiment
 from looming_spots.db.session_group import MouseSessionGroup
@@ -63,9 +63,9 @@ def plot_all_metrics_trials(experimental_group_labels, trial_type='pre_test'):
     all_dfs = pd.DataFrame()
     for experimental_group_label in experimental_group_labels:
         trials = load_trials_from_label(experimental_group_label, trial_type)
-        ltg = LoomTrialGroup(trials, experimental_group_label)
+        mtg = ExperimentalConditionGroup()
 
-        df = ltg.to_df()
+        df = mtg.to_df()
         all_dfs = all_dfs.append(df, ignore_index=True)
 
     fig, axes = plt.subplots(1, len(LoomTrialGroup.analysed_metrics()))
