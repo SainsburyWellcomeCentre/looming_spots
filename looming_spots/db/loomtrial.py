@@ -16,18 +16,72 @@ from looming_spots.util import video_processing
 
 
 class LoomTrial(object):
-    def __init__(self, session, directory, sample_number, trial_video_fname='loom{}.h264'):
+    def __init__(self, session, directory, sample_number, trial_type, trial_video_fname='loom{}.h264'):
         self.session = session
         self.sample_number = int(sample_number)
+        self.mouse_id = self.session.mouse_id
+
         self.directory = directory
         self.video_name = trial_video_fname.format(self.loom_number)
         self.video_path = os.path.join(self.directory, self.video_name)
         self.folder = os.path.join(self.directory, 'loom{}'.format(self.loom_number))
-        self.time_to_first_loom = None  # TODO: this is quite specific, consider better implementation
-        self.name = '{}_{}'.format(self.session.mouse_id, self.loom_number)
+
+        self.time_to_first_loom = None
+
+        self.name = '{}_{}'.format(self.mouse_id, self.loom_number)
+
+        self.trial_type = trial_type
+        self.next_trial = None
+        self.previous_trial = None
 
     def __gt__(self, other):
         return self.time > other.time
+
+    @classmethod
+    def set_next_trial(cls, self, other):
+        setattr(self, 'next_trial', other)
+
+    @classmethod
+    def set_previous_trial(cls, self, other):
+        setattr(self, 'previous_trial', other)
+
+    def habituation_loom_after(self):
+        current_trial = self
+        while current_trial is not None:
+            if current_trial.trial_type == 'habituation':
+                return True
+            current_trial = current_trial.next_trial
+
+    def habituation_loom_before(self):
+        current_trial = self
+        while current_trial is not None:
+            if current_trial.trial_type == 'habituation':
+                return True
+            current_trial = current_trial.previous_trial
+
+    def get_trial_type(self):
+        if self.habituation_loom_before() and self.habituation_loom_after():
+            return 'habituation'
+        elif self.habituation_loom_after():
+            return 'pre_test'
+        elif self.habituation_loom_before():
+            return 'post_test'
+        else:
+            return 'pre_test'
+
+    def absolute_acceleration(self):
+        return abs(self.peak_x_acc())
+
+    @property
+    def metric_functions(self):
+        func_dict = {'speed': self.peak_speed,
+                     'acceleration': self.absolute_acceleration,
+                     'latency to escape': self.latency,
+                     'time in safety zone': self.time_in_safety_zone,
+                     'classified as flee': self.is_flee
+                     }
+
+        return func_dict
 
     @property
     def context(self):
@@ -58,6 +112,9 @@ class LoomTrial(object):
     def time(self):
         return self.session.dt + datetime.timedelta(0, int(self.sample_number/FRAME_RATE))
 
+    def time_in_safety_zone(self):
+        return tracks.time_spent_hiding(self.folder, self.context)
+
     @property
     def raw_track(self):
         return tracks.load_raw_track(self.folder)
@@ -72,7 +129,7 @@ class LoomTrial(object):
 
     @property
     def normalised_x_track(self):
-        return tracks.normalise_track(self.x_track, self.context)
+        return tracks.normalise_x_track(self.x_track, self.context)
 
     @property
     def smoothed_x_track(self):  # TODO: extract implementation to tracks
@@ -96,16 +153,16 @@ class LoomTrial(object):
 
     def peak_x_acc(self):  # TODO: extract implementation to tracks
         acc_window = self.get_accelerations_to_shelter()
-        return min(acc_window)
+        return np.nanmin(acc_window)
 
     def peak_x_acc_idx(self):  # TODO: extract implementation to tracks
         acc_window = self.get_accelerations_to_shelter()
-        return np.where(acc_window == min(acc_window))[0] + LOOMING_STIMULUS_ONSET
+        return int(np.where(acc_window == np.nanmin(acc_window))[0] + LOOMING_STIMULUS_ONSET)
 
     def get_accelerations_to_shelter(self):
         acc_window = self.smoothed_x_acceleration[LOOMING_STIMULUS_ONSET:END_OF_CLASSIFICATION_WINDOW]
         vel_window = self.smoothed_x_speed[LOOMING_STIMULUS_ONSET:END_OF_CLASSIFICATION_WINDOW]
-        acc_window[np.where(vel_window > 0)] = 10
+        acc_window[np.where(vel_window > 0)] = np.nan
         return acc_window
 
     @property
@@ -127,49 +184,25 @@ class LoomTrial(object):
             track_color = 'b'
         plt.plot(x_track[start:end], y_track[start:end], color=track_color)
 
+    def peak_speed(self):
+        peak_speed, arg_peak_speed = tracks.get_peak_speed_and_latency(self.folder, self.context)
+        return peak_speed
+
+    def latency(self):
+        return (self.peak_x_acc_idx() - LOOMING_STIMULUS_ONSET)/FRAME_RATE
+
     @property
     def loom_location(self):
         x_track, y_track = self.raw_track
         return x_track[LOOMING_STIMULUS_ONSET], y_track[LOOMING_STIMULUS_ONSET]
 
-    def loom_start_end_pos(self):
-        start = self.get_start_pos()
-        end = self.get_end_pos()
-        return start, end
-
-    def get_start_pos(self):
-        x_track, y_track = self.raw_track
-        for coord in zip(x_track, y_track):
-            if not np.isnan(coord).any():
-                return coord
-
-    def get_end_pos(self):
-        x_track, y_track = self.raw_track
-        for coord in zip(x_track[::-1], y_track[::-1]):
-            if not np.isnan(coord).any():
-                return coord
-
     def max_speed(self):
         return np.nanmax(np.abs(self.normalised_x_speed))
 
     def plot_loom_location(self):
-        #plt.imshow(self.session.reference_frame)
+        plt.imshow(self.session.get_reference_frame)
         x, y = self.loom_location
-        start, end = self.loom_start_end_pos()
         plt.plot(x, y, 'o', color='k', markersize=20)
-        #plt.plot(start[0], start[1], 'o', color='g')
-        #plt.plot(end[0], end[1], 'o', color='r')
-
-    @property
-    def trial_type(self):
-        if not self.session.contains_habituation:
-            return 'test'  # FIXME: should probably be pre test here
-        elif self.sample_number < self.session.habituation_loom_idx[0]:
-            return 'pre_test'
-        elif self.sample_number in self.session.habituation_loom_idx:
-            return 'habituation'
-        elif self.sample_number > self.session.habituation_loom_idx[-1]:
-            return 'post_test'
 
     def plot_track(self, ax=None):
         if ax is None:
@@ -230,7 +263,3 @@ class LoomTrial(object):
         path_out = '_overlay.'.join(path_in.split('.'))
 
         video_processing.loom_superimposed_video(path_in, path_out, width=width, height=height, origin=origin)
-
-
-class NoReferenceFrameError(Exception):
-    pass
