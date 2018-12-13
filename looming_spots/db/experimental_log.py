@@ -1,16 +1,17 @@
 import pandas as pd
 import numpy as np
 
-file_path = '/home/slenzi/Downloads/updated_loom_sheet_format.csv'
+FILE_PATH = '/home/slenzi/Downloads/updated_loom_sheet_format.csv'
 
 
-def load_df(file_path=file_path):
+def load_df(file_path=FILE_PATH):
     df = pd.DataFrame.from_csv(file_path)
     df = df[~df['exclude']]
     return df
 
 
-def get_mouse_ids_in_experiment(df, experiment_key):
+def get_mouse_ids_in_experiment(experiment_key):
+    df = load_df(FILE_PATH)
     exp_df = get_experiment_subset_df(df, experiment_key)
     mouse_ids = get_mouse_ids(exp_df)
     return list(mouse_ids)
