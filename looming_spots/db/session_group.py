@@ -1,15 +1,14 @@
-import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
+from matplotlib import pyplot as plt
 
+import looming_spots.exceptions
 from looming_spots.analysis import plotting
-from looming_spots.db import session
+from looming_spots.db.constants import FRAME_RATE, ARENA_SIZE_CM
+
+from looming_spots.db.session_functions import get_x_length
 from looming_spots.util import generic_functions
 from looming_spots.db import load
-
-
-ARENA_SIZE_CM = 50
-FRAME_RATE = 30
 
 
 class MouseSessionGroup(object):
@@ -17,10 +16,22 @@ class MouseSessionGroup(object):
 
     def __init__(self, mouse_id):
         self.mouse_id = mouse_id
-        self.sessions = np.array(load.load_sessions(mouse_id))
+        self.sessions = sorted(np.array(load.load_sessions(mouse_id)))
 
         self.protocols = np.array([s.protocol for s in self.sessions])
         self.pre_trials, self.post_trials = self.get_pre_and_post_test_trials()
+        self.session_number = 0
+        self.all_trials = [t for s in self.sessions for t in s.trials]
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        if self.session_number >= len(self.sessions):
+            raise StopIteration
+        session = self.sessions[self.session_number]
+        self.session_number += 1
+        return session
 
     @property
     def habituation_sessions(self):  # TODO: remove all session references
@@ -68,7 +79,7 @@ class MouseSessionGroup(object):
             sessions = self.sessions[self.habituation_idx[0]:]
         elif len(self.habituation_idx) > 1:
             sessions = self.sessions[self.habituation_idx[0] + 1:]
-            sessions = [s for s in sessions if s.test_trials()]
+            sessions = [s for s in sessions if s.get_trials('test')]
         else:
             sessions = self.sessions[self.habituation_idx[0] + 1:]
         return self.filter_no_test_trials(sessions)
@@ -144,7 +155,7 @@ class SessionGroup(object):
             for t in s.get_trials(type):
                 try:
                     all_speeds.append(t.smoothed_x_speed)
-                except session.LoomsNotTrackedError:
+                except looming_spots.exceptions.LoomsNotTrackedError:
                     continue
         return all_speeds
 
@@ -160,7 +171,7 @@ class SessionGroup(object):
         for s in self.sessions:
             try:
                 s.plot_trials()
-            except session.LoomsNotTrackedError as err:
+            except looming_spots.exceptions.LoomsNotTrackedError as err:
                 print(err)
                 continue
 
@@ -203,15 +214,10 @@ class SessionGroup(object):
             for t in s.trials:
                 try:
                     all_accs.append(t.smoothed_x_acceleration)
-                except session.LoomsNotTrackedError:
+                except looming_spots.exceptions.LoomsNotTrackedError:
                     continue
         plt.imshow(all_accs, cmap='Greys', aspect='auto', vmin=-0.0075, vmax=0.0075)
         plt.title(self.title)
         generic_functions.neaten_plots(fig.axes)
 
-
-def get_x_length(ax):
-    line = ax.lines[0]
-    xdata = line.get_xdata()
-    return len(xdata)
 
