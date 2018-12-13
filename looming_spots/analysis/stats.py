@@ -4,7 +4,6 @@ import scipy.stats
 
 import looming_spots.db.session_functions
 import looming_spots.db.session_group
-from looming_spots.analysis import tracks
 import itertools as it
 import collections
 import pandas as pd
