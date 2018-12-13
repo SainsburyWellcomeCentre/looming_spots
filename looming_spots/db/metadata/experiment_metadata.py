@@ -118,6 +118,7 @@ def get_session_label_from_loom_idx(loom_idx, n_habituation_looms=120):
     warnings.warn('deprecated')
 
     print("{} looms detected".format(len(loom_idx)))
+
     if len(loom_idx) == 0:
         return 'no_stimuli'
     elif len(loom_idx) == n_habituation_looms:
@@ -126,25 +127,3 @@ def get_session_label_from_loom_idx(loom_idx, n_habituation_looms=120):
         return 'test_only'
     elif len(loom_idx) > n_habituation_looms:
         return 'habituation_and_test'
-
-
-def get_all_tests(mouse_records, records_to_get, habituation_context, test_context):  # TODO: move
-    sessions = []
-    times_since_habituation = []
-    out = []
-    for m in mouse_records:
-        if 'SR' in m.filename:
-            continue
-        date, cage, mid = m.filename.split('_')
-        mouse_name = '{}_{}'.format(cage, mid)
-        if mouse_name in records_to_get:
-            protocol_list = [s.protocol for s in sorted(m.sessions)]
-            context_list = [s.context for s in sorted(m.sessions)]
-            print(m.filename, protocol_list, context_list)
-            if len(protocol_list) == 2:
-                if 'habituation' in protocol_list[0] and protocol_list[1] == 'test_only':
-                    if context_list[0] == habituation_context and context_list[1] in test_context:
-                        out.append(mouse_name)
-                        sessions.append(m.test_session)
-                        times_since_habituation.append(m.days_since_habituation())
-    return np.array(sessions), np.array(times_since_habituation), out
