@@ -46,7 +46,7 @@ def plot_contingency_df(contingency_df):
     contingency_df.T.plot(kind='bar', stacked=True, color=['r', 'k'])
 
 
-def convert_contingency_dict(contingencies_dict, labels=['flees', 'non-flees']):
+def convert_contingency_dict(contingencies_dict, labels=('flees', 'non-flees')):
     contingencies_df = pd.DataFrame.from_dict(contingencies_dict)
     contingencies_df = contingencies_df.set_index([labels])
     return contingencies_df
