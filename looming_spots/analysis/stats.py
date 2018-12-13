@@ -1,6 +1,9 @@
 import itertools
 import numpy as np
 import scipy.stats
+
+import looming_spots.db.session_functions
+import looming_spots.db.session_group
 from looming_spots.analysis import tracks
 import itertools as it
 import collections
@@ -13,9 +16,9 @@ import matplotlib.pyplot as plt
 # rstats = importr('stats')
 
 
-def get_contingencies(session_list):
-    n_flees = sum(tracks.n_flees_all_sessions(session_list))
-    n_non_flees = sum(tracks.n_non_flees_all_sessions(session_list))
+def get_contingencies(session_list):  # TODO: reimplement with trial group
+    n_flees = sum(looming_spots.db.session_functions.n_flees_all_sessions(session_list))
+    n_non_flees = sum(looming_spots.db.session_functions.n_non_flees_all_sessions(session_list))
     return n_flees, n_non_flees
 
 
@@ -40,9 +43,7 @@ def plot_contingencies_from_session_dict(session_dictionary):
 
 
 def plot_contingency_df(contingency_df):
-    ax = contingency_df.T.plot(kind='bar', stacked=True, color=['r', 'k'])
-    ax.spines['right'].set_visible(False)
-    ax.spines['top'].set_visible(False)
+    contingency_df.T.plot(kind='bar', stacked=True, color=['r', 'k'])
 
 
 def convert_contingency_dict(contingencies_dict, labels=['flees', 'non-flees']):
@@ -78,6 +79,30 @@ def compare_all_groups_fisher(contingency_table):  # TODO: clean this
     return pd.DataFrame.from_dict(df_dict)
 
 
+def plot_contingencies_with_stats(contingencies):
+    stats_results = get_all_p_values(contingencies)
+    c_df = convert_contingency_dict(contingencies)
+    plot_contingency_df(c_df)
+
+    ax = plt.gca()
+    labels = ax.get_xticklabels()
+    print(list(labels))
+
+    for i, result in enumerate(stats_results.items()):
+        group_a, group_b = result[0].split('_vs_')
+        pos_a = get_bar_location_from_key(group_a, list(labels))
+        pos_b = get_bar_location_from_key(group_b, list(labels))
+
+        n_points = 5
+        x_line = np.linspace(min(pos_a[0], pos_b[0]), max(pos_a[0], pos_b[0]), n_points)
+
+        line_y_pos = max([sum(v) for v in contingencies.values()]) + 5 * (i+1)
+        stat_loc = np.mean(x_line)
+
+        plt.plot(x_line, [line_y_pos] * n_points, linewidth=1, color='k')
+        plt.text(stat_loc, line_y_pos + 1, result[1])
+
+
 def filter_by(session_list, filter_date=None, filter_date_range=None):
     if filter_date_range:
         session_list, session_dates = filter_by_date_range(session_list[0],
@@ -96,8 +121,8 @@ def get_rates_for_timepoints(session_lists, time_points):
     for session_list in session_lists:
         for tp in time_points:
             tp_session_list, session_dates = filter_by_date_exact(session_list[0], session_list[1], tp)
-            n_flees = tracks.n_flees_all_sessions(tp_session_list)
-            n_non_flees = tracks.n_non_flees_all_sessions(tp_session_list)
+            n_flees = looming_spots.db.session_functions.n_flees_all_sessions(tp_session_list)
+            n_non_flees = looming_spots.db.session_functions.n_non_flees_all_sessions(tp_session_list)
 
             label = 'condition{}'.format(tp)
             if label not in stats_dict.keys():
@@ -157,25 +182,4 @@ def get_bar_location_from_key(key, labels):
         return bar_x[0]
     return bar_x
 
-
-def plot_contingencies_with_stats(contingencies):
-    stats_results = get_all_p_values(contingencies)
-    c_df = convert_contingency_dict(contingencies)
-    plot_contingency_df(c_df)
-    ax = plt.gca()
-    labels = list(ax.get_xticklabels())
-
-    for i, result in enumerate(stats_results.items()):
-        group_a, group_b = result[0].split('_vs_')
-        pos_a = get_bar_location_from_key(group_a, labels)
-        pos_b = get_bar_location_from_key(group_b, labels)
-
-        n_points = 5
-        x_line = np.linspace(min(pos_a[0], pos_b[0]), max(pos_a[0], pos_b[0]), n_points)
-
-        line_y_pos = max([sum(v) for v in contingencies.values()]) + 5 * (i+1)
-        stat_loc = np.mean(x_line)
-
-        plt.plot(x_line, [line_y_pos] * n_points, linewidth=1, color='k')
-        plt.text(stat_loc, line_y_pos + 1, result[1])
 
