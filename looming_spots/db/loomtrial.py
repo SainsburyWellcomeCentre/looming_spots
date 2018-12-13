@@ -6,16 +6,13 @@ import datetime
 import seaborn as sns
 
 from looming_spots.db.constants import LOOMING_STIMULUS_ONSET, END_OF_CLASSIFICATION_WINDOW, ARENA_SIZE_CM, \
-    N_LOOMS_PER_STIMULUS, FRAME_RATE
+    N_LOOMS_PER_STIMULUS, FRAME_RATE, TRACK_LENGTH
+
 from looming_spots.analysis import tracks
 from looming_spots.preprocess import extract_looms
 from looming_spots.tracking.pyper_backend.auto_track import pyper_cli_track_trial
 from looming_spots.reference_frames.viewer import Viewer
 from looming_spots.util import video_processing
-
-# TODO: implement pre/post test attribute
-
-TRACK_LENGTH = 600
 
 
 class LoomTrial(object):

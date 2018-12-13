@@ -29,4 +29,6 @@ context_params = {
                   'B':  C,
                   'A':  A2,
                   }
+
 METADATA_PATH = './metadata.cfg'
+TRACK_LENGTH = 600
