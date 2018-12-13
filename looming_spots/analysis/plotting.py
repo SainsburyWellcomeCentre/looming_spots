@@ -74,3 +74,17 @@ def plot_line_with_color_variable(x, y, color_variable_array, start=None, normal
     plt.gca().add_collection(lc)
 
     plt.plot(color_variable_array)
+
+
+def plot_trials_separate_plots(trials):
+    fig, axes = plt.subplots(len(trials))
+    for t, ax in zip(trials, axes):
+        plt.axes(ax)
+        t.plot_track()
+
+
+def format_plots(axes):
+    plt.subplots_adjust(wspace=1, hspace=1)
+    for i, ax in enumerate(axes):
+        ax.spines['right'].set_visible(False)
+        ax.spines['top'].set_visible(False)
