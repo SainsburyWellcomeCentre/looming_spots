@@ -7,22 +7,28 @@ from looming_spots.db import load, experimental_log
 
 
 class ExperimentalConditionGroup(object):
-    def __init__(self, labels, mouse_ids=None):
+    def __init__(self, labels, mouse_ids=None, ignore_ids=None):
         self.labels = labels
         self.mouse_ids = mouse_ids
         self.avg_df = pd.DataFrame()
         self.trials_df = pd.DataFrame()
+        self.ignore_ids = ignore_ids
 
         if mouse_ids is None:
             self.groups = self.get_groups_from_record_sheet()
         else:
-            self.groups = {label: mouse_id_group for label, mouse_id_group in zip(labels, mouse_ids)}
+            self.groups = {label: list(mouse_id_group) for label, mouse_id_group in zip(labels, mouse_ids)}
+
+    def remove_ignore_mice(self, mouse_ids):
+        return list(set(mouse_ids).symmetric_difference(set(self.ignore_ids)))
 
     def get_groups_from_record_sheet(self):
         mouse_group_dictionary = {}
         for label in self.labels:
             mouse_ids_in_group = experimental_log.get_mouse_ids_in_experiment(label)
+            mouse_ids_in_group = self.remove_ignore_mice(mouse_ids_in_group)
             mouse_group_dictionary.setdefault(label, mouse_ids_in_group)
+
         return mouse_group_dictionary
 
     def to_df(self, trial_type, average=False):
@@ -37,6 +43,7 @@ class ExperimentalConditionGroup(object):
             experimental_condition_df = pd.DataFrame()
             n_rows = 0
             for mid in mouse_ids:
+                print(mouse_ids, type(mouse_ids))
                 mtg = MouseLoomTrialGroup(mid)
                 get_df_func = mtg.to_avg_df if average else mtg.to_trials_df
 
@@ -58,11 +65,12 @@ class MouseLoomTrialGroup(object):
 
     @classmethod
     def analysed_metrics(cls):
-        metrics = ['speed', 'acceleration', 'latency', 'time in safety zone', 'classified as flee']
+        metrics = ['speed', 'acceleration', 'latency to escape', 'time in safety zone', 'classified as flee']
         return metrics
 
     @property
     def all_trials(self):  # TODO: this can probably be achieved more elegantly  #TODO: weakref
+        print(self.mouse_id)
         unlinked_trials = sorted(flatten_list([s.trials for s in load.load_sessions(self.mouse_id)]))
         singly_linked_trials = []
         doubly_linked_trials = []
