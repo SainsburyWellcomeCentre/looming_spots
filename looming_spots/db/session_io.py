@@ -151,21 +151,6 @@ class Session(object):
         if os.path.isfile(fpath):
             return np.load(fpath)
 
-    def plot_trials(self, test_type):
-
-        trials = self.get_trials('test')
-
-        if test_type == 'pre_test':
-            trials = trials[0:3]
-
-        elif test_type == 'post_test':
-            trials = trials[-3:]
-            warnings.warn('only plotting last 3 trials')
-
-        for t in trials:
-            color = 'r' if t.is_flee() else 'k'
-            plt.plot(t.normalised_x_track, color=color)
-
     @property
     def photodiode_trace(self, raw=False):
         if raw:
