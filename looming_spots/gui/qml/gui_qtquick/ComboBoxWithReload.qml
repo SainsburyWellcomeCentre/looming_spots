@@ -1,8 +1,7 @@
-import QtQuick 2.0
+import QtQuick 2.5
 import QtQuick.Controls 1.3
 
 ComboBox {
-    id: cmb3
     textRole: "key"
 
     function reload() {
@@ -12,19 +11,14 @@ ComboBox {
     model:  ListModel {
         id: lm
         function reload() {
-            lm.clear()
-            for (var i=0; i < py_iface.get_test_specific_options(); i++) {
-                var value = py_iface.get_test_specific_options(i);
+            for (var i=0; i < py_iface.get_n_keys(); i++) {
+                var value = py_iface.get_key_at(i);
                 lm.append({key: value});
             }
         }
 
         Component.onCompleted: {
             reload();
-
         }
-
-
     }
-
 }
