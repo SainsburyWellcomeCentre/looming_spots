@@ -1,6 +1,7 @@
 import os
 
 import numpy as np
+import pims
 import scipy.signal
 
 from looming_spots import exceptions
@@ -24,7 +25,8 @@ def get_test_loom_idx(loom_idx,  n_looms_per_stimulus=5):  #WARNING: THIS DOES N
     if contains_habituation(loom_idx):
         loom_burst_onsets = np.diff(loom_idx[:: n_looms_per_stimulus])
         min_ili = min(loom_burst_onsets)
-        test_loom_idx = np.where(loom_burst_onsets > min_ili + 5)[0]
+        print('min_ili: {}'.format(min_ili))
+        test_loom_idx = np.where(loom_burst_onsets > min_ili + 200)[0] + 1
         return test_loom_idx*n_looms_per_stimulus
 
 
@@ -67,7 +69,7 @@ def get_manual_looms(loom_idx, n_looms_per_stimulus=5):
         return loom_idx[::n_looms_per_stimulus]
     else:
         test_loom_idx = get_test_loom_idx(loom_idx,  n_looms_per_stimulus)
-        return loom_idx[test_loom_idx[1:]]
+        return loom_idx[test_loom_idx]   #loom_idx[test_loom_idx[1:]]
 
 
 def check_n_manual_looms(n_manual_looms, first_loom_idx, n_looms_per_stimulus):
@@ -97,10 +99,17 @@ def load_pd_on_clock_ups(directory, pd_threshold=2.5):
         downsampled_processed_ai = np.load(path)
         return downsampled_processed_ai
     else:
-        pd, clock = load_pd_and_clock_raw(directory)
+        pd, clock, auditory = load_pd_and_clock_raw(directory)
         clock_ups = get_pd_clock_ups(clock, pd_threshold)
         print('number of clock ups found: {}'.format(len(clock_ups)))
         return pd[clock_ups]
+
+
+def load_auditory_on_clock_ups(directory, pd_threshold=2.5):
+    pd, clock, auditory = load_pd_and_clock_raw(directory)
+    clock_ups = get_pd_clock_ups(clock, pd_threshold)
+    print('number of clock ups found: {}'.format(len(clock_ups)))
+    return auditory[clock_ups]
 
 
 def manually_correct_ai(directory, start, end):
@@ -177,13 +186,21 @@ def get_pd_clock_ups(clock, pd_threshold=2.5):
     return clock_ups
 
 
-def load_pd_and_clock_raw(directory):
+def load_pd_and_clock_raw(directory, auditory_present=True):
     path = os.path.join(directory, 'AI.bin')
     raw_ai = np.fromfile(path, dtype='double')
+
+    if auditory_present:
+        raw_ai = raw_ai.reshape(int(raw_ai.shape[0] / 3), 3)
+        pd = raw_ai[:, 0]
+        clock = raw_ai[:, 1]
+        auditory = raw_ai[:, 2]
+        return pd, clock, auditory
+
     raw_ai = raw_ai.reshape(int(raw_ai.shape[0] / 2), 2)
     pd = raw_ai[:, 0]
     clock = raw_ai[:, 1]
-    return pd, clock
+    return pd, clock, []  #FIXME: hack
 
 
 def get_loom_idx_from_raw(directory, save=True):  # TODO: save npy file instead
@@ -230,6 +247,13 @@ def get_fpath(directory, extension):
 
     raise exceptions.FileNotPresentError('there is no file with extension: {}'
                                          ' in directory {}'.format(extension, directory))
+
+
+def get_pd_from_video(directory, start, end, video_name='camera.mp4'):
+    path = os.path.join(directory, video_name)
+    video = pims.Video(path)
+    video = video[start:end]
+    return np.mean(video, axis=(1, 2, 3))
 
 
 def get_inter_loom_interval(loom_idx):
