@@ -113,3 +113,18 @@ def plot_trials_with_habituation(mtg, trial_type='pre_test', habit_limit=5):
         plt.sca(axes[2])
 
     plotting.plot_looms_ax(axes[1])
+
+
+def plot_habituation_heatmap(mtg, n_trials_to_show=24):
+    ref = mtg.get_reference_frame('habituation')
+    hm = mtg.habituation_heatmap(n_trials_to_show)
+    alphas = hm > 0
+    cmap = plt.cm.RdYlBu
+
+    colors = plt.Normalize(0, hm.max())(hm)
+    colors = cmap(colors)
+    colors[..., -1] = alphas
+
+    fig, ax = plt.subplots()
+    ax.imshow(ref)
+    ax.imshow(colors)
