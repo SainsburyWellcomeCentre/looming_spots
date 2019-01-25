@@ -8,7 +8,10 @@ from looming_spots.db import load, experimental_log
 
 class ExperimentalConditionGroup(object):
     def __init__(self, labels, mouse_ids=None, ignore_ids=None):
-        self.labels = labels
+        if isinstance(labels, str):
+            self.labels = [labels]
+        else:
+            self.labels = labels
         self.mouse_ids = mouse_ids
         self.avg_df = pd.DataFrame()
         self.trials_df = pd.DataFrame()
@@ -20,6 +23,8 @@ class ExperimentalConditionGroup(object):
             self.groups = {label: list(mouse_id_group) for label, mouse_id_group in zip(labels, mouse_ids)}
 
     def remove_ignore_mice(self, mouse_ids):
+        if self.ignore_ids is None:
+            return mouse_ids
         return list(set(mouse_ids).symmetric_difference(set(self.ignore_ids)))
 
     def get_groups_from_record_sheet(self):
@@ -30,6 +35,23 @@ class ExperimentalConditionGroup(object):
             mouse_group_dictionary.setdefault(label, mouse_ids_in_group)
 
         return mouse_group_dictionary
+
+    def trials(self, trial_type):
+        trial_group_dictionary = {}
+        for experimental_label, mouse_ids in self.groups.items():
+            trials = []
+            for mid in mouse_ids:
+                mltg = MouseLoomTrialGroup(mid)
+                trials.extend(mltg.get_trials_of_type(trial_type))
+            trial_group_dictionary.setdefault(experimental_label, trials)
+        return trial_group_dictionary
+
+    def mouse_trial_groups(self):
+        mtg_dict = {}
+        for experimental_label, mouse_ids in self.groups.items():
+            mtgs = [MouseLoomTrialGroup(mid) for mid in mouse_ids]
+            mtg_dict.setdefault(experimental_label, mtgs)
+        return mtg_dict
 
     def to_df(self, trial_type, average=False):
         """
@@ -65,7 +87,7 @@ class MouseLoomTrialGroup(object):
 
     @classmethod
     def analysed_metrics(cls):
-        metrics = ['speed', 'acceleration', 'latency to escape', 'time in safety zone', 'classified as flee']
+        metrics = ['speed', 'acceleration', 'latency to escape', 'time in safety zone', 'classified as flee', 'time of loom', 'loom number']
         return metrics
 
     @property
@@ -96,13 +118,18 @@ class MouseLoomTrialGroup(object):
     def habituation_trials(self):
         return [t for t in self.all_trials if t.get_trial_type() == 'habituation']
 
-    def get_trials_of_type(self, key):
+    def get_trials_of_type(self, key, limit=3):
         if key == 'pre_test':
-            return self.pre_test_trials()
+            return self.pre_test_trials()[0:limit]
         elif key == 'post_test':
-            return self.post_test_trials()
+            return self.post_test_trials()[0:limit]
         elif key == 'habituation':
             return self.habituation_trials()
+
+    def get_loom_idx(self, trial):
+        for i, t in enumerate(self.all_trials):
+            if t == trial:
+                return i
 
     def n_flees(self, trial_type='pre_test'):
         return np.count_nonzero([t.is_flee() for t in self.get_trials_of_type(trial_type)])
@@ -127,9 +154,9 @@ class MouseLoomTrialGroup(object):
         trials = self.get_trials_of_type('habituation')[0:n_trials_to_show]
         return make_trial_heatmap_location_overlay(trials, self.get_reference_frame('habituation'))
 
-    def get_metric_data(self, metric, trial_type='pre_test'):
+    def get_metric_data(self, metric, trial_type='pre_test', limit=3):
         metric_values = []
-        for t in self.get_trials_of_type(trial_type):
+        for i, t in enumerate(self.get_trials_of_type(trial_type)[0:limit]):
             metric_value = t.metric_functions[metric]()
             metric_values.append(metric_value)
         return metric_values
@@ -140,6 +167,11 @@ class MouseLoomTrialGroup(object):
             data = self.get_metric_data(metric, trial_type=trial_type)
             metrics_dict.setdefault(metric, data)
 
+        all_loom_idx = []
+        for t in self.get_trials_of_type(trial_type):
+            loom_idx = self.get_loom_idx(t)
+            all_loom_idx.append(loom_idx)
+        metrics_dict.setdefault('loom_idx', all_loom_idx)
         n_trials = len(self.get_trials_of_type(trial_type))
         metrics_dict.setdefault('mouse_id', [self.mouse_id]*n_trials)
 

@@ -2,7 +2,7 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.ndimage import gaussian_filter
-import datetime
+from datetime import timedelta
 import seaborn as sns
 
 from looming_spots.db.constants import LOOMING_STIMULUS_ONSET, END_OF_CLASSIFICATION_WINDOW, ARENA_SIZE_CM, \
@@ -37,6 +37,9 @@ class LoomTrial(object):
     def __gt__(self, other):
         return self.time > other.time
 
+    def __eq__(self, other):
+        return self.time == other.time
+
     @classmethod
     def set_next_trial(cls, self, other):
         setattr(self, 'next_trial', other)
@@ -59,9 +62,36 @@ class LoomTrial(object):
                 return True
             current_trial = current_trial.previous_trial
 
+    def get_last_habituation_trial(self):
+        current_trial = self
+        while current_trial is not None:
+            if current_trial.trial_type == 'habituation':
+                return current_trial
+            current_trial = current_trial.previous_trial
+
+    def n_habituations(self):
+        current_trial = self.first_trial()
+        current_trial_type = current_trial.trial_type
+        n_habituations = 1 if current_trial_type == 'habituation' else 0
+
+        while current_trial is not None:
+            if current_trial.trial_type != current_trial_type:
+                n_habituations += 1
+                current_trial_type = current_trial.trial_type
+            current_trial = current_trial.next_trial
+        return n_habituations
+
+    def first_trial(self):
+        current_trial = self
+        while current_trial.previous_trial is not None:
+            current_trial = current_trial.previous_trial
+        return current_trial
+
     def get_trial_type(self):
-        if self.habituation_loom_before() and self.habituation_loom_after():
+        if self.trial_type == 'habituation':
             return 'habituation'
+        elif self.habituation_loom_before() and self.habituation_loom_after():
+            return 'post_test' #'pre_and_post_test'  # TODO:
         elif self.habituation_loom_after():
             return 'pre_test'
         elif self.habituation_loom_before():
@@ -78,7 +108,9 @@ class LoomTrial(object):
                      'acceleration': self.absolute_acceleration,
                      'latency to escape': self.latency,
                      'time in safety zone': self.time_in_safety_zone,
-                     'classified as flee': self.is_flee
+                     'classified as flee': self.is_flee,
+                     'time of loom': self.get_time,
+                     'loom number': self.get_loom_number
                      }
 
         return func_dict
@@ -97,6 +129,9 @@ class LoomTrial(object):
     def loom_number(self):
         return int(np.where(self.session.loom_idx == self.sample_number)[0][0] / N_LOOMS_PER_STIMULUS)
 
+    def get_loom_number(self):
+        return self.loom_number
+
     def extract_video(self, overwrite=False):
         if not overwrite:
             if os.path.isfile(self.video_path):
@@ -110,7 +145,10 @@ class LoomTrial(object):
 
     @property
     def time(self):
-        return self.session.dt + datetime.timedelta(0, int(self.sample_number/FRAME_RATE))
+        return self.session.dt + timedelta(0, int(self.sample_number/FRAME_RATE))
+
+    def get_time(self):
+        return self.time
 
     def time_in_safety_zone(self):
         return tracks.time_spent_hiding(self.folder, self.context)
@@ -162,7 +200,7 @@ class LoomTrial(object):
     def get_accelerations_to_shelter(self):
         acc_window = self.smoothed_x_acceleration[LOOMING_STIMULUS_ONSET:END_OF_CLASSIFICATION_WINDOW]
         vel_window = self.smoothed_x_speed[LOOMING_STIMULUS_ONSET:END_OF_CLASSIFICATION_WINDOW]
-        acc_window[np.where(vel_window > 0)] = np.nan
+        acc_window[np.where(vel_window[:-1] > 0)] = np.nan  # TEST:
         return acc_window
 
     @property
@@ -263,3 +301,16 @@ class LoomTrial(object):
         path_out = '_overlay.'.join(path_in.split('.'))
 
         video_processing.loom_superimposed_video(path_in, path_out, width=width, height=height, origin=origin)
+
+    def days_since_last_session_type(self):
+        if self.habituation_loom_before():
+            last_habituation_trial = self.get_last_habituation_trial()
+            time_since_last_session_type = self.time - last_habituation_trial.time
+            return self.round_timedelta(time_since_last_session_type)
+
+    @staticmethod
+    def round_timedelta(td):
+        if td.seconds > 60 * 60 * 12:
+            return td + timedelta(1)
+        else:
+            return td
