@@ -23,9 +23,11 @@ def process_all_mids():  # TODO: look for recent folders first instead of loopin
 
 
 def apply_all_preprocessing_to_mouse_id(mouse_id):
-    mouse_dir = get_processed_mouse_directory(mouse_id)
-    copy_mouse_directory_to_processed(mouse_id)
-    apply_all_preprocessing(mouse_dir)
+    raw_mouse_dir = get_raw_path(mouse_id)
+    if os.path.isdir(raw_mouse_dir):
+        mouse_dir = get_processed_mouse_directory(mouse_id)
+        copy_mouse_directory_to_processed(mouse_id)
+        apply_all_preprocessing(mouse_dir)
 
 
 def copy_mouse_directory_to_processed(mouse_id):
