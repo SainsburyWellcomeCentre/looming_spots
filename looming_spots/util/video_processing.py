@@ -4,6 +4,8 @@ import numpy as np
 import scipy.misc
 import skvideo
 import skvideo.io
+import pims
+
 
 STIMULUS_ONSETS = [200, 228, 256, 284, 312]
 
