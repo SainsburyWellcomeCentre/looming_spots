@@ -2,7 +2,7 @@ import os
 import subprocess
 
 import looming_spots.util.generic_functions
-from looming_spots.db.paths import PROCESSED_DATA_DIRECTORY
+from looming_spots.db.constants import PROCESSED_DATA_DIRECTORY
 from configobj import ConfigObj
 
 

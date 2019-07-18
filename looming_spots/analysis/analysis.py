@@ -1,14 +1,20 @@
+import warnings
+import os
+
 import matplotlib.pyplot as plt
+from matplotlib import cm
+
 import numpy as np
 
 import pandas as pd
 
-
 from looming_spots.analysis import plotting
-from looming_spots.db.loom_trial_group import ExperimentalConditionGroup
+#from looming_spots.db.loom_trial_group import ExperimentalConditionGroup
+from looming_spots.db import loom_trial_group
 
 from looming_spots.db.experimental_log import get_mouse_ids_in_experiment
-from looming_spots.db.session_group import MouseSessionGroup
+#from looming_spots.db.session_group import MouseSessionGroup
+#from looming_spots.db.loom_trial_group import MouseLoomTrialGroup
 
 
 def get_flee_probabilities_from_trials(trials):
@@ -51,7 +57,7 @@ def plot_all_metrics_mouse_avgs(experimental_labels, trial_type='pre_test', ax=N
     all_df = pd.DataFrame()
     for experimental_group_label in experimental_labels:
         trials = load_trials_from_label(experimental_group_label, trial_type)
-        ltg = LoomTrialGroup(trials, experimental_group_label)
+        ltg = MouseLoomTrialGroup(trials, experimental_group_label)
         df = ltg.get_mouse_avg_df(trials, experimental_group_label)
         all_df = all_df.append(df)
     all_df.boxplot(by='experimental group', ax=ax, rot=90, grid=False)
@@ -68,9 +74,9 @@ def plot_all_metrics_trials(experimental_group_labels, trial_type='pre_test'):
         df = mtg.to_df()
         all_dfs = all_dfs.append(df, ignore_index=True)
 
-    fig, axes = plt.subplots(1, len(LoomTrialGroup.analysed_metrics()))
+    fig, axes = plt.subplots(1, len(MouseLoomTrialGroup.analysed_metrics()))
 
-    all_dfs.boxplot(column=LoomTrialGroup.analysed_metrics(), by='condition', ax=axes, grid=False, rot=90)
+    all_dfs.boxplot(column=MouseLoomTrialGroup.analysed_metrics(), by='condition', ax=axes, grid=False, rot=90)
     plotting.format_plots(axes)
     return all_dfs
 
@@ -128,3 +134,291 @@ def plot_habituation_heatmap(mtg, n_trials_to_show=24):
     fig, ax = plt.subplots()
     ax.imshow(ref)
     ax.imshow(colors)
+
+
+def plot_photometry_with_thresholds(pre_trials, post_trials, rescale_factor=1):
+    if not all([os.path.split(t.video_path)] for t in pre_trials):
+        warnings.warn('this trial group consists of multiple sessions')
+
+    if not all([os.path.split(t.video_path)] for t in post_trials):
+        warnings.warn('this trial group consists of multiple sessions')
+
+    scale_factor = 30
+    #cumsum_sf = 0.5 #2
+    thresholds = []
+    fig, axes = plt.subplots(2, max(len(pre_trials), len(post_trials)))
+    if pre_trials[0].stimulus_type == 'loom':
+        plotting.plot_looms(fig)
+    else:
+        plotting.plot_stimulus(fig)
+
+    #get_rescale_factors_to_sessions_max()
+
+    for j, tg in enumerate([pre_trials, post_trials]):
+        for i, t in enumerate(tg):
+            cumsum = t.get_cumsum(rescale_factor)
+            ax = axes[j][i]
+            plt.sca(ax)
+            plt.ylim([-0.1, 1])
+            plt.xlim([0, 600])
+
+            color = 'r' if t.is_flee() else 'k'
+            t.plot_delta_f_with_track(color, scale_factor/rescale_factor)
+            #ax.plot(t.events_trace * scale_factor, color='y', linestyle='--')
+            ax.plot(cumsum, color='k', alpha=0.3, linewidth=3)
+
+            if j == 0:
+                latency = t.estimate_latency(False)
+                plt.plot(latency, t.normalised_x_track[latency], 'o')
+                thresholds.append(cumsum[latency])
+            else:
+                plt.sca(ax)
+                [plt.axhline(t) for t in thresholds]
+
+
+def plot_cumulative_event_traces(trials, limit=400):
+    for t in trials:
+        color = 'r' if t.returns_to_house_by(limit) else 'k'
+        plt.plot(t.cumulative_sum_raw, color)
+
+
+def plot_habituation(habituation_trials, max_df=1):
+    all_trials = []
+    summary = []
+
+    fig, axes = plt.subplots(1, 4, figsize=(15, 3))
+    for i, t in enumerate(habituation_trials):
+        plt.sca(axes[0])
+        plt.plot(t.delta_f() + i / 100 * max_df, color='k')
+        plt.sca(axes[1])
+        plt.plot(t.cumulative_sum_raw/max_df, linewidth=3, color=str((len(habituation_trials)+1)/(i + 1)))
+        plt.xlim([100, 400])
+        ax = plt.gca()
+        plotting.plot_looms_ax(ax)
+        all_trials.append(t.delta_f())
+        summary.append(max(t.cumulative_sum_raw[200:350]))
+    plt.sca(axes[2])
+    plt.imshow(all_trials, aspect='auto', origin=0, vmin=0, vmax=max_df/50)
+
+    plt.sca(axes[3])
+    summary = np.array(summary)
+    plt.plot(np.arange(len(summary)), summary/max_df, 'o', color='k')
+    plt.plot(np.arange(len(summary)), summary/max_df, color='k')
+    plt.ylim([0, 1])
+
+
+def plot_all(trials, max_df=1):
+    greys = cm.get_cmap('Greys')
+
+    all_trials = []
+    summary = []
+
+    fig, axes = plt.subplots(1, 4, figsize=(15, 3))
+
+    color_range = np.linspace(0.1, 1, len(trials[3:27]))
+    crange = [greys(c) for c in color_range]
+
+    for i, t in enumerate(trials):
+        if i < 3:
+            color = 'r'
+        elif 3 <= i < 27:
+            color = crange[i-3]
+        elif i > 26:
+            color = 'b'
+
+        plt.sca(axes[0])
+        plt.plot(t.delta_f() + i / 100 * max_df, color=color)
+        plt.sca(axes[1])
+        plt.plot(t.cumulative_sum_raw/max_df, linewidth=3, color=color)
+        plt.xlim([100, 400])
+        ax = plt.gca()
+        plotting.plot_looms_ax(ax)
+        all_trials.append(t.delta_f())
+        summary.append(max(t.cumulative_sum_raw[200:350]))
+    plt.sca(axes[2])
+    plt.imshow(all_trials, aspect='auto', origin=0, vmin=0, vmax=max_df/50)
+
+    plt.sca(axes[3])
+    summary = np.array(summary)
+    x = np.arange(len(summary))
+    plt.plot(x[:3], summary[:3]/max_df, 'o', color='r')
+    plt.scatter(x[3:27]+1, summary[3:27]/max_df, c=crange)
+    plt.plot(x[27:30]+2, summary[27:30]/max_df, 'o', color='b')
+
+    plt.plot(x[:3], summary[:3]/max_df, color='r')
+    plt.plot(x[3:27]+1, summary[3:27]/max_df, color='k')
+    plt.plot(x[27:30]+2, summary[27:30]/max_df, color='b')
+
+    plt.ylim([0, 1])
+    return fig
+
+
+def get_all(trials, max_df=1):
+
+    summary = []
+
+    for t in trials:
+        summary.append(max(t.cumulative_sum_raw[200:350])/max_df)
+
+    return np.array(summary)
+
+
+def get_max_stimulus_response(trials):
+    return get_max_integral(trials)
+    #return max(max(t.cumulative_sum_raw) for t in all_trials)
+
+
+def get_max_integral(trials):
+    return max(np.nanmax(t.integral) for t in trials)
+
+
+def get_normalising_factor(trial):
+    """
+
+    :param looming_spots.db.loomtrial.LoomTrial trial:
+    :return:
+    """
+    mtg = loom_trial_group.MouseLoomTrialGroup(trial.mouse_id)
+    return get_max_stimulus_response(mtg.all_trials)
+
+
+def get_normalised_pre_post_cumsums(pre_trials, post_trials):
+    """
+    must be used with single mouse because normalisation
+
+    :param pre_trials:
+    :param post_trials:
+    :return:
+    """
+
+    normalising_factor = get_normalising_factor(pre_trials[0])
+    pre_cumsum = [t.cumulative_sum_raw/normalising_factor for t in pre_trials]
+    post_cumsum = [t.cumulative_sum_raw/normalising_factor for t in post_trials]
+
+    return pre_cumsum, post_cumsum
+
+
+def plot_all_normalised_pre_post_cumsums(mouse_ids):
+    all_pre_cumsums = []
+    all_post_cumsums = []
+    ax = plt.subplot(111)
+    for mid in mouse_ids:
+        mtg = loom_trial_group.MouseLoomTrialGroup(mid)
+        pre_cumsum, post_cumsum = get_normalised_pre_post_cumsums(mtg.loom_trials()[:3], mtg.loom_trials()[27:30])
+        all_pre_cumsums.extend(pre_cumsum)
+        all_post_cumsums.extend(post_cumsum)
+
+    for all_cumsums, color in zip([all_pre_cumsums, all_post_cumsums], ['r', 'k']):
+        mean_cumsums = np.mean(all_cumsums, axis=0)
+        std_cumsums = np.std(all_cumsums, axis=0)
+        t = np.arange(len(mean_cumsums))
+        ax.plot(mean_cumsums, color=color, linewidth=3)
+        ax.fill_between(t, mean_cumsums + std_cumsums, mean_cumsums - std_cumsums, facecolor=color, alpha=0.5)
+
+
+def plot_all_with_integral(trials, max_df=1):
+    greys = cm.get_cmap('Greys')
+
+    all_trials = []
+    summary = []
+
+    fig, axes = plt.subplots(1, 4, figsize=(15, 3))
+
+    color_range = np.linspace(0.1, 1, len(trials[3:27]))
+    crange = [greys(c) for c in color_range]
+
+    for i, t in enumerate(trials):
+        if i < 3:
+            color = 'r'
+        elif 3 <= i < 27:
+            color = crange[i-3]
+        elif i > 26:
+            color = 'b'
+
+        plt.sca(axes[0])
+        plt.plot(t.delta_f() + i / 5 * max_df, color=color)
+
+        plt.sca(axes[1])
+        plt.plot(t.integral, linewidth=3, color=color)
+        ax = plt.gca()
+        plotting.plot_upsampled_looms_ax(ax)
+        plt.ylim([-0.01, max_df])
+
+        plt.xlim([100*10000/30, 400*10000/30])
+        ax = plt.gca()
+        plotting.plot_looms_ax(ax)
+        all_trials.append(t.delta_f())
+        summary.append(t.integral_at_end())
+    plt.sca(axes[2])
+    plt.imshow(all_trials, aspect='auto', origin=0, vmin=0, vmax=max_df)
+
+    plt.sca(axes[3])
+    summary = np.array(summary)
+    x = np.arange(len(summary))
+    plt.plot(x[:3], summary[:3]/max_df, 'o', color='r')
+    plt.scatter(x[3:27]+1, summary[3:27]/max_df, c=crange)
+    plt.plot(x[27:30]+2, summary[27:30]/max_df, 'o', color='b')
+
+    plt.plot(x[:3], summary[:3]/max_df, color='r')
+    plt.plot(x[3:27]+1, summary[3:27]/max_df, color='k')
+    plt.plot(x[27:30]+2, summary[27:30]/max_df, color='b')
+
+    plt.ylim([0, 1])
+    return fig
+
+
+def plot_trials(trials):
+    data = np.array([t.delta_f() for t in trials])
+    mean = np.mean(data, axis=0)
+    plt.plot(data.T, color='b', linewidth=0.5)
+    plt.plot(mean, linewidth=3, color='k')
+    plt.ylim([-0.01, 0.1])
+
+
+def plot_all_contrasts(trials):
+    grouped_trials = sort_trials_by_contrast(trials)
+    fig, axes = plt.subplots(len(grouped_trials), 1)
+    for gt, ax in zip(grouped_trials, axes):
+        plt.sca(ax)
+        plot_trials(gt)
+
+
+def sort_trials_by_contrast(trials):
+
+    grouped_trials = []
+    all_contrasts = sorted(set([t.contrast for t in trials]))
+    for contrast in all_contrasts:
+        all_in_condition = [t for t in trials if t.contrast == contrast]
+        grouped_trials.append(all_in_condition)
+    return grouped_trials
+
+
+def plot_by_classification(trials):
+    flees = []
+    flees_integrals = []
+    non_flees = []
+    non_flees_integrals = []
+    for t in trials:
+        flees.append(t.delta_f()) if t.is_flee() else non_flees.append(t.delta_f())
+        flees_integrals.append(t.integral) if t.is_flee() else non_flees_integrals.append(t.integral)
+
+    fig = plt.figure()
+    ax1 = plt.subplot(311)
+    plt.plot(np.array(flees).T, color='r', linewidth=0.5)
+    plt.plot(np.mean(flees, axis=0), color='r', linewidth=4)
+    plt.ylim([-0.01, 0.1])
+
+    ax2 = plt.subplot(312)
+    plt.plot(np.array(non_flees).T, color='k')
+    plt.plot(np.mean(non_flees, axis=0), color='k', linewidth=4)
+    plt.ylim([-0.01, 0.1])
+
+    ax3 = plt.subplot(313)
+    plt.plot(np.mean(flees_integrals, axis=0), color='b')
+    plt.plot(np.mean(non_flees_integrals, axis=0), color='y')
+    plt.ylim([-0.01, 0.1])
+    plotting.plot_looms_ax(ax1)
+    plotting.plot_looms_ax(ax2)
+    plotting.plot_upsampled_looms_ax(ax3)
+
+    return fig

@@ -3,14 +3,15 @@ import os
 import shutil
 import subprocess
 import sys
+import warnings
 
 import numpy as np
 import pims
 
 from looming_spots.db import load
+from looming_spots.db.constants import get_processed_mouse_directory, get_raw_path, RAW_DATA_DIRECTORY
 from looming_spots.db.metadata import experiment_metadata
 from looming_spots.preprocess import photodiode
-from looming_spots.db.paths import RAW_DATA_DIRECTORY, PROCESSED_DATA_DIRECTORY
 
 
 def process_all_mids():  # TODO: look for recent folders first instead of looping over all
@@ -27,7 +28,7 @@ def apply_all_preprocessing_to_mouse_id(mouse_id):
     if os.path.isdir(raw_mouse_dir):
         mouse_dir = get_processed_mouse_directory(mouse_id)
         copy_mouse_directory_to_processed(mouse_id)
-        apply_all_preprocessing(mouse_dir)
+        #apply_all_preprocessing(mouse_dir)
 
 
 def copy_mouse_directory_to_processed(mouse_id):
@@ -36,28 +37,25 @@ def copy_mouse_directory_to_processed(mouse_id):
 
     if 'test' in mouse_id:
         return 'test data... skipping'
-
+    print(path_to_mouse_processed)
     if not os.path.isdir(path_to_mouse_processed):
+        print('{} doesnt exist, copying whole directory'.format(path_to_mouse_processed))
         copy_directory(path_to_mouse_raw, path_to_mouse_processed)
     else:
         for fname in os.listdir(path_to_mouse_raw):
             path_to_session_raw = os.path.join(path_to_mouse_raw, fname)
             path_to_session_processed = os.path.join(path_to_mouse_processed, fname)
             if os.path.isdir(path_to_session_processed):
-                print('{} has already been copied'.format(fname))
+                print('{} has already been copied'.format(path_to_session_raw))
                 continue
             else:
                 print('copying {} to {}'.format(path_to_session_raw, path_to_session_processed))
                 copy_directory(path_to_session_raw, path_to_session_processed)
-    return '{} has already been copied'.format(path_to_mouse_raw)
+    return '{} did not get copied'.format(path_to_mouse_raw)
 
 
-def get_processed_mouse_directory(mouse_id):
-    return os.path.join(PROCESSED_DATA_DIRECTORY, mouse_id)
-
-
-def get_raw_path(mouse_id):
-    return os.path.join(RAW_DATA_DIRECTORY, mouse_id)
+class NoPdError(Exception):
+    pass
 
 
 def compare_pd_and_video(directory):
@@ -69,6 +67,8 @@ def compare_pd_and_video(directory):
     print('pd found {} samples, there are {} frames in the video'.format(n_samples_pd, n_samples_video))
 
     if n_samples_pd != n_samples_video:
+        if n_samples_pd == 0:
+            raise NoPdError
         n_samples_ratio = round(n_samples_pd/n_samples_video, 2)
         if n_samples_ratio.is_integer():
             print('downsampling by factor {}'.format(n_samples_ratio))
@@ -84,15 +84,24 @@ def apply_all_preprocessing(mouse_id, video_name='camera'):
 
     sessions = load.load_sessions(mouse_id)
     for s in sessions:
+        print(s.path)
         raw_video_path = os.path.join(s.path, raw_video_name)
         processed_video_path = os.path.join(s.path, processed_video_name)
         if not os.path.isfile(processed_video_path) and os.path.isfile(raw_video_path):
-            convert_to_mp4(raw_video_name, s.path, remove_avi=True)
-            initialise_metadata(s.path, remove_txt=True)
+            try:
+                convert_to_mp4(raw_video_name, s.path, remove_avi=True)
+                initialise_metadata(s.path, remove_txt=True)
+            except FileNotFoundError as e:
+                print(e)
+                continue
         if not os.path.isfile(processed_video_path):
-            raise NoProcessedVideoError
 
-        s.extract_trials()
+            warnings.warn('no video file in this session')
+            #NoProcessedVideoError
+            continue
+
+        #s.extract_trials()
+        #s.track_trials()
 
 
 def convert_to_mp4(name, directory, remove_avi=False):  # TODO: remove duplication
@@ -129,7 +138,7 @@ def convert_avi_to_mp4(avi_path):
 
 def copy_directory(src, dest):
     try:
-        shutil.copytree(src, dest, ignore=shutil.ignore_patterns('*.imec*'))
+        shutil.copytree(src, dest, ignore=shutil.ignore_patterns('*.imec*', '*.avi'))
     except OSError as e:
         # If the error was caused because the source wasn't a directory
         if e.errno == errno.ENOTDIR:

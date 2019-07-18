@@ -56,12 +56,19 @@ def classify_flee(loom_folder, context):
     track = gaussian_filter(load_normalised_track(loom_folder, context), 3)
     speed = np.diff(track)
 
-    if fast_enough(speed) and reaches_home(track, context):
-
+    if fast_enough(speed) and reaches_home(track, context) and leaves_house(loom_folder, context):
+        print('leaves: {}'.format(leaves_house(loom_folder, context)))
         return True
 
     print('fast enough: {}, reaches home: {}'.format(fast_enough(speed), reaches_home(track, context)))
     return False
+
+
+def leaves_house(smoothed_track, context):
+    if any(smoothed_track[CLASSIFICATION_WINDOW_END:CLASSIFICATION_WINDOW_END+150] > normalised_home_front(context)):
+        return False
+    else:
+        return True
 
 
 def time_spent_hiding(loom_folder, context):

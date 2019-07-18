@@ -1,11 +1,6 @@
 def main():
-    import os
-    from looming_spots.ref_builder import viewer
-    import skvideo.io
-
-    directory = '/home/slenzi/spine_shares/imaging/s/slenzi/data_working_copy/171030/CA84_2/20171030_11_28_19/'
-    os.chdir(directory)
-    #vid = skvideo.io.vread(os.path.join(directory, 'loom0.h264'), num_frames=400)
-    viewer.Viewer(directory, video=None, video_fname='loom0.h264')
+    from looming_spots.db import loom_trial_group
+    mtg = loom_trial_group.MouseLoomTrialGroup('CA388_1_marcus')
+    trials = mtg.get_trials_of_type('post_test')
 
 if __name__ == '__main__': main()

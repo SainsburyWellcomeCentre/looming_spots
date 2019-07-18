@@ -102,8 +102,9 @@ def get_context_from_stimulus_mat(directory):
 
         return 'B' if any(CONTEXT_B_SPOT_POSITION in x for x in dot_locations) else 'A'
     else:
-        print('no stimulus parameters file')
-        return 'n/a'
+        #print('no stimulus parameters file')
+        #return 'n/a'
+        return 'A10'
 
 
 def get_context(directory):

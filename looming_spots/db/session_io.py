@@ -1,13 +1,10 @@
 import os
-import warnings
-
 import numpy as np
 from datetime import datetime
 import scipy.ndimage
 from cached_property import cached_property
-from matplotlib import pyplot as plt
 
-from looming_spots.db.paths import PROCESSED_DATA_DIRECTORY
+from looming_spots.db.constants import AUDITORY_STIMULUS_CHANNEL_ADDED_DATE, PROCESSED_DATA_DIRECTORY
 
 from looming_spots.db import loomtrial
 from looming_spots.exceptions import LoomsNotTrackedError
@@ -15,6 +12,7 @@ from looming_spots.exceptions import LoomsNotTrackedError
 from looming_spots.preprocess import photodiode
 from looming_spots.util import generic_functions
 from looming_spots.db.metadata import experiment_metadata
+from looming_spots.analysis.photometry import demodulation
 
 
 class Session(object):
@@ -71,15 +69,54 @@ class Session(object):
 
         return sorted_paths
 
-    @property
+    def contains_auditory(self):
+        aud_idx_path = os.path.join(self.path, 'auditory_starts.npy')
+        if os.path.isfile(aud_idx_path):
+            if len(np.load(aud_idx_path)) > 0:
+                return True
+
+        recording_date = datetime.strptime(os.path.split(self.path)[-1], '%Y%m%d_%H_%M_%S')
+
+        if 'AI.tdms' in os.listdir(self.path):
+            return True
+
+        if recording_date > AUDITORY_STIMULUS_CHANNEL_ADDED_DATE:
+            ad = photodiode.load_auditory_on_clock_ups(self.path)
+            if (ad > 0.7).any():
+                return True
+
+    @cached_property
     def trials(self):
-        trials = []
-        for i, loom_onset_in_samples in enumerate(self.loom_idx[::5]):
-            t = loomtrial.LoomTrial(self, directory=self.path, sample_number=loom_onset_in_samples,
-                                    trial_type=self.get_trial_type(loom_onset_in_samples))
-            t.time_to_first_loom = self.time_to_first_loom()
-            trials.append(t)
-        return trials
+        visual_trials_idx = self.get_visual_trials_idx()
+        auditory_trials_idx = self.get_auditory_trials_idx()
+        visual_trials = self.initialise_trials(visual_trials_idx, 'visual')
+        auditory_trials = self.initialise_trials(auditory_trials_idx, 'auditory')
+        auditory_trials = self.initialise_trials(auditory_trials_idx, 'auditory')
+
+        return sorted(visual_trials + auditory_trials)
+
+    def initialise_trials(self, idx, stimulus_type):
+        if idx is not None:
+            if len(idx) > 0:
+                trials = []
+                for i, onset_in_samples in enumerate(idx):
+                    if stimulus_type == 'visual':
+                        t = loomtrial.VisualStimulusTrial(self, directory=self.path, sample_number=onset_in_samples,
+                                                          trial_type=self.get_trial_type(onset_in_samples),
+                                                          stimulus_type='loom')
+                    elif stimulus_type == 'auditory':
+                        t = loomtrial.AuditoryStimulusTrial(self, directory=self.path, sample_number=onset_in_samples,
+                                                            trial_type=self.get_trial_type(onset_in_samples),
+                                                            stimulus_type='auditory')
+                    else:
+                        raise NotImplementedError
+
+                    t.time_to_first_loom = self.time_to_first_loom()
+                    trials.append(t)
+                return trials
+            else:
+                return []
+        return []
 
     def get_trials(self, key):
 
@@ -90,7 +127,13 @@ class Session(object):
 
     @property
     def context(self):
-        return experiment_metadata.get_context_from_stimulus_mat(self.path)
+        try:
+            return experiment_metadata.get_context_from_stimulus_mat(self.path)
+        except FileNotFoundError as e:
+            print(e)
+            print('guessing A10')
+            return 'A'
+
 
     @property
     def contrast_protocol(self):  # TEST: FIXME:
@@ -160,6 +203,63 @@ class Session(object):
         return pd
 
     @property
+    def auditory_trace(self):
+        return photodiode.load_auditory_on_clock_ups(self.path)
+
+    def load_demodulated_photometry_on_clock_ups(self):
+        pd, clock, auditory = photodiode.load_pd_and_clock_raw(self.path)
+        clock_ups = photodiode.get_clock_ups(clock)
+        dm_signal, dm_background = self.load_demodulated_photometry()
+        return dm_signal[clock_ups], dm_background[clock_ups]
+
+    def load_demodulated_photometry(self):
+        pd, _, auditory, photometry, led211, led531 = photodiode.load_all_channels_raw(self.path)
+        dm_signal, dm_background = demodulation.demodulate(photometry, led211, led531)
+        if self.path == '/home/slenzi/spine_shares/loomer/srv/glusterfs/imaging/l/loomer/processed_data/074744/20190404_20_33_34':
+            print('flipping channels')
+            dm_signal, dm_background = dm_background, dm_signal
+        return dm_signal, dm_background
+
+    @cached_property
+    def dm_signal(self):
+        return self.load_demodulated_photometry_on_clock_ups()[0]
+
+    @cached_property
+    def dm_background(self):
+        return self.load_demodulated_photometry_on_clock_ups()[1]
+
+    def load_all_channels_on_clock_ups(self):
+        all_channels = photodiode.load_all_channels_raw(self.path)
+        clock_ups = photodiode.get_clock_ups(all_channels[1])
+        return [channel[clock_ups] for channel in all_channels]
+
+    @cached_property
+    def fully_sampled_delta_f(self, filter_artifact_cutoff_samples=40000):
+        pd, clock, auditory, pmt, led211, led531 = photodiode.load_all_channels_raw(self.path)
+
+        if self.path == '/home/slenzi/spine_shares/loomer/srv/glusterfs/imaging/l/loomer/processed_data/074744/20190404_20_33_34':
+            print('flipping channels')
+            led211, led531 = led531, led211
+
+        pmt[:filter_artifact_cutoff_samples] = np.median(pmt)
+        delta_f = demodulation.lerner_deisseroth_preprocess(pmt, led211, led531)
+        delta_f[:filter_artifact_cutoff_samples] = np.median(delta_f)  # to remove filter artifact
+        return delta_f, clock
+
+    @cached_property
+    def delta_f(self):
+        delta_f, clock = self.fully_sampled_delta_f
+        clock_ups = photodiode.get_clock_ups(clock)
+        return delta_f[clock_ups]
+
+        # sig, bg = self.load_demodulated_photometry_on_clock_ups()
+        # normalised_sig = sig - gaussian_filter(sig, 30)
+        # normalised_bg = bg - gaussian_filter(bg, 30)
+        # return normalised_sig-normalised_bg  # gaussian_filter((normalised_sig-normalised_bg), 2)
+
+
+
+    @property
     def contains_habituation(self):
         return photodiode.contains_habituation(self.loom_idx)
 
@@ -170,13 +270,30 @@ class Session(object):
             _ = photodiode.get_loom_idx_from_raw(self.path, save=True)[0]
         return np.load(loom_idx_path)
 
-    def get_trial_type(self, loom_onset_in_samples):
-        if self.habituation_loom_idx is None:
+    @cached_property
+    def auditory_idx(self):
+        if self.contains_auditory():
+            aud_idx_path = os.path.join(self.path, 'auditory_starts.npy')
+            if not os.path.isfile(aud_idx_path):
+                _ = photodiode.get_auditory_onsets_from_analog_input(self.path, save=True)
+            return np.load(aud_idx_path)
+
+    def get_trial_type(self, onset_in_samples):
+        if self.habituation_idx is None:
             return 'test'
-        elif loom_onset_in_samples in self.habituation_loom_idx:
+        elif onset_in_samples in self.habituation_idx:
             return 'habituation'
         else:
             return 'test'
+
+    @property
+    def habituation_idx(self):
+        if self.contains_auditory():
+            if photodiode.contains_habituation(self.auditory_idx, 1):
+                return photodiode.get_habituation_idx(self.auditory_idx, 1)
+
+        if photodiode.contains_habituation(self.loom_idx, 5):
+            return photodiode.get_habituation_idx(self.loom_idx, 5)
 
     @property
     def habituation_loom_idx(self):
@@ -222,4 +339,17 @@ class Session(object):
         mtd = experiment_metadata.load_metadata(self.path)
         grid_location = mtd['grid_location']
         return grid_location
+
+    def contains_visual(self):
+        pd = photodiode.load_pd_on_clock_ups(self.path)
+        if (pd > 0.5).any():
+            return True
+
+    def get_visual_trials_idx(self):
+        return self.loom_idx[::5]
+
+    def get_auditory_trials_idx(self):
+        return self.auditory_idx
+
+
 

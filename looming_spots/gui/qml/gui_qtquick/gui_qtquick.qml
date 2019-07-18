@@ -280,7 +280,7 @@ Window {
         height: parent.height / 1.5
         width: parent.width
         anchors.top: queryElements.bottom
-        anchors.left: parent.left
+        anchors.left: parent.parent.left
         anchors.leftMargin: 25
         anchors.topMargin: 50
 
@@ -290,7 +290,7 @@ Window {
             id: resultsTable1
             textFormat: Text.RichText
             wrapMode: TextEdit.Wrap
-
+            anchors.right: parent.right
             width: parent.width
             height: parent.height / 3
             textColor: "#000000"

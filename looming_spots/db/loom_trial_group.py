@@ -1,13 +1,20 @@
+import os
+
 import numpy as np
 import pandas as pd
+import scipy.io
+from cached_property import cached_property
+from tqdm import tqdm
 from util.generic_functions import flatten_list
+
+from pathlib import Path
 
 from looming_spots.analysis.trial_group_analysis import make_trial_heatmap_location_overlay
 from looming_spots.db import load, experimental_log
 
 
 class ExperimentalConditionGroup(object):
-    def __init__(self, labels, mouse_ids=None, ignore_ids=None):
+    def __init__(self, labels, mouse_ids=None, ignore_ids=None, limit=None):
         if isinstance(labels, str):
             self.labels = [labels]
         else:
@@ -16,7 +23,7 @@ class ExperimentalConditionGroup(object):
         self.avg_df = pd.DataFrame()
         self.trials_df = pd.DataFrame()
         self.ignore_ids = ignore_ids
-
+        self.limit = limit
         if mouse_ids is None:
             self.groups = self.get_groups_from_record_sheet()
         else:
@@ -42,7 +49,7 @@ class ExperimentalConditionGroup(object):
             trials = []
             for mid in mouse_ids:
                 mltg = MouseLoomTrialGroup(mid)
-                trials.extend(mltg.get_trials_of_type(trial_type))
+                trials.extend(mltg.get_trials_of_type(trial_type, self.limit))
             trial_group_dictionary.setdefault(experimental_label, trials)
         return trial_group_dictionary
 
@@ -85,12 +92,35 @@ class MouseLoomTrialGroup(object):
         self.trial_type_to_analyse = None
         self.kept_trials = None
 
+        if len(self.contrasts()) > 0:
+            self.set_contrasts()
+
+    def contrasts(self):
+        for t in self.all_trials:
+            for fname in os.listdir(t.directory):
+                fpath = os.path.join(t.directory, fname)
+                if 'contrasts.mat' in fpath:
+                    return scipy.io.loadmat(fpath)['contrasts'][0]
+                elif 'contrasts.npy' in fpath:
+                    return np.load(fpath)
+        return []
+
+    def set_contrasts(self):
+        for t, c in zip(self.all_trials, self.contrasts()):
+            t.set_contrast(c)
+
     @classmethod
     def analysed_metrics(cls):
-        metrics = ['speed', 'acceleration', 'latency to escape', 'time in safety zone', 'classified as flee', 'time of loom', 'loom number']
+        metrics = ['speed', 'acceleration', 'latency to escape', 'time in safety zone',
+                   'classified as flee', 'time of loom', 'loom number']
         return metrics
 
-    @property
+    @classmethod
+    def analysed_event_metrics(cls):
+        metrics = ['integral at latency', 'integral at end']
+        return metrics
+
+    @cached_property
     def all_trials(self):  # TODO: this can probably be achieved more elegantly  #TODO: weakref
         print(self.mouse_id)
         unlinked_trials = sorted(flatten_list([s.trials for s in load.load_sessions(self.mouse_id)]))
@@ -109,6 +139,12 @@ class MouseLoomTrialGroup(object):
 
         return doubly_linked_trials
 
+    def loom_trials(self):
+        return [t for t in self.all_trials if t.stimulus_type == 'loom']
+
+    def auditory_trials(self):
+        return [t for t in self.all_trials if t.stimulus_type == 'auditory']
+
     def pre_test_trials(self):
         return [t for t in self.all_trials if t.get_trial_type() == 'pre_test']
 
@@ -125,6 +161,8 @@ class MouseLoomTrialGroup(object):
             return self.post_test_trials()[0:limit]
         elif key == 'habituation':
             return self.habituation_trials()
+        else:
+            return self.all_trials
 
     def get_loom_idx(self, trial):
         for i, t in enumerate(self.all_trials):
@@ -180,8 +218,40 @@ class MouseLoomTrialGroup(object):
     def to_avg_df(self, trial_type='pre_test'):
         mouse_dict = {}
         for metric in MouseLoomTrialGroup.analysed_metrics():
-            values = [t.metric_functions[metric]() for t in self.get_trials_of_type(trial_type)]
-            mouse_dict.setdefault(metric, [np.nanmean(values)])
-            mouse_dict.setdefault('mouse_id', [self.mouse_id])
+
+            ignore_metrics = ['time of loom', 'loom number']
+            if metric not in ignore_metrics:
+                values = [t.metric_functions[metric]() for t in self.get_trials_of_type(trial_type)]
+                mouse_dict.setdefault(metric, [np.nanmean(values)])
+                mouse_dict.setdefault('mouse_id', [self.mouse_id])
 
         return pd.DataFrame.from_dict(mouse_dict)
+
+    def events_df(self, trial_type=None):
+        df_all_metrics = pd.DataFrame()
+        for metric in MouseLoomTrialGroup.analysed_event_metrics():
+            event_metric_df = self.get_event_metric_data(metric, trial_type=trial_type)
+            df_all_metrics = df_all_metrics.append(event_metric_df, ignore_index=True)
+        return df_all_metrics
+
+    def get_event_metric_data(self, metric, trial_type=None, stimulus_type='loom'):
+
+        all_trials_df = pd.DataFrame()
+        for i, t in tqdm(enumerate(self.get_trials_of_type(trial_type))):
+            event_metric_dict = {}
+            if t.stimulus_type == stimulus_type:
+
+                metric_values = t.event_metric_functions[metric]()
+                trial_idx = [self.get_loom_idx(t)]
+                mouse_ids = [self.mouse_id]
+                metric_labels = [metric]
+
+                event_metric_dict.setdefault('metric', metric_labels)
+                event_metric_dict.setdefault('values', metric_values)
+                event_metric_dict.setdefault('trial_idx', trial_idx)
+                event_metric_dict.setdefault('mouse_id', mouse_ids)
+
+                trial_df = pd.DataFrame.from_dict(event_metric_dict)
+                all_trials_df = all_trials_df.append(trial_df)
+        return all_trials_df
+
