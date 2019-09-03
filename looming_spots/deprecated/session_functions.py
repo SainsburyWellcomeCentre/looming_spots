@@ -2,6 +2,8 @@ import numpy as np
 from matplotlib import pyplot as plt
 from scipy.ndimage import gaussian_filter
 
+import looming_spots.analysis.escape_classifiers
+import looming_spots.preprocess.normalisation
 from looming_spots.analysis import tracks
 from looming_spots.db.constants import FRAME_RATE
 
@@ -44,9 +46,9 @@ def plot_flees_corrected(session, alpha=1, label=None):
     track_corrections = tracks.get_track_corrections(session.path)
     print('track corrections: {}'.format(track_corrections))
     for i, loom_folder in enumerate(session.loom_paths):
-        track_is_flee = tracks.classify_flee(loom_folder, session.context)
+        track_is_flee = looming_spots.analysis.escape_classifiers.classify_flee(loom_folder, session.context)
         color = 'r' if track_is_flee else 'k'
-        track = tracks.load_normalised_track(loom_folder, session.context)
+        track = looming_spots.preprocess.normalisation.load_normalised_track(loom_folder, session.context)
         corrected_track = np.roll(track, track_corrections[i])
         corrected_track[0:track_corrections[i]] = np.nan
         plt.plot(corrected_track, color=color, alpha=alpha, label=label)
@@ -54,7 +56,7 @@ def plot_flees_corrected(session, alpha=1, label=None):
 
 def plot_flees(session, smooth=False, alpha=1, label=None, suppress_non_flees=False, manual_color=None):
     for loom_folder in session.loom_paths:
-        track_is_flee = tracks.classify_flee(loom_folder, session.context)
+        track_is_flee = looming_spots.analysis.escape_classifiers.classify_flee(loom_folder, session.context)
         if track_is_flee or (not suppress_non_flees):
             zorder = 1 if track_is_flee else 0
             if manual_color is not None:
@@ -153,7 +155,7 @@ def get_all_speeds(sessions, smooth=False):
     speeds = []
     for s in sessions:
         for loom_folder in s.loom_paths:
-            track = tracks.load_normalised_track(loom_folder, s.context)
+            track = looming_spots.preprocess.normalisation.load_normalised_track(loom_folder, s.context)
             if smooth:
                 track = gaussian_filter(track, 3)
             speed = np.diff(track)
@@ -165,7 +167,7 @@ def get_all_accelerations(sessions, smooth=False):
     accelerations = []
     for s in sessions:
         for loom_folder in s.loom_paths:
-            track = tracks.load_normalised_track(loom_folder, s.context)
+            track = looming_spots.preprocess.normalisation.load_normalised_track(loom_folder, s.context)
             if smooth:
                 track = gaussian_filter(track, 3)
             speed = np.diff(track)
@@ -206,7 +208,7 @@ def get_flee_durations(sessions):
     durations = []
     for s in sessions:
         for loom_folder in s.loom_paths:
-            duration = tracks.get_flee_duration(loom_folder, s.context)
+            duration = looming_spots.analysis.escape_classifiers.get_flee_duration(loom_folder, s.context)
             durations.append(duration)
     return np.array(durations)
 
@@ -223,7 +225,7 @@ def get_flee_classification_colors_all_sessions(sessions):
     colors = []
     for s in sessions:
         for loom_folder in s.loom_paths:
-            color = 'r' if tracks.classify_flee(loom_folder, s.context) else 'k'
+            color = 'r' if looming_spots.analysis.escape_classifiers.classify_flee(loom_folder, s.context) else 'k'
             colors.extend(color)
     return colors
 

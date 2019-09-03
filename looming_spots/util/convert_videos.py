@@ -1,6 +1,4 @@
-import errno
 import os
-import shutil
 import subprocess
 import sys
 import warnings
@@ -8,13 +6,15 @@ import warnings
 import numpy as np
 import pims
 
+import looming_spots.preprocess.io
 from looming_spots.db import load
 from looming_spots.db.constants import get_processed_mouse_directory, get_raw_path, RAW_DATA_DIRECTORY
 from looming_spots.db.metadata import experiment_metadata
 from looming_spots.preprocess import photodiode
+from looming_spots.deprecated.deprecated import copy_mouse_directory_to_processed
 
 
-def process_all_mids():  # TODO: look for recent folders first instead of looping over all
+def process_all_mids():
     for mouse_directory in os.listdir(RAW_DATA_DIRECTORY):
         try:
             apply_all_preprocessing_to_mouse_id(mouse_directory)
@@ -31,35 +31,12 @@ def apply_all_preprocessing_to_mouse_id(mouse_id):
         #apply_all_preprocessing(mouse_dir)
 
 
-def copy_mouse_directory_to_processed(mouse_id):
-    path_to_mouse_raw = get_raw_path(mouse_id)
-    path_to_mouse_processed = get_processed_mouse_directory(mouse_id)
-
-    if 'test' in mouse_id:
-        return 'test data... skipping'
-    print(path_to_mouse_processed)
-    if not os.path.isdir(path_to_mouse_processed):
-        print('{} doesnt exist, copying whole directory'.format(path_to_mouse_processed))
-        copy_directory(path_to_mouse_raw, path_to_mouse_processed)
-    else:
-        for fname in os.listdir(path_to_mouse_raw):
-            path_to_session_raw = os.path.join(path_to_mouse_raw, fname)
-            path_to_session_processed = os.path.join(path_to_mouse_processed, fname)
-            if os.path.isdir(path_to_session_processed):
-                print('{} has already been copied'.format(path_to_session_raw))
-                continue
-            else:
-                print('copying {} to {}'.format(path_to_session_raw, path_to_session_processed))
-                copy_directory(path_to_session_raw, path_to_session_processed)
-    return '{} did not get copied'.format(path_to_mouse_raw)
-
-
 class NoPdError(Exception):
     pass
 
 
 def compare_pd_and_video(directory):
-    pd_trace = photodiode.load_pd_on_clock_ups(directory)
+    pd_trace = looming_spots.preprocess.io.load_pd_on_clock_ups(directory)
     n_samples_pd = len(pd_trace)
     video_path = os.path.join(directory, 'camera.mp4')
     n_samples_video = len(pims.Video(video_path))
@@ -134,17 +111,6 @@ def convert_avi_to_mp4(avi_path):
         raise(OSError('platform {} not recognised, expected one of {}'.format(sys.platform, supported_platforms)))
 
     subprocess.check_call([cmd], shell=True)
-
-
-def copy_directory(src, dest):
-    try:
-        shutil.copytree(src, dest, ignore=shutil.ignore_patterns('*.imec*', '*.avi'))
-    except OSError as e:
-        # If the error was caused because the source wasn't a directory
-        if e.errno == errno.ENOTDIR:
-            shutil.copy(src, dest)
-        else:
-            print('Directory not copied. Error: %s' % e)
 
 
 def initialise_metadata(session_folder, remove_txt=False):

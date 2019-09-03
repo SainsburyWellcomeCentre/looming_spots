@@ -5,7 +5,7 @@ import pims
 import skvideo
 import skvideo.io
 
-from looming_spots.preprocess import photodiode
+import looming_spots.util.generic_functions
 
 
 def extract_loom_videos(directory_in, directory_out, extraction_idx):
@@ -18,7 +18,7 @@ def extract_loom_video(directory_in, directory_out, loom_start, loom_number, n_s
     loom_video_path = os.path.join(directory_out, 'loom{}.h264'.format(loom_number))
     if os.path.isfile(loom_video_path):
         return
-    video_path = photodiode.get_fpath(directory_in, '.mp4')
+    video_path = looming_spots.util.generic_functions.get_fpath(directory_in, '.mp4')
     print(video_path)
     extract_video(video_path, loom_video_path, loom_start-n_samples_before, loom_start + n_samples_after)
 

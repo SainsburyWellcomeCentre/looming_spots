@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from configobj import ConfigObj
 
+import looming_spots.preprocess.normalisation
 from looming_spots.analysis import tracks
 from looming_spots.util.generic_functions import chunks
 
@@ -21,7 +22,7 @@ def get_binned_preference(session, start, grid_location, n_bins=10, video_name='
 
     path_to_video = os.path.join(session.path, video_name)
     config = load_config(session.path)
-    normalised_track = tracks.load_normalised_track(path_to_video, context='split')
+    normalised_track = looming_spots.preprocess.normalisation.load_normalised_track(path_to_video, context='split')
 
     if start is None:
         start = int(config['track_start'])
@@ -55,7 +56,7 @@ def plot_sides(session, start=None):
     if start is None:
         start = int(config['track_start'])
     end = start + N_SAMPLES_TO_ANALYSE
-    track = tracks.load_normalised_track(session.path + '/camera', context='split')[start:end]
+    track = looming_spots.preprocess.normalisation.load_normalised_track(session.path + '/camera', context='split')[start:end]
     x, y = tracks.load_raw_track(session.path + '/camera')
     x = x[start:end]
     y = y[start:end]
