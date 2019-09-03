@@ -44,7 +44,7 @@ for context in ['A', 'A2', 'A9']:
         subset = df[['loom_idx', 'classified as flee']]
         n_flees, n_total, results = get_loom_results_from_df(subset)
         for i, (nf, nt, result) in enumerate(zip(n_flees, n_total, results)):
-            print('{} days post habituation, {} out of {} flees, percentage: {} %'.format(day, nf, nt, result))
+            print('{} days post habituation, {} out of {} flees, percentage: {} %'.format(day, nf, nt, result*100))
 
             plt.bar(day + 0.33 * i, result, 0.2)
 
@@ -72,6 +72,6 @@ for context in ['A', 'A2', 'A9']:
 for day in [0, 1, 3, 7, 14, 28]:
     df = main_df[main_df['days_since_habituation'] == day]
     subset = df[['loom_idx', 'classified as flee']]
-    _,_, results = get_loom_results_from_df(subset)
+    _, _, results = get_loom_results_from_df(subset)
     for i, result in enumerate(results):
         plt.bar(day + 0.33*i, result, 0.2)

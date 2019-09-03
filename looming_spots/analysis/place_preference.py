@@ -57,7 +57,7 @@ def plot_sides(session, start=None):
         start = int(config['track_start'])
     end = start + N_SAMPLES_TO_ANALYSE
     track = looming_spots.preprocess.normalisation.load_normalised_track(session.path + '/camera', context='split')[start:end]
-    x, y = tracks.load_raw_track(session.path + '/camera')
+    x, y = looming_spots.preprocess.normalisation.load_raw_track(session.path + '/camera')
     x = x[start:end]
     y = y[start:end]
     above = track > 0.5
@@ -66,7 +66,7 @@ def plot_sides(session, start=None):
     where_above = np.where(above)[0]
     where_below = np.where(below)[0]
 
-    ref_path = os.path.join(path, 'ref.npy')
+    ref_path = os.path.join(session.path, 'ref.npy')
     ref = np.load(ref_path)
     plt.imshow(ref, cmap='Greys')
     plt.plot(x[where_above], y[where_above], 'o', color='k')

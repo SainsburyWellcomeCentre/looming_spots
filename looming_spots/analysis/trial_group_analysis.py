@@ -5,10 +5,10 @@ for functions that operate on lists of trials
 """
 
 
-def make_trial_heatmap_location_overlay(trials, reference_image):
-    track_heatmap = np.zeros_like(reference_image)
+def make_trial_heatmap_location_overlay(trials):
+    track_heatmap = np.zeros((480, 640))
     for t in trials:
-        x, y = np.array(t.raw_track[0]), np.array(t.raw_track[1])
+        x, y = np.array(t.raw_track[0][200:400]), np.array(t.raw_track[1][200:400])
         for coordinate in zip(x, y):
             if not np.isnan(coordinate).any():
                 track_heatmap[int(coordinate[1]), int(coordinate[0])] += 1

@@ -269,10 +269,10 @@ def get_max_stimulus_response(trials):
 
 
 def get_max_integral(trials):
-    return max(np.nanmax(t.integral) for t in trials)
+    return max(np.nanmax(t.integral_downsampled()) for t in trials)
 
 
-def get_normalising_factor(trial):
+def get_normalising_factor_from_mouse(trial):
     """
 
     :param looming_spots.db.loomtrial.LoomTrial trial:
@@ -291,7 +291,7 @@ def get_normalised_pre_post_cumsums(pre_trials, post_trials):
     :return:
     """
 
-    normalising_factor = get_normalising_factor(pre_trials[0])
+    normalising_factor = get_normalising_factor_from_mouse(pre_trials[0])
     pre_cumsum = [t.cumulative_sum_raw/normalising_factor for t in pre_trials]
     post_cumsum = [t.cumulative_sum_raw/normalising_factor for t in post_trials]
 
@@ -316,7 +316,14 @@ def plot_all_normalised_pre_post_cumsums(mouse_ids):
         ax.fill_between(t, mean_cumsums + std_cumsums, mean_cumsums - std_cumsums, facecolor=color, alpha=0.5)
 
 
-def plot_all_with_integral(trials, max_df=1):
+def plot_all_with_integral(mtg):
+    pre_test_trials = mtg.pre_test_trials()[:3]
+    habituation_trials = mtg.habituation_trials()[:24]
+    post_test_trials = mtg.post_test_trials()[:3]
+    all_trials = [pre_test_trials, habituation_trials, post_test_trials]
+
+    norm_factor = get_normalising_factor_from_mouse(mtg.pre_test_trials[0])
+
     greys = cm.get_cmap('Greys')
 
     all_trials = []
@@ -324,10 +331,10 @@ def plot_all_with_integral(trials, max_df=1):
 
     fig, axes = plt.subplots(1, 4, figsize=(15, 3))
 
-    color_range = np.linspace(0.1, 1, len(trials[3:27]))
-    crange = [greys(c) for c in color_range]
+    habituation_color_range = np.linspace(0.1, 1, len(habituation_trials))
+    crange = [greys(c) for c in habituation_color_range]
 
-    for i, t in enumerate(trials):
+    for i, t in enumerate(all_trials):
         if i < 3:
             color = 'r'
         elif 3 <= i < 27:
@@ -336,13 +343,13 @@ def plot_all_with_integral(trials, max_df=1):
             color = 'b'
 
         plt.sca(axes[0])
-        plt.plot(t.delta_f() + i / 5 * max_df, color=color)
+        plt.plot(t.delta_f() + i / 5 * norm_factor, color=color)
 
         plt.sca(axes[1])
         plt.plot(t.integral, linewidth=3, color=color)
         ax = plt.gca()
         plotting.plot_upsampled_looms_ax(ax)
-        plt.ylim([-0.01, max_df])
+        plt.ylim([-0.01, norm_factor])
 
         plt.xlim([100*10000/30, 400*10000/30])
         ax = plt.gca()
@@ -350,21 +357,84 @@ def plot_all_with_integral(trials, max_df=1):
         all_trials.append(t.delta_f())
         summary.append(t.integral_at_end())
     plt.sca(axes[2])
-    plt.imshow(all_trials, aspect='auto', origin=0, vmin=0, vmax=max_df)
+    plt.imshow(all_trials, aspect='auto', origin=0, vmin=0, vmax=norm_factor)
 
     plt.sca(axes[3])
     summary = np.array(summary)
     x = np.arange(len(summary))
-    plt.plot(x[:3], summary[:3]/max_df, 'o', color='r')
-    plt.scatter(x[3:27]+1, summary[3:27]/max_df, c=crange)
-    plt.plot(x[27:30]+2, summary[27:30]/max_df, 'o', color='b')
+    plt.plot(x[:3], summary[:3] / norm_factor, 'o', color='r')
+    plt.scatter(x[3:27] + 1, summary[3:27] / norm_factor, c=crange)
+    plt.plot(x[27:30] + 2, summary[27:30] / norm_factor, 'o', color='b')
 
-    plt.plot(x[:3], summary[:3]/max_df, color='r')
-    plt.plot(x[3:27]+1, summary[3:27]/max_df, color='k')
-    plt.plot(x[27:30]+2, summary[27:30]/max_df, color='b')
+    plt.plot(x[:3], summary[:3] / norm_factor, color='r')
+    plt.plot(x[3:27] + 1, summary[3:27] / norm_factor, color='k')
+    plt.plot(x[27:30] + 2, summary[27:30] / norm_factor, color='b')
 
     plt.ylim([0, 1])
     return fig
+
+
+def plot_integrals_latencies_tracks_and_df(trials, cmap_key='Greys', fig=None, axes=None):
+    """
+    plot the integrals, average delta F and tracks for given list of trials
+
+    >>> mtg = loom_trial_group.MouseLoomTrialGroup('898990')
+    >>> fig, axes = plot_integrals_latencies_tracks_and_df(mtg.habituation_trials()[:24],'Greys')
+    >>> plot_integrals_latencies_tracks_and_df(mtg.pre_test_trials()[:3],'Reds', fig, axes)
+    >>> plot_integrals_latencies_tracks_and_df.plot_group(mtg.post_test_trials()[:3],'Blues', fig, axes)
+
+    :param trials:
+    :param cmap_key:
+    :param fig:
+    :param axes:
+    :return:
+    """
+    cmap = cm.get_cmap(cmap_key)
+    trial_range = np.linspace(0.1, 1, len(trials))
+    crange = [cmap(c) for c in trial_range]
+
+    norm_factor = get_normalising_factor_from_mouse(trials[0])
+    if fig is None or axes is None:
+        fig, axes = plt.subplots(1, 3, figsize=(15, 3))
+
+    for i, t in enumerate(trials):
+        color = crange[i]
+        plt.sca(axes[0])
+        plt.plot(t.integral_downsampled(), linewidth=3, color=color)
+        plt.ylim([-0.01, norm_factor])
+        plt.xlim([100, 400])
+        plt.sca(axes[1])
+        t.plot_track(color=color)
+
+    ax = plt.sca(axes[2])
+    avg_df = np.mean([t.delta_f() for t in trials], axis=0)
+    plt.plot(avg_df, color=color)
+    plt.ylim([-0.01, max(avg_df)+0.02])
+    plt.xlim([180, 350])
+    plotting.plot_looms(fig)
+    return fig, axes
+
+
+def plot_all_LSIE(mouse_id):
+    mtg = loom_trial_group.MouseLoomTrialGroup(mouse_id)
+    fig, axes = plot_integrals_latencies_tracks_and_df(mtg.habituation_trials()[:24], 'Greys')
+    plot_integrals_latencies_tracks_and_df(mtg.pre_test_trials()[:3], 'Reds', fig, axes)
+    plot_integrals_latencies_tracks_and_df(mtg.post_test_trials()[:3], 'Blues', fig, axes)
+
+    plt.sca(axes[0])
+    plt.axvline(get_avg_latency(mtg.pre_test_trials()[:3]), linestyle='--', color='k')
+
+    plt.sca(axes[1])
+    plt.axvline(get_avg_latency(mtg.pre_test_trials()[:3]), linestyle='--', color='k')
+
+    plt.sca(axes[2])
+    plt.axvline(get_avg_latency(mtg.pre_test_trials()[:3]), linestyle='--', color='k')
+
+    return fig, axes
+
+
+def get_avg_latency(trials):
+    return np.mean([t.estimate_latency(False) for t in trials])
 
 
 def plot_trials(trials):
@@ -373,24 +443,6 @@ def plot_trials(trials):
     plt.plot(data.T, color='b', linewidth=0.5)
     plt.plot(mean, linewidth=3, color='k')
     plt.ylim([-0.01, 0.1])
-
-
-def plot_all_contrasts(trials):
-    grouped_trials = sort_trials_by_contrast(trials)
-    fig, axes = plt.subplots(len(grouped_trials), 1)
-    for gt, ax in zip(grouped_trials, axes):
-        plt.sca(ax)
-        plot_trials(gt)
-
-
-def sort_trials_by_contrast(trials):
-
-    grouped_trials = []
-    all_contrasts = sorted(set([t.contrast for t in trials]))
-    for contrast in all_contrasts:
-        all_in_condition = [t for t in trials if t.contrast == contrast]
-        grouped_trials.append(all_in_condition)
-    return grouped_trials
 
 
 def plot_by_classification(trials):

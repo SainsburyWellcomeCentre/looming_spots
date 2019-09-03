@@ -7,7 +7,7 @@ VIDEO_SHAPE = (480, 640)
 ARENA_SIZE_CM = 50
 
 CLASSIFICATION_WINDOW_END = 350  # 345
-CLASSIFICATION_SPEED = -0.021 # original was-0.027, then -0.024 changed to 0.021 for contrasts
+CLASSIFICATION_SPEED = -0.021  # original was-0.027, then -0.024 changed to 0.021 for contrasts
 CLASSIFICATION_SPEED_FIBER_ATTACHED = -0.024
 SPEED_THRESHOLD = -0.01
 CLASSIFICATION_LATENCY = 5
@@ -54,6 +54,8 @@ def get_raw_path(mouse_id):
     return os.path.join(RAW_DATA_DIRECTORY, mouse_id)
 
 
-HEAD_DIRECTORY = "/home/slenzi/spine_shares/loomer/srv/glusterfs/imaging/l/loomer/"
+HEAD_DIRECTORY = "/home/slenzi/winstor/margrie/glusterfs/imaging/l/loomer/"
 RAW_DATA_DIRECTORY = os.path.join(HEAD_DIRECTORY, 'raw_data')
 PROCESSED_DATA_DIRECTORY = os.path.join(HEAD_DIRECTORY, 'processed_data')
+FIGURE_DIRECTORY = '/home/slenzi/figures/'
+OLD_RAW_DIRECTORY = '/home/slenzi/spine_shares/loomer/srv/glusterfs/imaging/l/loomer/raw_data/'

@@ -5,10 +5,7 @@ import pandas as pd
 import scipy.io
 from cached_property import cached_property
 from tqdm import tqdm
-from util.generic_functions import flatten_list
-
-from pathlib import Path
-
+from looming_spots.util.generic_functions import flatten_list
 from looming_spots.analysis.trial_group_analysis import make_trial_heatmap_location_overlay
 from looming_spots.db import load, experimental_log
 
@@ -201,17 +198,31 @@ class MouseLoomTrialGroup(object):
 
     def to_trials_df(self, trial_type='pre_test'):
         metrics_dict = {}
+        all_metric_labels = []
+        all_metric_values = []
+
         for metric in MouseLoomTrialGroup.analysed_metrics():
             data = self.get_metric_data(metric, trial_type=trial_type)
-            metrics_dict.setdefault(metric, data)
+            #metrics_dict.setdefault(metric, data)
+            metric_labels = [metric]*len(data)
+            metric_values = data
+            all_metric_labels.extend(metric_labels)
+            all_metric_values.extend(metric_values)
 
         all_loom_idx = []
-        for t in self.get_trials_of_type(trial_type):
+        trials = self.get_trials_of_type(trial_type)
+        for t in trials:
             loom_idx = self.get_loom_idx(t)
             all_loom_idx.append(loom_idx)
+
+        n_trials = len(trials)
+        n_metrics = len(MouseLoomTrialGroup.analysed_metrics())
+        all_loom_idx = list(all_loom_idx)*n_metrics
         metrics_dict.setdefault('loom_idx', all_loom_idx)
-        n_trials = len(self.get_trials_of_type(trial_type))
-        metrics_dict.setdefault('mouse_id', [self.mouse_id]*n_trials)
+        #n_trials = len(self.get_trials_of_type(trial_type))
+        metrics_dict.setdefault('mouse_id', [self.mouse_id]*n_metrics*n_trials)
+        metrics_dict.setdefault('metric_label', all_metric_labels)
+        metrics_dict.setdefault('metric_value', all_metric_values)
 
         return pd.DataFrame.from_dict(metrics_dict)
 
@@ -255,3 +266,6 @@ class MouseLoomTrialGroup(object):
                 all_trials_df = all_trials_df.append(trial_df)
         return all_trials_df
 
+    def percentage_time_in_tz_middle(self):
+        hm = make_trial_heatmap_location_overlay(self.habituation_trials())
+        return sum(sum(hm[115:190, 150:245])/sum(sum(hm)))

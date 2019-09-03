@@ -4,7 +4,7 @@ from matplotlib import pyplot as plt, patches as patches
 
 from matplotlib.collections import LineCollection
 
-from looming_spots.analysis import tracks
+import looming_spots.preprocess.normalisation
 from looming_spots.db.constants import STIMULUS_ONSETS
 
 
@@ -40,7 +40,7 @@ def plot_stimulus(fig, onset=200, n_samples=90):
 def plot_home(fig, context):
     for ax in fig.axes:
         plt.sca(ax)
-        house_front = tracks.normalised_home_front(context)
+        house_front = looming_spots.preprocess.normalisation.normalised_home_front(context)
         plt.axhline(house_front, 0, 400, ls='--')
 
 

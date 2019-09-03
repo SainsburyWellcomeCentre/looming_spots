@@ -1,9 +1,11 @@
 import os
 import numpy as np
 from datetime import datetime
+
 import scipy.ndimage
 from cached_property import cached_property
 
+import looming_spots.preprocess.io
 from looming_spots.db.constants import AUDITORY_STIMULUS_CHANNEL_ADDED_DATE, PROCESSED_DATA_DIRECTORY
 
 from looming_spots.db import loomtrial
@@ -12,7 +14,7 @@ from looming_spots.exceptions import LoomsNotTrackedError
 from looming_spots.preprocess import photodiode
 from looming_spots.util import generic_functions
 from looming_spots.db.metadata import experiment_metadata
-from looming_spots.analysis.photometry import demodulation
+from photometry import demodulation, load
 
 
 class Session(object):
@@ -81,7 +83,7 @@ class Session(object):
             return True
 
         if recording_date > AUDITORY_STIMULUS_CHANNEL_ADDED_DATE:
-            ad = photodiode.load_auditory_on_clock_ups(self.path)
+            ad = looming_spots.preprocess.io.load_auditory_on_clock_ups(self.path)
             if (ad > 0.7).any():
                 return True
 
@@ -90,7 +92,6 @@ class Session(object):
         visual_trials_idx = self.get_visual_trials_idx()
         auditory_trials_idx = self.get_auditory_trials_idx()
         visual_trials = self.initialise_trials(visual_trials_idx, 'visual')
-        auditory_trials = self.initialise_trials(auditory_trials_idx, 'auditory')
         auditory_trials = self.initialise_trials(auditory_trials_idx, 'auditory')
 
         return sorted(visual_trials + auditory_trials)
@@ -133,7 +134,6 @@ class Session(object):
             print(e)
             print('guessing A10')
             return 'A'
-
 
     @property
     def contrast_protocol(self):  # TEST: FIXME:
@@ -197,23 +197,23 @@ class Session(object):
     @property
     def photodiode_trace(self, raw=False):
         if raw:
-            pd, clock = photodiode.load_pd_and_clock_raw(self.path)
+            pd, clock = looming_spots.preprocess.io.load_pd_and_clock_raw(self.path)
         else:
-            pd = photodiode.load_pd_on_clock_ups(self.path)
+            pd = looming_spots.preprocess.io.load_pd_on_clock_ups(self.path)
         return pd
 
     @property
     def auditory_trace(self):
-        return photodiode.load_auditory_on_clock_ups(self.path)
+        return looming_spots.preprocess.io.load_auditory_on_clock_ups(self.path)
 
     def load_demodulated_photometry_on_clock_ups(self):
-        pd, clock, auditory = photodiode.load_pd_and_clock_raw(self.path)
-        clock_ups = photodiode.get_clock_ups(clock)
+        pd, clock, auditory = looming_spots.preprocess.io.load_pd_and_clock_raw(self.path)
+        clock_ups = looming_spots.preprocess.io.get_clock_ups(clock)
         dm_signal, dm_background = self.load_demodulated_photometry()
         return dm_signal[clock_ups], dm_background[clock_ups]
 
     def load_demodulated_photometry(self):
-        pd, _, auditory, photometry, led211, led531 = photodiode.load_all_channels_raw(self.path)
+        pd, _, auditory, photometry, led211, led531 = load.load_all_channels_raw(self.path)
         dm_signal, dm_background = demodulation.demodulate(photometry, led211, led531)
         if self.path == '/home/slenzi/spine_shares/loomer/srv/glusterfs/imaging/l/loomer/processed_data/074744/20190404_20_33_34':
             print('flipping channels')
@@ -229,13 +229,13 @@ class Session(object):
         return self.load_demodulated_photometry_on_clock_ups()[1]
 
     def load_all_channels_on_clock_ups(self):
-        all_channels = photodiode.load_all_channels_raw(self.path)
-        clock_ups = photodiode.get_clock_ups(all_channels[1])
+        all_channels = load.load_all_channels_raw(self.path)
+        clock_ups = looming_spots.preprocess.io.get_clock_ups(all_channels[1])
         return [channel[clock_ups] for channel in all_channels]
 
     @cached_property
     def fully_sampled_delta_f(self, filter_artifact_cutoff_samples=40000):
-        pd, clock, auditory, pmt, led211, led531 = photodiode.load_all_channels_raw(self.path)
+        pd, clock, auditory, pmt, led211, led531 = load.load_all_channels_raw(self.path)
 
         if self.path == '/home/slenzi/spine_shares/loomer/srv/glusterfs/imaging/l/loomer/processed_data/074744/20190404_20_33_34':
             print('flipping channels')
@@ -249,15 +249,12 @@ class Session(object):
     @cached_property
     def delta_f(self):
         delta_f, clock = self.fully_sampled_delta_f
-        clock_ups = photodiode.get_clock_ups(clock)
+        clock_ups = looming_spots.preprocess.io.get_clock_ups(clock)
         return delta_f[clock_ups]
 
-        # sig, bg = self.load_demodulated_photometry_on_clock_ups()
-        # normalised_sig = sig - gaussian_filter(sig, 30)
-        # normalised_bg = bg - gaussian_filter(bg, 30)
-        # return normalised_sig-normalised_bg  # gaussian_filter((normalised_sig-normalised_bg), 2)
-
-
+    @cached_property
+    def data(self):
+        return load.load_all_channels_on_clock_ups(self.path)
 
     @property
     def contains_habituation(self):
@@ -341,7 +338,7 @@ class Session(object):
         return grid_location
 
     def contains_visual(self):
-        pd = photodiode.load_pd_on_clock_ups(self.path)
+        pd = looming_spots.preprocess.io.load_pd_on_clock_ups(self.path)
         if (pd > 0.5).any():
             return True
 

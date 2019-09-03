@@ -2,8 +2,8 @@ import itertools
 import numpy as np
 import scipy.stats
 
-import looming_spots.db.session_functions
-import looming_spots.db.session_group
+import looming_spots.deprecated.session_functions
+import looming_spots.deprecated.session_group
 import itertools as it
 import collections
 import pandas as pd
@@ -16,8 +16,8 @@ import matplotlib.pyplot as plt
 
 
 def get_contingencies(session_list):  # TODO: reimplement with trial group
-    n_flees = sum(looming_spots.db.session_functions.n_flees_all_sessions(session_list))
-    n_non_flees = sum(looming_spots.db.session_functions.n_non_flees_all_sessions(session_list))
+    n_flees = sum(looming_spots.deprecated.session_functions.n_flees_all_sessions(session_list))
+    n_non_flees = sum(looming_spots.deprecated.session_functions.n_non_flees_all_sessions(session_list))
     return n_flees, n_non_flees
 
 
@@ -120,8 +120,8 @@ def get_rates_for_timepoints(session_lists, time_points):
     for session_list in session_lists:
         for tp in time_points:
             tp_session_list, session_dates = filter_by_date_exact(session_list[0], session_list[1], tp)
-            n_flees = looming_spots.db.session_functions.n_flees_all_sessions(tp_session_list)
-            n_non_flees = looming_spots.db.session_functions.n_non_flees_all_sessions(tp_session_list)
+            n_flees = looming_spots.deprecated.session_functions.n_flees_all_sessions(tp_session_list)
+            n_non_flees = looming_spots.deprecated.session_functions.n_non_flees_all_sessions(tp_session_list)
 
             label = 'condition{}'.format(tp)
             if label not in stats_dict.keys():

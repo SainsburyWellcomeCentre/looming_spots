@@ -183,19 +183,23 @@ def get_combination(include=['post_test', 'habituation'], exclude=['pre_test'],
     return mouse_ids_habituation_combo.intersection(mouse_ids_post_combo)  # make suitable for all 3
 
 
-def get_pre_tests(include=['pre_test'],exclude=[], matching_dict_pre_test={'test_type': '== pre_test',
-                                                                           'context': '== A9'}, matching_dict={'test_type': '== pre_test',
-                                 'context': '== A9'}):
+def get_pre_tests(include=['pre_test'], exclude=[],
+                  matching_dict_pre_test={'test_type': '== pre_test',
+                                          'context': '== A9',
+                                          'line': '== wt',
+                                          'stimulus': '== looming',
+                                          'contrast': '== 0.1600',
+                                          'surgery': '== FALSE'}):
     log = load_df()
     mouse_ids = get_mouse_ids_with_test_combination(log, include, exclude)
     filtered_db = get_subset_df_from_mouse_ids(log, mouse_ids)
 
-    mouse_ids_pre_combo = get_mouse_ids_from_query(filtered_db,
-                                                   matching_dict_pre_test) if len(matching_dict_pre_test) > 1 else {}
+    mouse_ids_pre_combo = get_mouse_ids_from_query(filtered_db, matching_dict_pre_test) if len(matching_dict_pre_test) > 1 else {}
 
     return mouse_ids_pre_combo
 
 
 def get_subset_df_from_mouse_ids(db, mouse_ids):
     return db[db.mouse_id.isin(mouse_ids)]
+
 
