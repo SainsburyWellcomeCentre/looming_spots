@@ -1,39 +1,9 @@
-import os
-import numpy as np
-import matplotlib.pyplot as plt
-
-from looming_spots.analysis.photometry_habituations import (
-    get_signal_metric_dataframe_variable_contrasts,
-    get_behaviour_metric_dataframe,
-)
-from looming_spots.db import load, experimental_log, loom_trial_group
-from looming_spots.analysis import randomised_contrast_escape_curves
 import pandas as pd
+import pingouin as pg
 
+from looming_spots.analysis.photometry_habituations import get_behaviour_metric_dataframe
+from looming_spots.db import experimental_log, loom_trial_group
 
-# df = experimental_log.load_df()
-# mids = experimental_log.get_mouse_ids_in_experiment('background_contrast_cossel_curve')
-# root_dir = '/home/slenzi/spine_shares/loomer/srv/glusterfs/imaging/l/loomer/processed_data/'
-#
-# for mid in mids:
-#     sessions = load.load_sessions(mid)
-#     if sessions is not None:
-#         for s in sessions:
-#             save_path = os.path.join(s.path, 'contrasts.npy')
-#             print(save_path)
-#             contrast = df[df['mouse_id'] == mid]['contrast']
-#             print(mid, float(contrast))
-#             np.save(save_path, contrast)
-#
-#
-# plt.close('all')
-# OHDA = ['CA451A_2', 'CA451A_3', 'CA451A_4', 'CA478_2', 'CA476_4']
-# NMDA = ['276585A', '276585B', 'CA439_1', 'CA439_4']
-# CONTROL = ['276585D', '276585E', 'CA452_1', 'CA439_5', 'CA451A_5', 'CA459A_2', 'CA478_3']
-#
-# for l, c, mids in zip(['OHDA', 'NMDA', 'CONTROL'], ['g', 'b', 'k'], [OHDA, NMDA, CONTROL]):
-#     randomised_contrast_escape_curves.plot_block_escape_curves_with_avg(mids, c)
-#
 GROUPS = {
     "OHDA": [
         "CA451A_1",
@@ -53,6 +23,8 @@ GROUPS = {
         "CA459A_2",
         "CA478_3",
     ],
+    'd1_caspase': experimental_log.get_mouse_ids_in_experiment('d1MSN_caspase_lesion_TS'),
+    'd2_caspase': experimental_log.get_mouse_ids_in_experiment('d2MSN_caspase_lesion_TS'),
 }
 
 
@@ -64,3 +36,39 @@ def get_df(metric, groups=GROUPS):
         df["experimental group"] = [label] * len(df)
         all_df = all_df.append(df)
     return all_df
+
+
+def get_escape_curve_df(df):
+    escape_curve_df = pd.DataFrame()
+    for group in df['experimental group'].unique():
+        sub_df = df[df['experimental group'] == group]
+
+        for mid in sub_df['mouse id'].unique():
+            escape_curve = df[df['mouse id'] == mid][['contrast', 'escape']].groupby('contrast').mean().reset_index()
+            escape_curve['mouse id'] = [mid]*len(escape_curve)
+            escape_curve['experimental group'] = [group]*len(escape_curve)
+            escape_curve_df = escape_curve_df.append(escape_curve)
+    return escape_curve_df
+
+
+def two_way_mixed_anova(group_label_1, group_label_2, post_hoc=False):
+    """
+    perform two way mixed ANOVA on two groups of mice with variable contrast curve experiment
+
+    :param str group_label_1:
+    :param str group_label_2:
+    :return:
+    """
+    groups = {group_label_1: GROUPS[group_label_1],
+              group_label_2: GROUPS[group_label_2]}
+    print(groups)
+
+    df = get_df('classified as flee', groups)
+    escape_curve_df = get_escape_curve_df(df)
+
+    aov = pg.mixed_anova(dv='escape', within='contrast', between='experimental group', subject='mouse id', data=escape_curve_df)
+    pg.print_table(aov)
+
+    if post_hoc:
+        pg.pairwise_ttests(dv='escape', within='contrast', between='experimental group', subject='mouse id', data=escape_curve_df)
+    return escape_curve_df, aov
