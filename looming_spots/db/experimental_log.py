@@ -154,7 +154,7 @@ def get_mouse_ids_with_test_combination(
 
     for test_phase in include_test_phases:
         mouse_ids = get_mouse_ids_from_query(
-            db, {"test_type": "== {}".format(test_phase)}
+            db, {"test_type": f"== {test_phase}"}
         )
         all_query_results.append(mouse_ids)
 
@@ -164,7 +164,7 @@ def get_mouse_ids_with_test_combination(
     if len(exclude_test_phases) > 0:
         for test_phase in exclude_test_phases:
             mouse_ids = get_mouse_ids_from_query(
-                db, {"test_type": "== {}".format(test_phase)}
+                db, {"test_type": f"== {test_phase}"}
             )
             exclude_results.append(mouse_ids)
 

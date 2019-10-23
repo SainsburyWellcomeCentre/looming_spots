@@ -20,7 +20,7 @@ class MouseNotFoundError(Exception):
 
 def load_sessions(mouse_id):
     mouse_directory = os.path.join(PROCESSED_DATA_DIRECTORY, mouse_id)
-    print("loading.... {}".format(mouse_directory))
+    print(f"loading.... {mouse_directory}")
     session_list = []
     if os.path.isdir(mouse_directory):
 
@@ -60,13 +60,11 @@ def load_sessions(mouse_id):
 
         if len(session_list) == 0:
             raise MouseNotFoundError(
-                "the mouse: {} has not been processed".format(mouse_id)
+                f"the mouse: {mouse_id} has not been processed"
             )
 
         return sorted(session_list)
-    msg = "the mouse: {} has not been copied to the processed data directory".format(
-        mouse_id
-    )
+    msg = f"the mouse: {mouse_id} has not been copied to the processed data directory"
     warnings.warn(msg)
 
     raise MouseNotFoundError()
@@ -89,7 +87,7 @@ def contains_tracks(file_names):
 
 
 def get_tracks_from_raw(directory):
-    print("getting tracks from {}".format(directory))
+    print(f"getting tracks from {directory}")
     p = Path(directory)
     track_paths = p.rglob("*tracks.npy")
     if len(list(p.rglob("*tracks.npy"))) == 0:
@@ -99,6 +97,6 @@ def get_tracks_from_raw(directory):
     for tp in track_paths:
         raw_path = str(tp)
         processed_path = raw_path.replace("raw_data", "processed_data")
-        print("copying {} to {}".format(raw_path, processed_path))
+        print(f"copying {raw_path} to {processed_path}")
         copyfile(raw_path, processed_path)
     return True

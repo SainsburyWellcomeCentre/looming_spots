@@ -20,7 +20,7 @@ for context in ["A", "A2", "A9"]:
         exclude=["pre_test"],
         matching_dict_post_test={
             "test_type": "== post_test",
-            "context": "== {}".format(context),
+            "context": f"== {context}",
             "surgery": "== FALSE",
             "drug_given/additional_param": "== FALSE",
             "stimulus": "== looming",
@@ -28,7 +28,7 @@ for context in ["A", "A2", "A9"]:
         },
         matching_dict_habituation={
             "test_type": "== habituation",
-            "context": "== {}r".format(context),
+            "context": f"== {context}r",
             "surgery": "== FALSE",
             "gradient_protocol": "== 2",
             "drug_given/additional_param": "== FALSE",
@@ -59,9 +59,7 @@ for context in ["A", "A2", "A9"]:
         n_flees, n_total, results = get_loom_results_from_df(subset)
         for i, (nf, nt, result) in enumerate(zip(n_flees, n_total, results)):
             print(
-                "{} days post habituation, {} out of {} flees, percentage: {} %".format(
-                    day, nf, nt, result * 100
-                )
+                f"{day} days post habituation, {nf} out of {nt} flees, percentage: {result * 100} %"
             )
 
             plt.bar(day + 0.33 * i, result, 0.2)

@@ -63,7 +63,7 @@ class LoomTrial(object):
         self.video_path = os.path.join(self.directory, self.video_name)
         self.folder = os.path.join(
             self.directory,
-            "{}{}".format(self.stimulus_type, self.stimulus_number()),
+            f"{self.stimulus_type}{self.stimulus_number()}"
         )
 
         self.start = self.sample_number - N_SAMPLES_BEFORE
@@ -71,7 +71,7 @@ class LoomTrial(object):
 
         self.time_to_first_loom = None
 
-        self.name = "{}_{}".format(self.mouse_id, self.stimulus_number())
+        self.name = f"{self.mouse_id}_{self.stimulus_number()}"
 
         self.trial_type = trial_type
         self.next_trial = None
@@ -387,23 +387,12 @@ class LoomTrial(object):
         ) and looming_spots.analysis.escape_classifiers.reaches_home(
             track, self.context
         ):  # and not leaves_house(track, self.context)
-            print(
-                "leaves: {}".format(
-                    looming_spots.analysis.escape_classifiers.leaves_house(
-                        track, self.context
-                    )
-                )
-            )
+            leaves_house_within = looming_spots.analysis.escape_classifiers.leaves_house(track, self.context)
+            print(f"leaves: {leaves_house_within}")
             return True
-
-        print(
-            "fast enough: {}, reaches home: {}".format(
-                looming_spots.analysis.escape_classifiers.fast_enough(speed),
-                looming_spots.analysis.escape_classifiers.reaches_home(
-                    track, self.context
-                ),
-            )
-        )
+        fast_enough = looming_spots.analysis.escape_classifiers.fast_enough(speed)
+        reaches_shelter = looming_spots.analysis.escape_classifiers.reaches_home(track, self.context)
+        print(f"fast enough: {fast_enough}, reaches home: {reaches_shelter}")
         return False
 
     def plot_peak_x_acceleration(self):
@@ -543,23 +532,19 @@ class LoomTrial(object):
             print(self.directory)
             Viewer(
                 self.directory,
-                video_fname="{}{}.h264".format(
-                    self.stimulus_type, self.stimulus_number()
-                ),
+                video_fname=f"{self.stimulus_type}{self.stimulus_number()}.h264",
                 trial_type=self.trial_type,
             )
             # raise NoReferenceFrameError
         pyper_cli_track_trial(
-            self.video_path, "{}_ref.npy".format(self.trial_type)
+            self.video_path, f"{self.trial_type}_ref.npy"
         )
 
     def make_reference_frames(self):
         if self.session.get_reference_frame(self.trial_type) is None:
             Viewer(
                 self.directory,
-                video_fname="{}{}.h264".format(
-                    self.stimulus_type, self.stimulus_number()
-                ),
+                video_fname=f"{self.stimulus_type}{self.stimulus_number()}.h264",
                 trial_type=self.trial_type,
             )
 

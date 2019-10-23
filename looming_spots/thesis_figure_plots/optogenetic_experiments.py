@@ -36,7 +36,7 @@ def plot_ichloc_pretest_disruption(mids=ICHLOC_MIDS):
             trials.extend([t])
         hm = make_trial_heatmap_location_overlay(trials)
         ax = plt.subplot(2, 3, i + 1)
-        ax.title.set_text("{} {}".format("ichloc", mid))
+        ax.title.set_text(f"ichloc {mid}")
         plt.imshow(hm, aspect="auto", vmax=2, vmin=0, interpolation="bilinear")
         ax.axis("off")
         plt.ylim(0, 300)

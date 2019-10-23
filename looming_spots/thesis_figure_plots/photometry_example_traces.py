@@ -19,18 +19,14 @@ def plot_pre_post_photometry_trials_lsie(mtg):
     for t in mtg.pre_test_trials()[:3]:
         fig = t.plot_track_and_delta_f()
         fig.savefig(
-            "/{}/loom_{}_{}_pre_test.eps".format(
-                FIGURE_DIRECTORY, t.loom_number, mtg.mouse_id
-            ),
-            format="eps",
+            f"/{FIGURE_DIRECTORY}/loom_{t.loom_number}_{mtg.mouse_id}_pre_test.eps",
+            format="eps"
         )
         plt.close("all")
     for t in mtg.post_test_trials()[:3]:
         fig = t.plot_track_and_delta_f()
         fig.savefig(
-            "/{}/loom_{}_{}_post_test.eps".format(
-                FIGURE_DIRECTORY, t.loom_number, mtg.mouse_id
-            ),
+            f"/{FIGURE_DIRECTORY}/loom_{t.loom_number}_{mtg.mouse_id}_post_test.eps",
             format="eps",
         )
         plt.close("all")
@@ -70,15 +66,11 @@ def plot_pre_post_photometry_lsie(mtg):
     mtg.pre_test_trials()[0].plot_stimulus()
 
     fig1.savefig(
-        "/home/slenzi/pre_post_LSIE_photometry/{}_pre_test.eps".format(
-            mtg.mouse_id
-        ),
+        f"/home/slenzi/pre_post_LSIE_photometry/{mtg.mouse_id}_pre_test.eps",
         format="eps",
     )
     fig2.savefig(
-        "/home/slenzi/pre_post_LSIE_photometry/{}_post_test.eps".format(
-            mtg.mouse_id
-        ),
+        f"/home/slenzi/pre_post_LSIE_photometry/{mtg.mouse_id}_post_test.eps",
         format="eps",
     )
 
@@ -457,15 +449,11 @@ def plot_lsie_suppression_over_variable_contrast(hue="test type"):
             color="k",
         )
         g.savefig(
-            "/home/slenzi/figures/photometry_contrasts/pre_post_24hr_group_on_contrast_ca_curve_{}_hue_{}.eps".format(
-                metric, hue.replace(" ", "_")
-            ),
+            f"/home/slenzi/figures/photometry_contrasts/pre_post_24hr_group_on_contrast_ca_curve_{metric}_hue_{hue.replace(' ', '_')}.eps",
             format="eps",
         )
         g.savefig(
-            "/home/slenzi/figures/photometry_contrasts/pre_post_24hr_group_on_contrast_ca_curve_{}_hue_{}.png".format(
-                metric, hue.replace(" ", "_")
-            ),
+            f"/home/slenzi/figures/photometry_contrasts/pre_post_24hr_group_on_contrast_ca_curve_{metric}_hue_{hue.replace(' ', '_')}.png",
             format="png",
         )
 
@@ -625,7 +613,7 @@ def get_post_lsie_signal_df(groups, metric):
             mtg_dict.setdefault("pre test values", pre_vals)
             mtg_dict.setdefault("post test values", post_vals)
             mtg_dict.setdefault(
-                "post test {} values".format(metric), post_metric_vals
+                f"post test {metric} values", post_metric_vals
             )
             mtg_dict.setdefault(
                 "suppression value",

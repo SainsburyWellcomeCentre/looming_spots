@@ -64,7 +64,7 @@ class Session(object):
         paths = []
 
         if self.n_looms == 0:
-            print("no looms in {}".format(self.path))
+            print(f"no looms in {self.path}")
             return []
 
         for name in os.listdir(self.path):
@@ -219,7 +219,7 @@ class Session(object):
         return len(self.loom_idx)
 
     def get_reference_frame(self, trial_type):
-        fpath = os.path.join(self.path, "{}_ref.npy".format(trial_type))
+        fpath = os.path.join(self.path, f"{trial_type}_ref.npy")
         if os.path.isfile(fpath):
             return np.load(fpath)
 

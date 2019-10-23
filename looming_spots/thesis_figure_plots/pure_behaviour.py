@@ -240,7 +240,7 @@ def compare_groups_lsie_exploration(
             hm = make_trial_heatmap_location_overlay(trials)
             group_hm.append(hm)
             ax = plt.subplot(2, 7, i + 1)
-            ax.title.set_text("{} {}".format(group, mid))
+            ax.title.set_text(f"{group} {mid}")
             plt.imshow(
                 hm, aspect="auto", vmax=2, vmin=0, interpolation="bilinear"
             )
