@@ -2,12 +2,15 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 
+import looming_spots.preprocess.io
 from looming_spots.preprocess import photodiode
+from looming_spots.preprocess.photodiode import filter_pd
+from looming_spots.preprocess.io import load_pd_on_clock_ups
 
 
 def get_calibration_curve(pd_directory):
-    pd = photodiode.load_pd_on_clock_ups(pd_directory)
-    starts, ends = photodiode.get_calibration_starts_ends(pd_directory)
+    pd = looming_spots.preprocess.io.load_pd_on_clock_ups(pd_directory)
+    starts, ends = get_calibration_starts_ends(pd_directory)
     pd_vals = []
     for start, end in zip(starts, ends):
         pd_val = np.median(pd[start:end])
@@ -33,3 +36,22 @@ for i, directory in enumerate([psychopy_directory, psychtoolbox_directory]):
 
 
 plt.show()
+
+
+def get_calibration_starts_ends(directory):
+    pd = load_pd_on_clock_ups(directory)
+    starts, ends = find_pd_calibration_crossings(pd, 0.9)
+    return starts, ends
+
+
+def find_pd_calibration_crossings(ai, threshold=0.4):
+
+    filtered_pd = filter_pd(ai)
+
+    print('threshold: {}'.format(threshold))
+    loom_on = (filtered_pd < threshold).astype(int)
+    loom_ups = np.diff(loom_on) == 1
+    loom_starts = np.where(loom_ups)[0]
+    loom_downs = np.diff(loom_on) == -1
+    loom_ends = np.where(loom_downs)[0]
+    return loom_starts, loom_ends

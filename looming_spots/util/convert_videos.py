@@ -10,7 +10,6 @@ import looming_spots.preprocess.io
 from looming_spots.db import load
 from looming_spots.db.constants import get_processed_mouse_directory, get_raw_path, RAW_DATA_DIRECTORY
 from looming_spots.db.metadata import experiment_metadata
-from looming_spots.preprocess import photodiode
 from looming_spots.deprecated.deprecated import copy_mouse_directory_to_processed
 
 
