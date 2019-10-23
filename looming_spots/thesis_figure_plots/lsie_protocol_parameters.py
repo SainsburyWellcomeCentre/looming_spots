@@ -13,7 +13,9 @@ def plot_effect_of_delay_on_habituation_efficacy(metric="classified as flee"):
     for contrast_protocol in [2, 7]:
         for delay in [0, 10]:
 
-            experiment_string = f"== variable_stimulus_number_habituation_{delay}min_delay"
+            experiment_string = (
+                f"== variable_stimulus_number_habituation_{delay}min_delay"
+            )
             gradient_protocol_string = f"== {contrast_protocol}"
 
             test_contrast_df = experimental_log.filter_df(
@@ -61,7 +63,9 @@ def n_stimuli_effect(metric="classified as flee"):
     for contrast_protocol in [14, 15, 16]:
         for delay in [0]:
             groups = []
-            experiment_string = f"== variable_stimulus_number_habituation_{delay}min_delay"
+            experiment_string = (
+                f"== variable_stimulus_number_habituation_{delay}min_delay"
+            )
             gradient_protocol_string = f"== {contrast_protocol}"
 
             test_contrast_df = experimental_log.filter_df(
@@ -78,7 +82,8 @@ def n_stimuli_effect(metric="classified as flee"):
 
             for mid_group in groups:
                 print(
-                    "contrast protocol: {contrast_protocol}, mouse ids: {mid_group}")
+                    "contrast protocol: {contrast_protocol}, mouse ids: {mid_group}"
+                )
                 mtgs = [
                     loom_trial_group.MouseLoomTrialGroup(mid)
                     for mid in mid_group

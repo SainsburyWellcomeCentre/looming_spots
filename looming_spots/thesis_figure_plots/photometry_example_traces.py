@@ -20,7 +20,7 @@ def plot_pre_post_photometry_trials_lsie(mtg):
         fig = t.plot_track_and_delta_f()
         fig.savefig(
             f"/{FIGURE_DIRECTORY}/loom_{t.loom_number}_{mtg.mouse_id}_pre_test.eps",
-            format="eps"
+            format="eps",
         )
         plt.close("all")
     for t in mtg.post_test_trials()[:3]:
@@ -612,9 +612,7 @@ def get_post_lsie_signal_df(groups, metric):
             mtg_dict.setdefault("group", [group] * len(pre_vals))
             mtg_dict.setdefault("pre test values", pre_vals)
             mtg_dict.setdefault("post test values", post_vals)
-            mtg_dict.setdefault(
-                f"post test {metric} values", post_metric_vals
-            )
+            mtg_dict.setdefault(f"post test {metric} values", post_metric_vals)
             mtg_dict.setdefault(
                 "suppression value",
                 np.array([np.mean(pre_vals)] * len(post_vals)) - post_vals,

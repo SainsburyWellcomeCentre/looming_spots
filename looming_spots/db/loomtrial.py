@@ -62,8 +62,7 @@ class LoomTrial(object):
         )
         self.video_path = os.path.join(self.directory, self.video_name)
         self.folder = os.path.join(
-            self.directory,
-            f"{self.stimulus_type}{self.stimulus_number()}"
+            self.directory, f"{self.stimulus_type}{self.stimulus_number()}"
         )
 
         self.start = self.sample_number - N_SAMPLES_BEFORE
@@ -387,11 +386,17 @@ class LoomTrial(object):
         ) and looming_spots.analysis.escape_classifiers.reaches_home(
             track, self.context
         ):  # and not leaves_house(track, self.context)
-            leaves_house_within = looming_spots.analysis.escape_classifiers.leaves_house(track, self.context)
+            leaves_house_within = looming_spots.analysis.escape_classifiers.leaves_house(
+                track, self.context
+            )
             print(f"leaves: {leaves_house_within}")
             return True
-        fast_enough = looming_spots.analysis.escape_classifiers.fast_enough(speed)
-        reaches_shelter = looming_spots.analysis.escape_classifiers.reaches_home(track, self.context)
+        fast_enough = looming_spots.analysis.escape_classifiers.fast_enough(
+            speed
+        )
+        reaches_shelter = looming_spots.analysis.escape_classifiers.reaches_home(
+            track, self.context
+        )
         print(f"fast enough: {fast_enough}, reaches home: {reaches_shelter}")
         return False
 
@@ -536,9 +541,7 @@ class LoomTrial(object):
                 trial_type=self.trial_type,
             )
             # raise NoReferenceFrameError
-        pyper_cli_track_trial(
-            self.video_path, f"{self.trial_type}_ref.npy"
-        )
+        pyper_cli_track_trial(self.video_path, f"{self.trial_type}_ref.npy")
 
     def make_reference_frames(self):
         if self.session.get_reference_frame(self.trial_type) is None:
