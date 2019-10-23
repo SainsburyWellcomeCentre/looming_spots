@@ -5,3 +5,5 @@
 *.h264
 /zarchive/
 *deprecated*
+*idea*
+*test*

@@ -4,6 +4,7 @@ from PyQt5.QtQuick import QQuickImageProvider
 
 import numpy as np
 
+
 class PyplotImageProvider(QQuickImageProvider):
     """
     This class implements TrackingImageProvider for pyplot graphs.
@@ -12,17 +13,19 @@ class PyplotImageProvider(QQuickImageProvider):
     a place holder.
     """
 
-    def __init__(self, requestedImType='img', fig=None):
+    def __init__(self, requestedImType="img", fig=None):
         """
         :param string requestedImType: The type of image to return to the QT interface (one of ['img', 'pixmap'])
         """
 
-        if requestedImType == 'img':
+        if requestedImType == "img":
             imType = QQuickImageProvider.Image
-        elif requestedImType == 'pixmap':
+        elif requestedImType == "pixmap":
             imType = QQuickImageProvider.Pixmap
         else:
-            raise NotImplementedError('Unknown type: {}'.format(requestedImType))
+            raise NotImplementedError(
+                "Unknown type: {}".format(requestedImType)
+            )
         QQuickImageProvider.__init__(self, imType)
 
         self._fig = fig
@@ -96,4 +99,6 @@ class PyplotImageProvider(QQuickImageProvider):
         :rtype: tuple
         """
 
-        return (qSize.width(), qSize.height()) if qSize.isValid() else (512, 512)
+        return (
+            (qSize.width(), qSize.height()) if qSize.isValid() else (512, 512)
+        )

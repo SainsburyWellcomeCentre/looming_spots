@@ -1,4 +1,3 @@
-
 class LoomException(Exception):
     pass
 
@@ -13,8 +12,12 @@ class LoomVideosAlreadyExtractedError(LoomException):
         self.directory = directory
 
     def __str__(self):
-        return 'the directory: {} already contains some extracted videos, ' \
-               'please delete these or set overwrite to True'.format(self.directory)
+        return (
+            "the directory: {} already contains some extracted videos, "
+            "please delete these or set overwrite to True".format(
+                self.directory
+            )
+        )
 
 
 class DateTimeException(LoomException):
@@ -31,7 +34,11 @@ class CannotFormReferenceFrameError(LoomException):
 
 class LoomsNotTrackedError(Exception):
     def __init__(self, msg):
-        print('no loom folder paths, please check you have tracked this session: {}'.format(msg))
+        print(
+            "no loom folder paths, please check you have tracked this session: {}".format(
+                msg
+            )
+        )
 
 
 class NoReferenceFrameError(Exception):

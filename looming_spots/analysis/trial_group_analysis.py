@@ -8,11 +8,15 @@ for functions that operate on lists of trials
 def make_trial_heatmap_location_overlay(trials):
     track_heatmap = np.zeros((480, 640))
     for t in trials:
-        x, y = np.array(t.raw_track[0][200:400]), np.array(t.raw_track[1][200:400])
+        x, y = (
+            np.array(t.raw_track[0][200:400]),
+            np.array(t.raw_track[1][200:400]),
+        )
         for coordinate in zip(x, y):
             if not np.isnan(coordinate).any():
                 track_heatmap[int(coordinate[1]), int(coordinate[0])] += 1
     return track_heatmap
+
 
 #
 # def sorted_tracks(self, values_to_sort_by=None):

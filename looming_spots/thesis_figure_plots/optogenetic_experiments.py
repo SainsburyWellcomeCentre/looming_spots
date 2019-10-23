@@ -1,14 +1,20 @@
-from looming_spots.analysis.trial_group_analysis import make_trial_heatmap_location_overlay
+from looming_spots.analysis.trial_group_analysis import (
+    make_trial_heatmap_location_overlay,
+)
 from looming_spots.db import loom_trial_group, experimental_log
 from matplotlib import patches
 import matplotlib.pyplot as plt
 
-ICHLOC_MIDS = experimental_log.get_mouse_ids_in_experiment('block_DA_during_pretest_flexichloc_SNLfibre')
+ICHLOC_MIDS = experimental_log.get_mouse_ids_in_experiment(
+    "block_DA_during_pretest_flexichloc_SNLfibre"
+)
 
 
 def plot_ichloc_pretest_disruption(mids=ICHLOC_MIDS):
     fig, axes = plt.subplots(2, 1)
-    plt.suptitle('ichloc (15mW) inactivation of SNL during pre-test (same-day)')
+    plt.suptitle(
+        "ichloc (15mW) inactivation of SNL during pre-test (same-day)"
+    )
     for mid in mids:
         mtg = loom_trial_group.MouseLoomTrialGroup(mid)
         ax = plt.sca(axes[0])
@@ -16,7 +22,7 @@ def plot_ichloc_pretest_disruption(mids=ICHLOC_MIDS):
             t.plot_track(ax)
         t.plot_stimulus()
         ax = plt.sca(axes[1])
-        r = patches.Rectangle((195, 0.95), 135, height=0.05, color='b')
+        r = patches.Rectangle((195, 0.95), 135, height=0.05, color="b")
         for t in mtg.post_test_trials():
             t.plot_track()
         t.plot_stimulus()
@@ -30,9 +36,9 @@ def plot_ichloc_pretest_disruption(mids=ICHLOC_MIDS):
             trials.extend([t])
         hm = make_trial_heatmap_location_overlay(trials)
         ax = plt.subplot(2, 3, i + 1)
-        ax.title.set_text('{} {}'.format('ichloc', mid))
-        plt.imshow(hm, aspect='auto', vmax=2, vmin=0, interpolation='bilinear')
-        ax.axis('off')
+        ax.title.set_text("{} {}".format("ichloc", mid))
+        plt.imshow(hm, aspect="auto", vmax=2, vmin=0, interpolation="bilinear")
+        ax.axis("off")
         plt.ylim(0, 300)
         plt.xlim(0, 400)
         ax2 = plt.subplot(2, 3, i + 4)

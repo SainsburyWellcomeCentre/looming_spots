@@ -16,8 +16,16 @@ import matplotlib.pyplot as plt
 
 
 def get_contingencies(session_list):  # TODO: reimplement with trial group
-    n_flees = sum(looming_spots.deprecated.session_functions.n_flees_all_sessions(session_list))
-    n_non_flees = sum(looming_spots.deprecated.session_functions.n_non_flees_all_sessions(session_list))
+    n_flees = sum(
+        looming_spots.deprecated.session_functions.n_flees_all_sessions(
+            session_list
+        )
+    )
+    n_non_flees = sum(
+        looming_spots.deprecated.session_functions.n_non_flees_all_sessions(
+            session_list
+        )
+    )
     return n_flees, n_non_flees
 
 
@@ -42,17 +50,21 @@ def plot_contingencies_from_session_dict(session_dictionary):
 
 
 def plot_contingency_df(contingency_df):
-    contingency_df.T.plot(kind='bar', stacked=True, color=['r', 'k'])
+    contingency_df.T.plot(kind="bar", stacked=True, color=["r", "k"])
 
 
-def convert_contingency_dict(contingencies_dict, labels=('flees', 'non-flees')):
+def convert_contingency_dict(
+    contingencies_dict, labels=("flees", "non-flees")
+):
     contingencies_df = pd.DataFrame.from_dict(contingencies_dict)
     contingencies_df = contingencies_df.set_index([labels])
     return contingencies_df
 
 
 def compare_all_groups_fisher(contingency_table):  # TODO: clean this
-    result_list = list(map(dict, itertools.combinations(contingency_table.items(), 2)))
+    result_list = list(
+        map(dict, itertools.combinations(contingency_table.items(), 2))
+    )
     df_dict = {}
 
     conditions = []
@@ -66,14 +78,16 @@ def compare_all_groups_fisher(contingency_table):  # TODO: clean this
             conditions.append(k)
             n_flees.append(v[0])
             n_non_flees.append(v[1])
-            comparisons.append('_vs_'.join(comparison.keys()))
-            p_values.append(scipy.stats.fisher_exact([v for v in comparison.values()])[1])
+            comparisons.append("_vs_".join(comparison.keys()))
+            p_values.append(
+                scipy.stats.fisher_exact([v for v in comparison.values()])[1]
+            )
 
-    df_dict.setdefault('condition', conditions)
-    df_dict.setdefault('n_flees', n_flees)
-    df_dict.setdefault('n_non_flees', n_non_flees)
-    df_dict.setdefault('comparison', comparisons)
-    df_dict.setdefault('p_value', p_values)
+    df_dict.setdefault("condition", conditions)
+    df_dict.setdefault("n_flees", n_flees)
+    df_dict.setdefault("n_non_flees", n_non_flees)
+    df_dict.setdefault("comparison", comparisons)
+    df_dict.setdefault("p_value", p_values)
 
     return pd.DataFrame.from_dict(df_dict)
 
@@ -88,28 +102,36 @@ def plot_contingencies_with_stats(contingencies):
     print(list(labels))
 
     for i, result in enumerate(stats_results.items()):
-        group_a, group_b = result[0].split('_vs_')
+        group_a, group_b = result[0].split("_vs_")
         pos_a = get_bar_location_from_key(group_a, list(labels))
         pos_b = get_bar_location_from_key(group_b, list(labels))
 
         n_points = 5
-        x_line = np.linspace(min(pos_a[0], pos_b[0]), max(pos_a[0], pos_b[0]), n_points)
+        x_line = np.linspace(
+            min(pos_a[0], pos_b[0]), max(pos_a[0], pos_b[0]), n_points
+        )
 
-        line_y_pos = max([sum(v) for v in contingencies.values()]) + 5 * (i+1)
+        line_y_pos = max([sum(v) for v in contingencies.values()]) + 5 * (
+            i + 1
+        )
         stat_loc = np.mean(x_line)
 
-        plt.plot(x_line, [line_y_pos] * n_points, linewidth=1, color='k')
+        plt.plot(x_line, [line_y_pos] * n_points, linewidth=1, color="k")
         plt.text(stat_loc, line_y_pos + 1, result[1])
 
 
 def filter_by(session_list, filter_date=None, filter_date_range=None):
     if filter_date_range:
-        session_list, session_dates = filter_by_date_range(session_list[0],
-                                                           session_list[1],
-                                                           filter_date_range[0],
-                                                           filter_date_range[1])
+        session_list, session_dates = filter_by_date_range(
+            session_list[0],
+            session_list[1],
+            filter_date_range[0],
+            filter_date_range[1],
+        )
     elif filter_date:
-        session_list, session_dates = filter_by_date_exact(session_list[0], session_list[1], filter_date)
+        session_list, session_dates = filter_by_date_exact(
+            session_list[0], session_list[1], filter_date
+        )
     else:
         session_list = session_list[0]
     return session_list, session_dates  # FIXME:
@@ -119,11 +141,17 @@ def get_rates_for_timepoints(session_lists, time_points):
     stats_dict = collections.OrderedDict()
     for session_list in session_lists:
         for tp in time_points:
-            tp_session_list, session_dates = filter_by_date_exact(session_list[0], session_list[1], tp)
-            n_flees = looming_spots.deprecated.session_functions.n_flees_all_sessions(tp_session_list)
-            n_non_flees = looming_spots.deprecated.session_functions.n_non_flees_all_sessions(tp_session_list)
+            tp_session_list, session_dates = filter_by_date_exact(
+                session_list[0], session_list[1], tp
+            )
+            n_flees = looming_spots.deprecated.session_functions.n_flees_all_sessions(
+                tp_session_list
+            )
+            n_non_flees = looming_spots.deprecated.session_functions.n_non_flees_all_sessions(
+                tp_session_list
+            )
 
-            label = 'condition{}'.format(tp)
+            label = "condition{}".format(tp)
             if label not in stats_dict.keys():
                 stats_dict[label] = np.array([n_flees, n_non_flees])
             else:
@@ -132,7 +160,9 @@ def get_rates_for_timepoints(session_lists, time_points):
     return stats_dict
 
 
-def filter_by_date_range(sessions_list, days_since_habituation, lower_limit, upper_limit):
+def filter_by_date_range(
+    sessions_list, days_since_habituation, lower_limit, upper_limit
+):
     sessions_array = np.array(sessions_list)
     days_since_habituation = np.array(days_since_habituation)
     above_lower = days_since_habituation > lower_limit
@@ -149,12 +179,14 @@ def filter_by_date_exact(sessions_list, days_since_habituation, days):
 
 
 def get_all_p_values(contingency_table_dict):
-    all_combinations = list(map(dict, it.combinations(contingency_table_dict.items(), 2)))
+    all_combinations = list(
+        map(dict, it.combinations(contingency_table_dict.items(), 2))
+    )
     p_values = {}
     for pairing in all_combinations:
         keys = list(pairing.keys())
         results = list(pairing.values())
-        new_key = '{}_vs_{}'.format(keys[0], keys[1])
+        new_key = "{}_vs_{}".format(keys[0], keys[1])
         print(results)
         _, p_value = scipy.stats.fisher_exact([results[0], results[1]])
         p_values[new_key] = p_value
@@ -176,9 +208,9 @@ def get_sorted(flees, days):
 
 
 def get_bar_location_from_key(key, labels):
-    bar_x = [label.get_position() for label in labels if label.get_text() == key]
+    bar_x = [
+        label.get_position() for label in labels if label.get_text() == key
+    ]
     if isinstance(bar_x, list):
         return bar_x[0]
     return bar_x
-
-

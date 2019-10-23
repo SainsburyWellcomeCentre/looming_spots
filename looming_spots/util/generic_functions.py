@@ -15,7 +15,9 @@ def sort_by(list_to_sort, list_to_sort_by, descend=True):
     :return list sorted_list:
     """
 
-    sorted_lists = [(cid, did) for did, cid in sorted(zip(list_to_sort_by, list_to_sort))]
+    sorted_lists = [
+        (cid, did) for did, cid in sorted(zip(list_to_sort_by, list_to_sort))
+    ]
     if descend:
         sorted_lists = sorted_lists[::-1]
     ordered = np.array(sorted_lists)[:, 0]
@@ -36,17 +38,17 @@ def flatten_list(lst):
 
 def is_datetime(string):
     try:
-        date_time = datetime.strptime(string, '%Y%m%d_%H_%M_%S')
+        date_time = datetime.strptime(string, "%Y%m%d_%H_%M_%S")
         return True
     except ValueError:  # FIXME: custom exception required
-        print('string is in not in date_time format: {}'.format(string))
+        print("string is in not in date_time format: {}".format(string))
         return False
 
 
 def chunks(l, n):
     """Yield successive n-sized chunks from l."""
     for i in range(0, len(l), n):
-        yield l[i:i + n]
+        yield l[i : i + n]
 
 
 def neaten_plots(axes, top=True, right=True, left=False, bottom=False):
@@ -59,5 +61,7 @@ def get_fpath(directory, extension):
         if extension in item:
             return os.path.join(directory, item)
 
-    raise exceptions.FileNotPresentError('there is no file with extension: {}'
-                                         ' in directory {}'.format(extension, directory))
+    raise exceptions.FileNotPresentError(
+        "there is no file with extension: {}"
+        " in directory {}".format(extension, directory)
+    )

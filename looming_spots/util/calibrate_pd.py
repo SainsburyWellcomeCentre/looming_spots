@@ -19,8 +19,8 @@ def get_calibration_curve(pd_directory):
     return pd, starts, ends, pd_vals
 
 
-psychopy_directory = '/home/slenzi/spine_shares/loomer/srv/glusterfs/imaging/l/loomer/raw_data/calibration_psychtoolbox_-1_1_contrast_steps/20190613_09_09_04/'
-psychtoolbox_directory = '/home/slenzi/spine_shares/loomer/srv/glusterfs/imaging/l/loomer/raw_data/calibration_psychtoolbox_-1_1_contrast_steps/20190613_11_02_06/'
+psychopy_directory = "/home/slenzi/spine_shares/loomer/srv/glusterfs/imaging/l/loomer/raw_data/calibration_psychtoolbox_-1_1_contrast_steps/20190613_09_09_04/"
+psychtoolbox_directory = "/home/slenzi/spine_shares/loomer/srv/glusterfs/imaging/l/loomer/raw_data/calibration_psychtoolbox_-1_1_contrast_steps/20190613_11_02_06/"
 
 fig, axes = plt.subplots(2, 1)
 for i, directory in enumerate([psychopy_directory, psychtoolbox_directory]):
@@ -28,11 +28,11 @@ for i, directory in enumerate([psychopy_directory, psychtoolbox_directory]):
     pd, starts, ends, pd_vals = get_calibration_curve(directory)
 
     axes[0].plot(pd)
-    contrasts = np.load(os.path.join(directory, 'steps.npy'))
-    if i==1:
-        contrasts -=1
-    axes[0].plot(starts[:len(contrasts)], contrasts, 'o')
-    axes[1].plot(pd_vals[:len(contrasts)], contrasts, 'o')
+    contrasts = np.load(os.path.join(directory, "steps.npy"))
+    if i == 1:
+        contrasts -= 1
+    axes[0].plot(starts[: len(contrasts)], contrasts, "o")
+    axes[1].plot(pd_vals[: len(contrasts)], contrasts, "o")
 
 
 plt.show()
@@ -48,7 +48,7 @@ def find_pd_calibration_crossings(ai, threshold=0.4):
 
     filtered_pd = filter_pd(ai)
 
-    print('threshold: {}'.format(threshold))
+    print("threshold: {}".format(threshold))
     loom_on = (filtered_pd < threshold).astype(int)
     loom_ups = np.diff(loom_on) == 1
     loom_starts = np.where(loom_ups)[0]

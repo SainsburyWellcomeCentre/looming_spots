@@ -28,17 +28,17 @@ def load_video_from_rdr(rdr, ref=None):
 
 def save_frame_as_array(frame, directory):
     ref_array = np.mean(frame, axis=2)
-    ref_path = os.path.join(directory, 'ref.npy')
-    print('refarray:{}'.format(ref_array))
-    print('saving reference frame to: {}'.format(ref_path))
+    ref_path = os.path.join(directory, "ref.npy")
+    print("refarray:{}".format(ref_array))
+    print("saving reference frame to: {}".format(ref_path))
     np.save(ref_path, ref_array)
 
 
 def save_frame_as_png(frame, directory):
     ref_array = np.mean(frame, axis=2)
-    save_fpath = os.path.join(directory, 'ref.png')
-    print('saving reference frame to: {}'.format(save_fpath))
-    scipy.misc.imsave(save_fpath, ref_array, format='png')
+    save_fpath = os.path.join(directory, "ref.png")
+    print("saving reference frame to: {}".format(save_fpath))
+    scipy.misc.imsave(save_fpath, ref_array, format="png")
 
 
 def get_frame(rdr_path, idx):
@@ -64,10 +64,12 @@ def save_video(video, path):
 
 def crop_video(video, width, height, origin=(0, 0)):
     n_frames = video.shape[0]
-    new_video = np.full((n_frames, height-origin[1], width-origin[0]), np.nan)
+    new_video = np.full(
+        (n_frames, height - origin[1], width - origin[0]), np.nan
+    )
 
     for i, frame in enumerate(video):
-        new_video[i, :, :] = frame[origin[1]:height, origin[0]:width]
+        new_video[i, :, :] = frame[origin[1] : height, origin[0] : width]
     return new_video
 
 
@@ -84,7 +86,7 @@ def plot_loom_on_video(video, radius_profile):
 def loom_radius_profile(n_frames):  # TODO: make this using the maths
     radius_profile = np.zeros(n_frames)
     for onset in STIMULUS_ONSETS:
-        radius_profile[onset:onset+14] = np.linspace(5, 140, 14)
+        radius_profile[onset : onset + 14] = np.linspace(5, 140, 14)
     return radius_profile
 
 

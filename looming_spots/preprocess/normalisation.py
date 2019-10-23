@@ -35,13 +35,13 @@ def load_normalised_speeds(loom_folder, context):
 def normalised_home_front(context):
     house_front_raw = constants.context_params[context].house_front
     house_front_normalised = normalise_x_track(house_front_raw, context)
-    #print(house_front_normalised)
+    # print(house_front_normalised)
     return house_front_normalised
 
 
-def load_raw_track(loom_folder, name='tracks.csv'):
+def load_raw_track(loom_folder, name="tracks.csv"):
     track_path = os.path.join(loom_folder, name)
-    df = pd.read_csv(track_path, sep='\t')
-    x_pos = np.array(df['x_position'])
-    y_pos = np.array(df['y_position'])
+    df = pd.read_csv(track_path, sep="\t")
+    x_pos = np.array(df["x_position"])
+    y_pos = np.array(df["y_position"])
     return x_pos, y_pos

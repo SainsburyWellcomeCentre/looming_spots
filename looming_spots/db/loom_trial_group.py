@@ -6,7 +6,9 @@ import scipy.io
 from cached_property import cached_property
 from tqdm import tqdm
 from looming_spots.util.generic_functions import flatten_list
-from looming_spots.analysis.trial_group_analysis import make_trial_heatmap_location_overlay
+from looming_spots.analysis.trial_group_analysis import (
+    make_trial_heatmap_location_overlay,
+)
 from looming_spots.db import load, experimental_log
 
 
@@ -24,7 +26,10 @@ class ExperimentalConditionGroup(object):
         if mouse_ids is None:
             self.groups = self.get_groups_from_record_sheet()
         else:
-            self.groups = {label: list(mouse_id_group) for label, mouse_id_group in zip(labels, mouse_ids)}
+            self.groups = {
+                label: list(mouse_id_group)
+                for label, mouse_id_group in zip(labels, mouse_ids)
+            }
 
     def remove_ignore_mice(self, mouse_ids):
         if self.ignore_ids is None:
@@ -34,7 +39,9 @@ class ExperimentalConditionGroup(object):
     def get_groups_from_record_sheet(self):
         mouse_group_dictionary = {}
         for label in self.labels:
-            mouse_ids_in_group = experimental_log.get_mouse_ids_in_experiment(label)
+            mouse_ids_in_group = experimental_log.get_mouse_ids_in_experiment(
+                label
+            )
             mouse_ids_in_group = self.remove_ignore_mice(mouse_ids_in_group)
             mouse_group_dictionary.setdefault(label, mouse_ids_in_group)
 
@@ -74,11 +81,14 @@ class ExperimentalConditionGroup(object):
                 get_df_func = mtg.to_avg_df if average else mtg.to_trials_df
 
                 mouse_trials_df = get_df_func(trial_type)
-                experimental_condition_df = experimental_condition_df.append(mouse_trials_df)
+                experimental_condition_df = experimental_condition_df.append(
+                    mouse_trials_df
+                )
                 n_rows += len(mouse_trials_df)
             experimental_labels = [experimental_label] * n_rows
-            experimental_condition_df['experimental condition'] = pd.Series(experimental_labels,
-                                                                            index=experimental_condition_df.index)
+            experimental_condition_df["experimental condition"] = pd.Series(
+                experimental_labels, index=experimental_condition_df.index
+            )
             self.trials_df = self.trials_df.append(experimental_condition_df)
         return self.trials_df
 
@@ -96,9 +106,9 @@ class MouseLoomTrialGroup(object):
         for t in self.all_trials:
             for fname in os.listdir(t.directory):
                 fpath = os.path.join(t.directory, fname)
-                if 'contrasts.mat' in fpath:
-                    return scipy.io.loadmat(fpath)['contrasts'][0]
-                elif 'contrasts.npy' in fpath:
+                if "contrasts.mat" in fpath:
+                    return scipy.io.loadmat(fpath)["contrasts"][0]
+                elif "contrasts.npy" in fpath:
                     return np.load(fpath)
         return []
 
@@ -108,55 +118,74 @@ class MouseLoomTrialGroup(object):
 
     @classmethod
     def analysed_metrics(cls):
-        metrics = ['speed', 'acceleration', 'latency to escape', 'time in safety zone',
-                   'classified as flee', 'time of loom', 'loom number']
+        metrics = [
+            "speed",
+            "acceleration",
+            "latency to escape",
+            "time in safety zone",
+            "classified as flee",
+            "time of loom",
+            "loom number",
+        ]
         return metrics
 
     @classmethod
     def analysed_event_metrics(cls):
-        metrics = ['integral at latency', 'integral at end']
+        metrics = ["integral at latency", "integral at end"]
         return metrics
 
     @cached_property
-    def all_trials(self):  # TODO: this can probably be achieved more elegantly  #TODO: weakref
+    def all_trials(
+        self
+    ):  # TODO: this can probably be achieved more elegantly  #TODO: weakref
         print(self.mouse_id)
-        unlinked_trials = sorted(flatten_list([s.trials for s in load.load_sessions(self.mouse_id)]))
+        unlinked_trials = sorted(
+            flatten_list([s.trials for s in load.load_sessions(self.mouse_id)])
+        )
         singly_linked_trials = []
         doubly_linked_trials = []
 
-        for i, (t_current, t_next) in enumerate(zip(unlinked_trials[0:-1], unlinked_trials[1:])):
+        for i, (t_current, t_next) in enumerate(
+            zip(unlinked_trials[0:-1], unlinked_trials[1:])
+        ):
             t_current.set_next_trial(t_current, t_next)
             singly_linked_trials.append(t_current)
         singly_linked_trials.append(unlinked_trials[-1])
 
         doubly_linked_trials.append(singly_linked_trials[0])
-        for i, (t_current, t_next) in enumerate(zip(singly_linked_trials[0:-1], singly_linked_trials[1:])):
+        for i, (t_current, t_next) in enumerate(
+            zip(singly_linked_trials[0:-1], singly_linked_trials[1:])
+        ):
             t_next.set_previous_trial(t_next, t_current)
             doubly_linked_trials.append(t_next)
 
         return doubly_linked_trials
 
     def loom_trials(self):
-        return [t for t in self.all_trials if t.stimulus_type == 'loom']
+        return [t for t in self.all_trials if t.stimulus_type == "loom"]
 
     def auditory_trials(self):
-        return [t for t in self.all_trials if t.stimulus_type == 'auditory']
+        return [t for t in self.all_trials if t.stimulus_type == "auditory"]
 
     def pre_test_trials(self):
-        return [t for t in self.all_trials if t.get_trial_type() == 'pre_test']
+        return [t for t in self.all_trials if t.get_trial_type() == "pre_test"]
 
     def post_test_trials(self):
-        return [t for t in self.all_trials if t.get_trial_type() == 'post_test']
+        return [
+            t for t in self.all_trials if t.get_trial_type() == "post_test"
+        ]
 
     def habituation_trials(self):
-        return [t for t in self.all_trials if t.get_trial_type() == 'habituation']
+        return [
+            t for t in self.all_trials if t.get_trial_type() == "habituation"
+        ]
 
     def get_trials_of_type(self, key, limit=3):
-        if key == 'pre_test':
+        if key == "pre_test":
             return self.pre_test_trials()[0:limit]
-        elif key == 'post_test':
+        elif key == "post_test":
             return self.post_test_trials()[0:limit]
-        elif key == 'habituation':
+        elif key == "habituation":
             return self.habituation_trials()
         else:
             return self.all_trials
@@ -166,45 +195,57 @@ class MouseLoomTrialGroup(object):
             if t == trial:
                 return i
 
-    def n_flees(self, trial_type='pre_test'):
-        return np.count_nonzero([t.is_flee() for t in self.get_trials_of_type(trial_type)])
+    def n_flees(self, trial_type="pre_test"):
+        return np.count_nonzero(
+            [t.is_flee() for t in self.get_trials_of_type(trial_type)]
+        )
 
-    def n_non_flees(self, trial_type='pre_test'):
-        return len(self.get_trials_of_type(trial_type)) - self.n_flees(trial_type)
+    def n_non_flees(self, trial_type="pre_test"):
+        return len(self.get_trials_of_type(trial_type)) - self.n_flees(
+            trial_type
+        )
 
     def flee_rate(self, trial_type):
-        return self.n_flees(trial_type) / (len(self.n_non_flees(trial_type)) + self.n_flees(trial_type))
+        return self.n_flees(trial_type) / (
+            len(self.n_non_flees(trial_type)) + self.n_flees(trial_type)
+        )
 
     def get_reference_frame(self, key):
-        if key == 'pre_test':
+        if key == "pre_test":
             return self.pre_test_trials()[0].get_reference_frame()
-        elif key == 'post_test':
+        elif key == "post_test":
             return self.post_test_trials()[0].get_reference_frame()
-        elif key == 'habituation':
-            return [t for t in self.all_trials if t.get_trial_type() == 'habituation'][0].get_reference_frame()
+        elif key == "habituation":
+            return [
+                t
+                for t in self.all_trials
+                if t.get_trial_type() == "habituation"
+            ][0].get_reference_frame()
 
     def habituation_heatmap(self, n_trials_to_show):
         if n_trials_to_show is None:
             n_trials_to_show = -1
-        trials = self.get_trials_of_type('habituation')[0:n_trials_to_show]
-        return make_trial_heatmap_location_overlay(trials, self.get_reference_frame('habituation'))
+        trials = self.get_trials_of_type("habituation")[0:n_trials_to_show]
+        return make_trial_heatmap_location_overlay(
+            trials, self.get_reference_frame("habituation")
+        )
 
-    def get_metric_data(self, metric, trial_type='pre_test', limit=3):
+    def get_metric_data(self, metric, trial_type="pre_test", limit=3):
         metric_values = []
         for i, t in enumerate(self.get_trials_of_type(trial_type)[0:limit]):
             metric_value = t.metric_functions[metric]()
             metric_values.append(metric_value)
         return metric_values
 
-    def to_trials_df(self, trial_type='pre_test'):
+    def to_trials_df(self, trial_type="pre_test"):
         metrics_dict = {}
         all_metric_labels = []
         all_metric_values = []
 
         for metric in MouseLoomTrialGroup.analysed_metrics():
             data = self.get_metric_data(metric, trial_type=trial_type)
-            #metrics_dict.setdefault(metric, data)
-            metric_labels = [metric]*len(data)
+            # metrics_dict.setdefault(metric, data)
+            metric_labels = [metric] * len(data)
             metric_values = data
             all_metric_labels.extend(metric_labels)
             all_metric_values.extend(metric_values)
@@ -217,35 +258,46 @@ class MouseLoomTrialGroup(object):
 
         n_trials = len(trials)
         n_metrics = len(MouseLoomTrialGroup.analysed_metrics())
-        all_loom_idx = list(all_loom_idx)*n_metrics
-        metrics_dict.setdefault('loom_idx', all_loom_idx)
-        #n_trials = len(self.get_trials_of_type(trial_type))
-        metrics_dict.setdefault('mouse_id', [self.mouse_id]*n_metrics*n_trials)
-        metrics_dict.setdefault('metric_label', all_metric_labels)
-        metrics_dict.setdefault('metric_value', all_metric_values)
+        all_loom_idx = list(all_loom_idx) * n_metrics
+        metrics_dict.setdefault("loom_idx", all_loom_idx)
+        # n_trials = len(self.get_trials_of_type(trial_type))
+        metrics_dict.setdefault(
+            "mouse_id", [self.mouse_id] * n_metrics * n_trials
+        )
+        metrics_dict.setdefault("metric_label", all_metric_labels)
+        metrics_dict.setdefault("metric_value", all_metric_values)
 
         return pd.DataFrame.from_dict(metrics_dict)
 
-    def to_avg_df(self, trial_type='pre_test'):
+    def to_avg_df(self, trial_type="pre_test"):
         mouse_dict = {}
         for metric in MouseLoomTrialGroup.analysed_metrics():
 
-            ignore_metrics = ['time of loom', 'loom number']
+            ignore_metrics = ["time of loom", "loom number"]
             if metric not in ignore_metrics:
-                values = [t.metric_functions[metric]() for t in self.get_trials_of_type(trial_type)]
+                values = [
+                    t.metric_functions[metric]()
+                    for t in self.get_trials_of_type(trial_type)
+                ]
                 mouse_dict.setdefault(metric, [np.nanmean(values)])
-                mouse_dict.setdefault('mouse_id', [self.mouse_id])
+                mouse_dict.setdefault("mouse_id", [self.mouse_id])
 
         return pd.DataFrame.from_dict(mouse_dict)
 
     def events_df(self, trial_type=None):
         df_all_metrics = pd.DataFrame()
         for metric in MouseLoomTrialGroup.analysed_event_metrics():
-            event_metric_df = self.get_event_metric_data(metric, trial_type=trial_type)
-            df_all_metrics = df_all_metrics.append(event_metric_df, ignore_index=True)
+            event_metric_df = self.get_event_metric_data(
+                metric, trial_type=trial_type
+            )
+            df_all_metrics = df_all_metrics.append(
+                event_metric_df, ignore_index=True
+            )
         return df_all_metrics
 
-    def get_event_metric_data(self, metric, trial_type=None, stimulus_type='loom'):
+    def get_event_metric_data(
+        self, metric, trial_type=None, stimulus_type="loom"
+    ):
 
         all_trials_df = pd.DataFrame()
         for i, t in tqdm(enumerate(self.get_trials_of_type(trial_type))):
@@ -257,10 +309,10 @@ class MouseLoomTrialGroup(object):
                 mouse_ids = [self.mouse_id]
                 metric_labels = [metric]
 
-                event_metric_dict.setdefault('metric', metric_labels)
-                event_metric_dict.setdefault('values', metric_values)
-                event_metric_dict.setdefault('trial_idx', trial_idx)
-                event_metric_dict.setdefault('mouse_id', mouse_ids)
+                event_metric_dict.setdefault("metric", metric_labels)
+                event_metric_dict.setdefault("values", metric_values)
+                event_metric_dict.setdefault("trial_idx", trial_idx)
+                event_metric_dict.setdefault("mouse_id", mouse_ids)
 
                 trial_df = pd.DataFrame.from_dict(event_metric_dict)
                 all_trials_df = all_trials_df.append(trial_df)
@@ -268,4 +320,4 @@ class MouseLoomTrialGroup(object):
 
     def percentage_time_in_tz_middle(self):
         hm = make_trial_heatmap_location_overlay(self.habituation_trials())
-        return sum(sum(hm[115:190, 150:245])/sum(sum(hm)))
+        return sum(sum(hm[115:190, 150:245]) / sum(sum(hm)))

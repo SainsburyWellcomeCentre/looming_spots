@@ -1,7 +1,10 @@
 import pandas as pd
 from PyQt5.QtCore import QObject, pyqtSlot
 from looming_spots.db import experimental_log
-from looming_spots.db.experimental_log import get_comparator_functions, filter_df
+from looming_spots.db.experimental_log import (
+    get_comparator_functions,
+    filter_df,
+)
 
 
 class Logger(QObject):
@@ -25,10 +28,10 @@ class Logger(QObject):
         :param string text: The text to append at the end of the current qml component text
         """
         if text:
-            previous_text = self.log.property('text')
-            output_text = '{}\n>>>{}'.format(previous_text, text)
+            previous_text = self.log.property("text")
+            output_text = "{}\n>>>{}".format(previous_text, text)
 
-            self.log.setProperty('text', output_text)
+            self.log.setProperty("text", output_text)
 
 
 class LoomTrialGroupBackend(QObject):
@@ -36,6 +39,7 @@ class LoomTrialGroupBackend(QObject):
     The QObject derived class that stores most of the parameters from the graphical interface
     for the other QT interfaces
     """
+
     def __init__(self, app, context, parent):
         """
         :param app: The QT application
@@ -43,7 +47,9 @@ class LoomTrialGroupBackend(QObject):
         :param parent: the parent window
         """
         QObject.__init__(self, parent)
-        self.app = app  # necessary to avoid QPixmap bug: Must construct a QGuiApplication before
+        self.app = (
+            app
+        )  # necessary to avoid QPixmap bug: Must construct a QGuiApplication before
         self.win = parent
         self.ctx = context
 
@@ -55,7 +61,7 @@ class LoomTrialGroupBackend(QObject):
         self.current_key = None
 
         self.test_phases = []
-        self.exclude_test_phases = ['pre_test', 'habituation', 'post_test']
+        self.exclude_test_phases = ["pre_test", "habituation", "post_test"]
         self.n_records = 0
 
     def _set_defaults(self):
@@ -67,9 +73,11 @@ class LoomTrialGroupBackend(QObject):
 
     @pyqtSlot(int, str, str, str)
     def update_condition_dictionary(self, idx, key, value, comparator):
-        comparator_value_string = '{} {}'.format(comparator, value)
+        comparator_value_string = "{} {}".format(comparator, value)
         print(key, comparator_value_string)
-        self.condition_dictionaries[idx].setdefault(key, comparator_value_string)
+        self.condition_dictionaries[idx].setdefault(
+            key, comparator_value_string
+        )
 
     @pyqtSlot()
     def reset_conditions(self):
@@ -145,14 +153,14 @@ class LoomTrialGroupBackend(QObject):
     @pyqtSlot()
     def filter_data(self):
         self.reset_db()
-        relevant_mouse_ids = experimental_log.get_mouse_ids_with_test_combination(self.data,
-                                                                                  self.test_phases,
-                                                                                  self.exclude_test_phases)
+        relevant_mouse_ids = experimental_log.get_mouse_ids_with_test_combination(
+            self.data, self.test_phases, self.exclude_test_phases
+        )
         self.data = self.data[self.data.mouse_id.isin(relevant_mouse_ids)]
 
     @pyqtSlot(result=int)
     def n_records_displayed(self):
-        print('number of records on display: {}'.format(self.n_records))
+        print("number of records on display: {}".format(self.n_records))
         return self.n_records
 
     @pyqtSlot(int, result=str)
@@ -161,7 +169,10 @@ class LoomTrialGroupBackend(QObject):
         print(self.condition_dictionaries[0])
         self.dfs[0] = filter_df(self.data, self.condition_dictionaries[0])
         self.n_records = len(self.dfs[0])
-        print('{} records matching these criteria were found'.format(self.n_records))
+        print(
+            "{} records matching these criteria were found".format(
+                self.n_records
+            )
+        )
         self.dfs[1] = filter_df(self.data, self.condition_dictionaries[1])
         return self.dfs[idx].to_html()
-
