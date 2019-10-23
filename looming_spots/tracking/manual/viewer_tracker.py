@@ -7,8 +7,7 @@ import pandas as pd
 import skvideo.io
 from cached_property import cached_property
 
-from looming_spots.analysis import tracks
-from looming_spots.analysis.tracks import load_raw_track
+from looming_spots.preprocess.normalisation import load_raw_track
 from looming_spots.util import video_processing
 
 N_FRAMES = 600
@@ -146,10 +145,6 @@ class TrackViewer(object):
     @property
     def track_path(self):
         return os.path.join(self.directory, self.video_fname[:-5])
-
-    @property
-    def track(self):
-        return tracks.load_raw_track(self.track_path)
 
     @property
     def track_errors(self):
