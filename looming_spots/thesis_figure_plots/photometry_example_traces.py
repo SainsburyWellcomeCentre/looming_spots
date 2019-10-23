@@ -1,8 +1,9 @@
 import numpy as np
 from looming_spots.db.constants import FIGURE_DIRECTORY
-from looming_spots.db import loom_trial_group
+from looming_spots.db import loom_trial_group, experimental_log
 from looming_spots.analysis import photometry_habituations
 import seaborn as sns
+import pandas as pd
 
 import matplotlib.pyplot as plt
 
@@ -190,6 +191,8 @@ def plot_LSIE_evoked_signals(groups=(pre_test_sameday, pre_test_24hr), colors=('
 
 
 def plot_LSIE_evoked_signals_all_mice(groups=(pre_test_sameday, pre_test_24hr), colors=('b', 'k'), labels=('same day pre-test (n={})', '24 hr pre-test n={}')):
+    if '074744' in pre_test_24hr:
+        pre_test_24hr.remove('074744')
     plt.figure()
     for group, color in zip(groups, colors):
         mtgs = [loom_trial_group.MouseLoomTrialGroup(mid) for mid in group]
@@ -208,7 +211,8 @@ def plot_LSIE_evoked_signals_all_mice(groups=(pre_test_sameday, pre_test_24hr), 
 
 
 def plot_LSIE_bars(groups=(pre_test_sameday, pre_test_24hr)):
-    #pre_test_24hr.remove('074744')
+    if '074744' in pre_test_24hr:
+        pre_test_24hr.remove('074744')
     mtgs_sup = [loom_trial_group.MouseLoomTrialGroup(mid) for mid in groups[1]]
     mtgs_non_sup = [loom_trial_group.MouseLoomTrialGroup(mid) for mid in groups[0]]
 
@@ -229,7 +233,7 @@ def plot_LSIE_bars(groups=(pre_test_sameday, pre_test_24hr)):
     ax.get_yaxis().set_visible(False)
 
 
-def plot_escape_metrics_variable_contrast_experiments():
+def plot_escape_metrics_variable_contrast_experiments(metrics=('latency to escape', 'speed', 'acceleration', 'time in safety zone', 'classified as flee')):
     from looming_spots.db import loom_trial_group
     from looming_spots.analysis import photometry_habituations
     import seaborn as sns
@@ -238,10 +242,9 @@ def plot_escape_metrics_variable_contrast_experiments():
     mouse_ids = ['898992', '916063', '921000', '907822']
     mtgs = [loom_trial_group.MouseLoomTrialGroup(mid) for mid in mouse_ids]
 
-    for metric in ['latency to escape', 'speed', 'acceleration', 'time in safety zone']:
+    for metric in metrics:
         df = photometry_habituations.get_signal_metric_dataframe_variable_contrasts(mtgs, metric)
         all_dfs.append(df)
-    metrics = ['latency to escape', 'speed', 'acceleration', 'time in safety zone']
 
     for i, (df, metric) in enumerate(zip(all_dfs, metrics)):
         fig = sns.lmplot(metric, 'ca signal', df, fit_reg=True,
@@ -254,20 +257,24 @@ def plot_escape_metrics_variable_contrast_experiments():
         fig = sns.lmplot(metric, 'ca signal', df, hue='contrast', fit_reg=False,
                          palette=sns.cubehelix_palette(8)[::-1], legend=False)
 
+    # fig = sns.lineplot('contrast', 'escape', data=df, err_style='bars')
+    # sns.lineplot('contrast', 'ca signal', data=df, err_style='bars')
+    return all_dfs
 
-def plot_ca_vs_metric_signal_before_after_lsie():
+
+def plot_ca_vs_metric_signal_before_after_lsie(metrics=('latency to escape', 'speed', 'acceleration', 'time in safety zone')):
     all_dfs = []
-    mouse_ids = ['074743', '074746', '895773', '953828', '953829']
+    mouse_ids = ['074743', '074746', '895773', '953828', '953829', '898989', '898990']
 
     mtgs = [loom_trial_group.MouseLoomTrialGroup(mid) for mid in mouse_ids]
-    for metric in ['latency to escape', 'speed', 'acceleration', 'time in safety zone']:
+    for metric in metrics:
         df = photometry_habituations.get_signal_metric_dataframe(mtgs, metric)
         all_dfs.append(df)
 
-    metrics = ['latency to escape', 'speed', 'acceleration', 'time in safety zone']
     for i, (df, metric) in enumerate(zip(all_dfs, metrics)):
         g = sns.lmplot(metric, 'ca signal', data=df, hue='escape', fit_reg=False)
         sns.regplot(x=metric, y='ca signal', data=df, scatter=False, ax=g.axes[0, 0], color='k')
+    return all_dfs
 
 
 def plot_lsie_suppression_over_variable_contrast(hue='test type'):
@@ -301,8 +308,92 @@ def plot_habituation_trialwise_with_lowess_fit():
     mtgs_24 = [loom_trial_group.MouseLoomTrialGroup(mid) for mid in (pre_test_24hr)]
     mtgs_imm = [loom_trial_group.MouseLoomTrialGroup(mid) for mid in (pre_test_sameday)]
 
-    df =photometry_habituations.habituation_df([mtgs_24, mtgs_imm], ['24 hr', 'same day'])
-    plt.figure()
-    a = sns.lmplot('trial number', 'ca signal', hue='test type', data=df[df['group label']=='24 hr'], lowess=True)
-    b = sns.lmplot('trial number', 'ca signal', hue='test type', data=df[df['group label']=='same day'], lowess=True)
-    c = sns.lmplot('trial number', 'ca signal', hue='group label', data=df[df['test type'] == 'habituation'], lowess=True)
+    df = photometry_habituations.habituation_df([mtgs_24, mtgs_imm], ['24 hr', 'same day'])
+    a = sns.lmplot('trial number', 'ca signal', hue='test type', data=df[df['group label'] == '24 hr'], lowess=True)
+    b = sns.lmplot('trial number', 'ca signal', hue='test type', data=df[df['group label'] == 'same day'], lowess=True)
+    c = sns.lmplot('trial number', 'ca signal', hue='group label', data=df[df['test type'] == 'habituation'], fit_reg=False)
+    sns.lineplot('trial number', 'ca signal', hue='group label', data=df[df['test type'] == 'habituation'], err_style='bars')
+    return df
+
+
+def get_first_loom_response_by_contrast(contrast_curve_mids=contrast_curves):
+    mtgs = [loom_trial_group.MouseLoomTrialGroup(mid) for mid in contrast_curve_mids]
+    df_all = pd.DataFrame()
+    for contrast in np.unique(mtgs[0].contrasts()):
+        contrast_response_dict = {}
+        print(contrast)
+        avg_df = []
+        pooled_trials_at_contrast = get_trials_of_contrast(mtgs, contrast, 4)
+
+        for t in pooled_trials_at_contrast:
+            avg_df.append(t.delta_f()[200:230])
+        #normalised_signals_at_contrast = get_trials_of_contrast_normalised(mtgs, contrast, 4)
+
+        avg_response_at_contrast = np.mean(avg_df, axis=0)
+        contrast_response_dict.setdefault('signal', avg_response_at_contrast)
+        contrast_response_dict.setdefault('contrast', [contrast]*len(avg_response_at_contrast))
+        contrast_response_dict.setdefault('timepoint', np.arange(len(avg_response_at_contrast)))
+        df = pd.DataFrame.from_dict(contrast_response_dict)
+        df_all = df_all.append(df)
+    return df_all
+
+
+def get_trials_of_contrast(mtgs, contrast, n_trials_to_take):
+    pooled_trials_at_contrast = []
+
+    for mtg in mtgs:
+        trials_at_contrast = [t for t in mtg.all_trials[:18] if t.contrast == contrast]
+        pooled_trials_at_contrast.extend(trials_at_contrast[:n_trials_to_take])
+
+    return pooled_trials_at_contrast
+
+
+def get_trials_of_contrast_normalised(mtgs, contrast, n_trials_to_take):
+    pooled_signal_at_contrast = []
+
+    for mtg in mtgs:
+        normalising_factor = max([max(t.delta_f()[200:230]) for t in mtg.all_trials])
+        trials_at_contrast = [t for t in mtg.all_trials[:18] if t.contrast == contrast]
+        normalised_signals_at_contrast = [t.delta_f()[200:230]/normalising_factor for t in trials_at_contrast]
+        pooled_signal_at_contrast.extend(normalised_signals_at_contrast[:n_trials_to_take])
+
+    return pooled_signal_at_contrast
+
+
+def get_post_lsie_signal_df(groups, metric):
+    all_df = pd.DataFrame()
+    for group in groups:
+        mtgs = experimental_log.get_mtgs_in_experiment(group)
+        mtgs = [m for m in mtgs if m.mouse_id != '074744']
+
+        for mtg in mtgs:
+            mtg_dict={}
+            pre_vals = []
+            post_vals = []
+            post_has_escaped_vals = []
+            post_metric_vals = []
+
+            pre_test_latency = np.nanmean([t.estimate_latency(False) for t in mtg.pre_test_trials()[:3]])
+            normalising_factor = max([np.nanmax([t.integral_escape_metric(int(pre_test_latency)) for t in mtg.loom_trials()[:30]])])
+
+            for t in mtg.pre_test_trials()[:3]:
+                val = t.integral_escape_metric(int(pre_test_latency)) / normalising_factor
+                pre_vals.append(val)
+
+            for t in mtg.post_test_trials()[:3]:
+                val = t.integral_escape_metric(int(pre_test_latency)) / normalising_factor
+                post_vals.append(val)
+                post_has_escaped_vals.append(t.has_escaped_by(int(pre_test_latency)))
+                post_metric_vals.append(t.metric_functions[metric]())
+
+            mtg_dict.setdefault('group', [group]*len(pre_vals))
+            mtg_dict.setdefault('pre test values', pre_vals)
+            mtg_dict.setdefault('post test values', post_vals)
+            mtg_dict.setdefault('post test {} values'.format(metric), post_metric_vals)
+            mtg_dict.setdefault('suppression value', np.array([np.mean(pre_vals)]*len(post_vals)) - post_vals)
+            mtg_dict.setdefault('escape by pretest latency', post_has_escaped_vals)
+            mtg_dict.setdefault('mouse id', [mtg.mouse_id]*len(pre_vals))
+            mtg_df = pd.DataFrame.from_dict(mtg_dict)
+            all_df = all_df.append(mtg_df)
+    return all_df
+

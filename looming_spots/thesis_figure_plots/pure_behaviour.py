@@ -1,6 +1,7 @@
 import numpy as np
 from matplotlib import pyplot as plt
 
+from looming_spots.analysis.photometry_habituations import get_behaviour_metric_dataframe
 from looming_spots.analysis.randomised_contrast_escape_curves import get_contrast_escape_curve_from_group_label
 from looming_spots.db import experimental_log, loom_trial_group
 from looming_spots.preprocess import photodiode
@@ -9,6 +10,16 @@ import seaborn as sns
 
 
 A10_naive_pre_tests = {'CA285_3', 'CA389_5', 'CA330_2', 'CA389_4', 'CA412_3', 'CA389_2', 'CA305_1', 'CA412_1', 'CA330_3', 'CA389_3', 'CA408_5', 'CA409_2', 'CA414_2', 'CA408_4'}
+
+
+def plot_cossell_curves_sns():
+    for group in ['spot_contrast_cossel_curve', 'background_contrast_cossel_curve']:
+        mids = experimental_log.get_mouse_ids_in_experiment(group)
+        mtgs = [loom_trial_group.MouseLoomTrialGroup(mid) for mid in mids]
+        df = get_behaviour_metric_dataframe(mtgs, 'latency to escape')
+        if group == 'spot_contrast_cossel_curve':
+            df['contrast'] = 0.1607 - df['contrast']
+        ax = sns.lineplot(data=df, x="contrast", y="escape", err_style="bars", ci=68)
 
 
 def plot_cossell_curves_pooled_trials():
@@ -96,6 +107,7 @@ def plot_pre_test_effect():
     ax.spines['top'].set_visible(False)
     ax.set_ylim([0, 1.2])
     plt.subplots_adjust(bottom=0.35, left=0.3, right=0.8)
+    return df
 
 
 def plot_pre_test_effect_post_test_only():
@@ -132,6 +144,7 @@ def plot_pre_test_effect_post_test_only():
     ax.spines['top'].set_visible(False)
     ax.set_ylim([0, 1.2])
     plt.subplots_adjust(bottom=0.35, left=0.3, right=0.8)
+    return df
 
 
 def get_group_avg_df(df, key='experimental condition'):
@@ -167,6 +180,7 @@ def compare_groups_lsie_exploration(groups=('pre_hab_post_immediate', 'pre_hab_p
 
     plt.close('all')
     for mids, group in zip([immediate, day_before], [groups[0], groups[1]]):
+        group_hm=[]
         plt.figure()
         for i, mid in enumerate(mids):
             trials = []
@@ -174,6 +188,7 @@ def compare_groups_lsie_exploration(groups=('pre_hab_post_immediate', 'pre_hab_p
             for t in mtg.habituation_trials():
                 trials.extend([t])
             hm = make_trial_heatmap_location_overlay(trials)
+            group_hm.append(hm)
             ax = plt.subplot(2, 7, i+1)
             ax.title.set_text('{} {}'.format(group, mid))
             plt.imshow(hm, aspect='auto', vmax=2, vmin=0, interpolation='bilinear')
@@ -184,6 +199,8 @@ def compare_groups_lsie_exploration(groups=('pre_hab_post_immediate', 'pre_hab_p
             for t in mtg.post_test_trials()[:3]:
                 t.plot_track()
             t.plot_stimulus()
+        plt.figure()
+        plt.imshow(np.mean(group_hm, axis=0), aspect='auto', vmax=2, vmin=0, interpolation='bilinear')
 
     df = pd.DataFrame()
     plt.figure()
@@ -197,4 +214,50 @@ def compare_groups_lsie_exploration(groups=('pre_hab_post_immediate', 'pre_hab_p
             df = df.append(pd.DataFrame.from_dict(event_metric_dict), ignore_index=True)
 
     df.boxplot(by='group', rot=90, grid=False)
+    return df
 
+
+def get_group_lsie_exploration_hms(groups=('pre_hab_post_immediate', 'pre_hab_post_24hr')):
+    from looming_spots.db import loom_trial_group, experimental_log
+    from looming_spots.analysis.trial_group_analysis import make_trial_heatmap_location_overlay
+
+    group_hms = {}
+
+    for group in groups:
+        group_hm = []
+        mids = experimental_log.get_mouse_ids_in_experiment(group)
+        for i, mid in enumerate(mids):
+            trials = []
+            mtg = loom_trial_group.MouseLoomTrialGroup(mid)
+            for t in mtg.habituation_trials():
+                trials.extend([t])
+            hm = make_trial_heatmap_location_overlay(trials)
+            group_hm.append(hm)
+
+        group_hms.setdefault(group, group_hm)
+
+    return group_hms
+
+
+def get_lsie_exploration_dataframe(groups=('pre_hab_post_immediate', 'pre_hab_post_24hr')):
+    from looming_spots.db import experimental_log
+
+    df = pd.DataFrame()
+
+    for group_label in groups:
+        mtgs = experimental_log.get_mtgs_in_experiment(group_label)
+        for i, mtg in enumerate(mtgs):
+            time_delta = mtg.habituation_trials()[0].time - mtg.pre_test_trials()[0].time
+            if time_delta.seconds < 3600 and time_delta.days == 0:
+                test_type = 'same_day'
+            else:
+                test_type = 'previous_day'
+
+            event_metric_dict = {}
+            event_metric_dict.setdefault('mouse id', [mtg.mouse_id])
+            event_metric_dict.setdefault('group', [group_label])
+            event_metric_dict.setdefault('pre_test_condition', [test_type])
+            event_metric_dict.setdefault('time_delta', [time_delta])
+            event_metric_dict.setdefault('percentage time in tz middle', [mtg.percentage_time_in_tz_middle()])
+            df = df.append(pd.DataFrame.from_dict(event_metric_dict), ignore_index=True)
+    return df
