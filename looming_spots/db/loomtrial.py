@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from cached_property import cached_property
 from matplotlib import patches
+from photometry.demodulation import apply_butterworth_lowpass_filter
 from scipy.ndimage import gaussian_filter
 from scipy import signal
 from datetime import timedelta
@@ -15,7 +16,7 @@ from looming_spots.util.event_detection.events_collection import EventsCollectio
 from looming_spots.db.constants import LOOMING_STIMULUS_ONSET, END_OF_CLASSIFICATION_WINDOW, ARENA_SIZE_CM, \
     N_LOOMS_PER_STIMULUS, FRAME_RATE, TRACK_LENGTH, N_SAMPLES_BEFORE, N_SAMPLES_AFTER
 
-from looming_spots.analysis import tracks, plotting
+from looming_spots.analysis import tracks, plotting, escape_classifiers
 from looming_spots.preprocess import extract_videos, photodiode
 from looming_spots.tracking.pyper_backend.auto_track import pyper_cli_track_trial
 from looming_spots.tracking.pyper_backend.reference_frames.viewer import Viewer
@@ -128,10 +129,22 @@ class LoomTrial(object):
                      'time in safety zone': self.time_in_safety_zone,
                      'classified as flee': self.is_flee,
                      'time of loom': self.get_time,
-                     'loom number': self.get_stimulus_number
+                     'loom number': self.get_stimulus_number,
+                     'time to reach safety': self.time_to_reach_home
                      }
 
         return func_dict
+
+    @property
+    def normalisation_dict(self):
+        normalisation_dict = {'speed': 120,
+                              'acceleration': 6,
+                              'latency to escape': 12,
+                              'time in safety zone': 12,
+                              'classified as flee': 1,
+                              'time to reach safety': 12
+                              }
+        return normalisation_dict
 
     @property
     def context(self):
@@ -358,6 +371,12 @@ class LoomTrial(object):
                 print(e)
                 return np.nan
 
+    def has_escaped_by(self, sample_n):
+        return self.estimate_latency(False) < sample_n
+
+    def time_to_reach_home(self):
+        return escape_classifiers.time_to_reach_home(self.normalised_x_track, self.context)
+
     @property
     def mouse_location_at_stimulus_onset(self):
         x_track, y_track = self.raw_track
@@ -494,7 +513,7 @@ class LoomTrial(object):
         return self.detect_events_scipy() #detect_events(self.delta_f(), bsl_start=0, bsl_end=200)
 
     def detect_events_scipy(self):
-        df = self.delta_f() - _apply_butterworth_lowpass_filter(self.delta_f(), 0.1, 30, order=8)
+        df = self.delta_f() - apply_butterworth_lowpass_filter(self.delta_f(), 0.1, 30, order=8)
 
         pks = signal.find_peaks(df, np.std(df), width=2)  # 1.5 * np.std(df)
         starts = pks[1]['left_ips'].astype(int)
@@ -609,11 +628,14 @@ class LoomTrial(object):
         self.plot_stimulus()
         return fig1
 
-    def integral_escape_metric(self):
-        try:
-            return self.integral_downsampled()[self.estimate_latency(False)]
-        except Exception as e:
-            return np.nan
+    def integral_escape_metric(self, latency=None):
+        if latency is not None:
+            return self.integral_downsampled()[int(latency)]
+        else:
+            try:
+                return self.integral_downsampled()[self.estimate_latency(False)]
+            except Exception as e:
+                return np.nan
 
 
 class VisualStimulusTrial(LoomTrial):

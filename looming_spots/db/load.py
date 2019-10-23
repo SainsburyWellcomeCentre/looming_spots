@@ -20,6 +20,7 @@ class MouseNotFoundError(Exception):
 
 def load_sessions(mouse_id):
     mouse_directory = os.path.join(PROCESSED_DATA_DIRECTORY, mouse_id)
+    print('loading.... {}'.format(mouse_directory))
     session_list = []
     if os.path.isdir(mouse_directory):
 
@@ -57,8 +58,10 @@ def load_sessions(mouse_id):
             raise MouseNotFoundError('the mouse: {} has not been processed'.format(mouse_id))
 
         return sorted(session_list)
-    warnings.warn('the mouse: {} has not been copied to the processed data directory'.format(mouse_id))
-    raise MouseNotFoundError('the mouse: {} has not been processed'.format(mouse_id))
+    msg = 'the mouse: {} has not been copied to the processed data directory'.format(mouse_id)
+    warnings.warn(msg)
+
+    raise MouseNotFoundError()
 
 
 def contains_analog_input(file_names):

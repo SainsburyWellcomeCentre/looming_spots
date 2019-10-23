@@ -92,3 +92,11 @@ def get_flee_duration(loom_folder, context):
         if x < house_front:
             return i
     return np.nan
+
+
+def time_to_reach_home(track, context):
+    house_front = normalised_home_front(context)
+    in_home_idx = np.where([x < house_front for x in track[CLASSIFICATION_WINDOW_START:]])[0]
+    if len(in_home_idx) == 0:
+        return np.nan
+    return in_home_idx[0]/FRAME_RATE

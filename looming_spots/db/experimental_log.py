@@ -3,6 +3,8 @@ import operator
 import pandas as pd
 import numpy as np
 
+from looming_spots.db import loom_trial_group
+
 FILE_PATH = '/home/slenzi/Downloads/updated_loom_sheet_format.csv'
 
 
@@ -17,6 +19,11 @@ def get_mouse_ids_in_experiment(experiment_key):
     exp_df = get_experiment_subset_df(df, experiment_key)
     mouse_ids = get_mouse_ids(exp_df)
     return list(mouse_ids)
+
+
+def get_mtgs_in_experiment(experiment_key):
+    mids = get_mouse_ids_in_experiment(experiment_key)
+    return [loom_trial_group.MouseLoomTrialGroup(mid) for mid in mids]
 
 
 def get_mouse_ids(df, ignore_future_experiments=True):
@@ -117,7 +124,7 @@ def filter_df(db, filter_dict):
         n_results = np.count_nonzero(query_result)
 
         if n_results == 0:
-            return False
+            return []
 
         f_df = f_df[query_result]
 

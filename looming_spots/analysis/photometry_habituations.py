@@ -67,7 +67,7 @@ def plot_integral_at_latency_bars(mtgs, bar_colors=('k', 'k')):
 
     for mtg in mtgs:
         pre_test_latency = np.nanmean([t.estimate_latency(False) for t in mtg.pre_test_trials()[:3]])
-        normalising_factor = max([np.nanmax([t.integral_escape_metric(int(pre_test_latency)) for t in mtg.loom_trials()])])
+        normalising_factor = max([np.nanmax([t.integral_escape_metric(int(pre_test_latency)) for t in mtg.loom_trials()[:30]])])
 
         max_integrals_pre = [np.nanmax(t.integral_escape_metric(int(pre_test_latency))) / normalising_factor for t in mtg.pre_test_trials()[:3]]
         max_integrals_post = [np.nanmax(t.integral_escape_metric(int(pre_test_latency))) / normalising_factor for t in mtg.post_test_trials()[:3]]
@@ -155,7 +155,7 @@ def get_habituation_protocol_responses(mtgs):
     for mtg in mtgs:
         pre_test_latency = np.nanmean([t.estimate_latency(False) for t in mtg.pre_test_trials()[:3]])
         print(pre_test_latency)
-        normalising_factor = max([np.nanmax([t.integral_escape_metric(int(pre_test_latency)) for t in mtg.loom_trials()])])
+        normalising_factor = max([np.nanmax([t.integral_escape_metric(int(pre_test_latency)) for t in mtg.loom_trials()[:30]])])
         max_integrals = [np.nanmax(t.integral_escape_metric(int(pre_test_latency))) / normalising_factor for t in mtg.habituation_trials()[:24]]
         group_integral_escape_metrics.append(max_integrals)
     return group_integral_escape_metrics
@@ -218,15 +218,15 @@ def get_signal_metric_dataframe_variable_contrasts(mtgs, metric):
 def get_signal_metric_dataframe(mtgs, metric):
     all_df = pd.DataFrame()
     for mtg in mtgs:
-        norm_factor = max([t.integral_escape_metric() for t in mtg.all_trials]) #t.integral_downsampled()[200:214]
-
+        norm_factor = max([t.integral_escape_metric() for t in mtg.loom_trials()[:30]]) #t.integral_downsampled()[200:214]
+        pre_test_latency = np.nanmean([t.estimate_latency(False) for t in mtg.pre_test_trials()[:3]])
         for trials, test_type in zip([mtg.pre_test_trials()[:3], mtg.post_test_trials()[:3]], ['pre test', 'post test']):
             event_metric_dict = {}
             vals = []
             signals = []
             for t in trials:
                 val = t.metric_functions[metric]()
-                signal = t.integral_escape_metric()/norm_factor  #t.integral_downsampled()[200:214]
+                signal = t.integral_escape_metric(int(pre_test_latency))/norm_factor  #t.integral_downsampled()[200:214]
                 vals.append(val)
                 signals.append(signal)
 
@@ -307,13 +307,17 @@ def habituation_df(mtg_groups, mtg_group_labels):
     for mtgs, label in zip(mtg_groups, mtg_group_labels):
         for mtg in mtgs:
             start = 0
-            norm_factor = max([max(t.integral_downsampled()[200:214]) for t in mtg.all_trials])
-            for trials, test_type in zip([mtg.pre_test_trials()[:3], mtg.habituation_trials()[:23], mtg.post_test_trials()[:3]], ['pre test', 'habituation', 'post test']):
+            pre_test_latency = np.nanmean([t.estimate_latency(False) for t in mtg.pre_test_trials()[:3]])
+            norm_factor = max([np.nanmax([t.integral_escape_metric(int(pre_test_latency)) for t in mtg.loom_trials()[:30]])])
+            all_trials = mtg.pre_test_trials()[:3] + mtg.habituation_trials()[:23] + mtg.post_test_trials()[:3]
+            #norm_factor = max([max(t.integral_downsampled()[200:214]) for t in all_trials])
+            for trials, test_type in zip([mtg.pre_test_trials()[:3], mtg.habituation_trials()[:24], mtg.post_test_trials()[:3]], ['pre test', 'habituation', 'post test']):
                 event_metric_dict = {}
                 contrasts = []
                 signals = []
                 for t in trials:
-                    signal = max(t.integral_downsampled()[200:214])/norm_factor
+                    #signal = max(t.integral_downsampled()[200:214])/norm_factor
+                    signal = t.integral_escape_metric(int(pre_test_latency))/norm_factor
                     contrasts.append(t.contrast)
                     signals.append(signal)
 
@@ -331,23 +335,60 @@ def habituation_df(mtg_groups, mtg_group_labels):
     return all_df
 
 
-def get_behaviour_metric_dataframe(mtgs, metric):
+def get_behaviour_metric_dataframe(mtgs, metric, test_type):
     all_df = pd.DataFrame()
     for mtg in mtgs:
-        trials = mtg.all_trials[:18]
+        if test_type == 'pre_test':
+            trials = mtg.pre_test_trials()
+        elif test_type == 'post_test':
+            trials = mtg.post_test_trials()
+        elif test_type == 'variable_contrast':
+            trials = mtg.all_trials[:18]
         event_metric_dict = {}
         vals = []
         for t in trials:
-            val = t.metric_functions[metric]()
+            val = t.metric_functions[metric]() #/ t.normalisation_dict[metric]
             vals.append(val)
 
         mids = [mtg.mouse_id]*len(trials)
         event_metric_dict.setdefault('mouse id', mids)
-        event_metric_dict.setdefault(metric, vals)
+        event_metric_dict.setdefault('loom number', [t.get_stimulus_number() for t in trials])
+        event_metric_dict.setdefault('metric value', vals)
         event_metric_dict.setdefault('test type', ['variable contrast'] * len(trials))
-        # event_metric_dict.setdefault('metric', metrics)
+        event_metric_dict.setdefault('metric', [metric]*len(trials))
         event_metric_dict.setdefault('contrast', [t.contrast for t in trials])
         event_metric_dict.setdefault('escape', [t.is_flee() for t in trials])
+        metric_df = pd.DataFrame.from_dict(event_metric_dict)
+        all_df = all_df.append(metric_df, ignore_index=True)
+    return all_df
+
+
+def get_trials_df(mtgs, metric):
+    all_df = pd.DataFrame()
+    for mtg in mtgs:
+        norm_factor = max([t.integral_escape_metric() for t in mtg.all_trials])  # t.integral_downsampled()[200:214]
+        event_metric_dict = {}
+        vals = []
+        signals = []
+        metric_values = []
+
+        trials = mtg.auditory_trials()[:3]
+        for t in trials:
+            val = t.metric_functions[metric]()
+            signal = t.integral_escape_metric() / norm_factor  # t.integral_downsampled()[200:214]
+            metric_val = t.metric_functions[metric]()
+            vals.append(val)
+            signals.append(signal)
+            metric_values.append(metric_val)
+
+        mids = [mtg.mouse_id] * len(trials)
+        event_metric_dict.setdefault('mouse id', mids)
+        event_metric_dict.setdefault('ca signal', signals)
+        event_metric_dict.setdefault(metric, metric_values)
+
+        event_metric_dict.setdefault('contrast', [t.contrast for t in trials])
+        event_metric_dict.setdefault('escape', [t.is_flee() for t in trials])
+
         metric_df = pd.DataFrame.from_dict(event_metric_dict)
         all_df = all_df.append(metric_df, ignore_index=True)
     return all_df
