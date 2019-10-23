@@ -5,7 +5,6 @@ import numpy as np
 from configobj import ConfigObj
 
 import looming_spots.preprocess.normalisation
-from looming_spots.analysis import tracks
 from looming_spots.util.generic_functions import chunks
 
 N_MIN = 10
@@ -33,7 +32,7 @@ def get_binned_preference(
 
     end = start + N_SAMPLES_TO_ANALYSE
     track_sample = normalised_track[start:end]
-    print("length_of_track to consider= {}".format(len(track_sample)))
+    print(f"length_of_track to consider= {len(track_sample)}")
     binned_preference = []
 
     for i, chunk in enumerate(

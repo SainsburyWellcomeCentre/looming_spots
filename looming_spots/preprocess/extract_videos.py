@@ -22,9 +22,7 @@ def extract_loom_video(
     n_samples_after=400,
 ):
     loom_start = int(loom_start)
-    loom_video_path = os.path.join(
-        directory_out, "loom{}.h264".format(loom_number)
-    )
+    loom_video_path = os.path.join(directory_out, f"loom{loom_number}.h264")
     if os.path.isfile(loom_video_path):
         return
     video_path = looming_spots.util.generic_functions.get_fpath(

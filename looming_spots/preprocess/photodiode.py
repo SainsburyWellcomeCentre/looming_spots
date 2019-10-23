@@ -49,7 +49,7 @@ def get_test_loom_idx(
     if contains_habituation(loom_idx):
         loom_burst_onsets = np.diff(loom_idx[::n_looms_per_stimulus])
         min_ili = min(loom_burst_onsets)
-        print("min_ili: {}".format(min_ili))
+        print("min_ili: {min_ili}")
         test_loom_idx = np.where(loom_burst_onsets > min_ili + 200)[0] + 1
         return test_loom_idx * n_looms_per_stimulus
 
@@ -119,7 +119,7 @@ def find_pd_threshold_crossings(ai, threshold=0.4):
         return [], []
 
     threshold = np.median(filtered_pd) + np.nanstd(filtered_pd) * 3  # 3
-    print("threshold: {}".format(threshold))
+    print("threshold: {threshold}")
     loom_on = (filtered_pd > threshold).astype(int)
     loom_ups = np.diff(loom_on) == 1
     loom_starts = np.where(loom_ups)[0]

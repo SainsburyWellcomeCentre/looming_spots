@@ -151,7 +151,7 @@ def get_rates_for_timepoints(session_lists, time_points):
                 tp_session_list
             )
 
-            label = "condition{}".format(tp)
+            label = f"condition{tp}"
             if label not in stats_dict.keys():
                 stats_dict[label] = np.array([n_flees, n_non_flees])
             else:

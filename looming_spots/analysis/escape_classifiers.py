@@ -66,13 +66,11 @@ def classify_flee(loom_folder, context):
         and reaches_home(track, context)
         and leaves_house(loom_folder, context)
     ):
-        print("leaves: {}".format(leaves_house(loom_folder, context)))
+        print(f"leaves: {leaves_house(loom_folder, context)}")
         return True
 
     print(
-        "fast enough: {}, reaches home: {}".format(
-            fast_enough(speed), reaches_home(track, context)
-        )
+        f"fast enough: {fast_enough(speed)}, reaches home: {reaches_home(track, context)}"
     )
     return False
 
@@ -89,7 +87,7 @@ def time_spent_hiding_deprecated(loom_folder, context):
     if len(safety_zone_border_crossings[0]) == 0:  # never runs away
         return 0
     elif len(safety_zone_border_crossings[0]) == 1:  # never comes back out
-        print("this mouse never leaves {}".format(loom_folder))
+        print(f"this mouse never leaves {loom_folder}")
         print(safety_zone_border_crossings)
         return (
             int(

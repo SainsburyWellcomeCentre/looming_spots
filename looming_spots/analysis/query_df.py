@@ -49,6 +49,6 @@ def plot_from_mid_dict(condition_mouse_id_dictionary):
             sessions = load.load_sessions(mid)
             for i, s in enumerate(sorted(sessions)):
                 plt.sca(axes[j][i])
-                title = "{}_{}".format(condition, s.contains_habituation)
+                title = f"{condition}_{s.contains_habituation}"
                 axes[j][i].set_title(title)
                 s.plot_trials()

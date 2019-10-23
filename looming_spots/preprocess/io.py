@@ -110,7 +110,7 @@ def load_pd_on_clock_ups(directory, pd_threshold=2.5):
         print(directory)
         pd, clock, auditory = load_pd_and_clock_raw(directory)
         clock_ups = get_clock_ups(clock, pd_threshold)
-        print("number of clock ups found: {}".format(len(clock_ups)))
+        print(f"number of clock ups found: {len(clock_ups)}")
         if len(clock_ups) < 12:
             raise PdTooShortError()
         return pd[clock_ups]
@@ -119,7 +119,7 @@ def load_pd_on_clock_ups(directory, pd_threshold=2.5):
 def load_auditory_on_clock_ups(directory, pd_threshold=2.5):
     pd, clock, auditory = load_pd_and_clock_raw(directory)
     clock_ups = get_clock_ups(clock, pd_threshold)
-    print("number of clock ups found: {}".format(len(clock_ups)))
+    print(f"number of clock ups found: {len(clock_ups)}")
     return auditory[clock_ups]
 
 
@@ -145,10 +145,8 @@ def get_all_tracks(raw_directory=RAW_DATA_DIRECTORY, dry=False):
         mouse_id = old_path.split("/")[-3]
         date = old_path.split("/")[-2]
         fname = old_path.split("/")[-1]
-        new_path = "{}/{}/{}/{}".format(
-            PROCESSED_DATA_DIRECTORY, mouse_id, date, fname
-        )
+        new_path = f"{PROCESSED_DATA_DIRECTORY}/{mouse_id}/{date}/{fname}"
         if not os.path.isfile(new_path):
-            print("copying {} to {}".format(old_path, new_path))
+            print(f"copying {old_path} to {new_path}")
             if not dry:
                 copyfile(old_path, new_path)
