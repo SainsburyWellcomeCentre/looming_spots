@@ -24,6 +24,9 @@ def extract_loom_video(directory_in, directory_out, loom_start, loom_number, n_s
 
 
 def extract_loom_video_trial(path_in, path_out, loom_start, n_samples_before=200, n_samples_after=400, overwrite=False):
+    if not os.path.isfile(path_in):
+        path_in = path_in.replace('.mp4', '.avi')
+        path_in = path_in.replace('processed', 'raw')
     loom_start = int(loom_start)
     if not overwrite:
         if os.path.isfile(path_out):
