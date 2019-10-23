@@ -1,0 +1,7 @@
+*.pyc
+*__pycache__*
+*/scripts/
+*.cfg
+*.h264
+/zarchive/
+*deprecated*
