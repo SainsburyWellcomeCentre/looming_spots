@@ -527,40 +527,6 @@ def habituation_df(mtg_groups, mtg_group_labels):
     return all_df
 
 
-def get_behaviour_metric_dataframe(mtgs, metric, test_type):
-    all_df = pd.DataFrame()
-    for mtg in mtgs:
-        if test_type == "pre_test":
-            trials = mtg.pre_test_trials()
-        elif test_type == "post_test":
-            trials = mtg.post_test_trials()
-        elif test_type == "variable_contrast":
-            trials = mtg.all_trials[:18]
-        event_metric_dict = {}
-        vals = []
-        for t in trials:
-            val = t.metric_functions[
-                metric
-            ]()  # / t.normalisation_dict[metric]
-            vals.append(val)
-
-        mids = [mtg.mouse_id] * len(trials)
-        event_metric_dict.setdefault("mouse id", mids)
-        event_metric_dict.setdefault(
-            "loom number", [t.get_stimulus_number() for t in trials]
-        )
-        event_metric_dict.setdefault("metric value", vals)
-        event_metric_dict.setdefault(
-            "test type", ["variable contrast"] * len(trials)
-        )
-        event_metric_dict.setdefault("metric", [metric] * len(trials))
-        event_metric_dict.setdefault("contrast", [t.contrast for t in trials])
-        event_metric_dict.setdefault("escape", [t.is_flee() for t in trials])
-        metric_df = pd.DataFrame.from_dict(event_metric_dict)
-        all_df = all_df.append(metric_df, ignore_index=True)
-    return all_df
-
-
 def get_trials_df(mtgs, metric):
     all_df = pd.DataFrame()
     for mtg in mtgs:
