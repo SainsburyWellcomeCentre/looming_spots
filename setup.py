@@ -17,6 +17,6 @@ setup(
         "scipy",
         "pandas",
         "pims",
-        "scikit-video",
+        "scikit-video", 'pingouin'
     ],
 )
