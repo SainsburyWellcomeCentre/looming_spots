@@ -1,9 +1,7 @@
 import numpy as np
 from matplotlib import pyplot as plt
 
-from looming_spots.analysis.photometry_habituations import (
-    get_behaviour_metric_dataframe,
-)
+from looming_spots.analysis.escape_metrics import get_behaviour_metric_dataframe
 from looming_spots.analysis.randomised_contrast_escape_curves import (
     get_contrast_escape_curve_from_group_label,
 )

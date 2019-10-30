@@ -10,7 +10,7 @@ from datetime import timedelta
 import seaborn as sns
 import pandas as pd
 
-import looming_spots.analysis.escape_classifiers
+import looming_spots.analysis.escape_classification
 import looming_spots.preprocess.normalisation
 from looming_spots.util.event_detection.events_collection import (
     EventsCollection,
@@ -26,7 +26,7 @@ from looming_spots.db.constants import (
     N_SAMPLES_AFTER,
 )
 
-from looming_spots.analysis import tracks, plotting, escape_classifiers
+from looming_spots.analysis import tracks, plotting, escape_classification
 from looming_spots.preprocess import extract_videos, photodiode
 from looming_spots.tracking.pyper_backend.auto_track import (
     pyper_cli_track_trial,
@@ -283,7 +283,7 @@ class LoomTrial(object):
         return self.time
 
     def time_in_safety_zone(self):
-        return looming_spots.analysis.escape_classifiers.time_spent_hiding(
+        return looming_spots.analysis.escape_classification.time_spent_hiding(
             self.normalised_x_track, self.context
         )
 
@@ -381,20 +381,20 @@ class LoomTrial(object):
         track = gaussian_filter(self.normalised_x_track, 3)
         speed = np.diff(track)
 
-        if looming_spots.analysis.escape_classifiers.fast_enough(
+        if looming_spots.analysis.escape_classification.fast_enough(
             speed
-        ) and looming_spots.analysis.escape_classifiers.reaches_home(
+        ) and looming_spots.analysis.escape_classification.reaches_home(
             track, self.context
         ):  # and not leaves_house(track, self.context)
-            leaves_house_within = looming_spots.analysis.escape_classifiers.leaves_house(
+            leaves_house_within = looming_spots.analysis.escape_classification.leaves_house(
                 track, self.context
             )
             print(f"leaves: {leaves_house_within}")
             return True
-        fast_enough = looming_spots.analysis.escape_classifiers.fast_enough(
+        fast_enough = looming_spots.analysis.escape_classification.fast_enough(
             speed
         )
-        reaches_shelter = looming_spots.analysis.escape_classifiers.reaches_home(
+        reaches_shelter = looming_spots.analysis.escape_classification.reaches_home(
             track, self.context
         )
         print(f"fast enough: {fast_enough}, reaches home: {reaches_shelter}")
@@ -467,7 +467,7 @@ class LoomTrial(object):
         return self.estimate_latency(False) < sample_n
 
     def time_to_reach_home(self):
-        return escape_classifiers.time_to_reach_home(
+        return escape_classification.time_to_reach_home(
             self.normalised_x_track, self.context
         )
 
@@ -787,6 +787,7 @@ class LoomTrial(object):
                 ]
             except Exception as e:
                 return np.nan
+
 
 
 class VisualStimulusTrial(LoomTrial):

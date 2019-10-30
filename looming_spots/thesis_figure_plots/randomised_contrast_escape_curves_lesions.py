@@ -1,9 +1,7 @@
 import pandas as pd
 import pingouin as pg
 
-from looming_spots.analysis.photometry_habituations import (
-    get_behaviour_metric_dataframe,
-)
+from looming_spots.analysis.escape_metrics import get_behaviour_metric_dataframe
 from looming_spots.db import experimental_log, loom_trial_group
 
 GROUPS = {
@@ -25,7 +23,7 @@ GROUPS = {
         "CA459A_2",
         "CA478_3",
     ],
-    "d1_caspase": experimental_log.get_mouse_ids_in_experiment(
+    "": experimental_log.get_mouse_ids_in_experiment(
         "d1MSN_caspase_lesion_TS"
     ),
     "d2_caspase": experimental_log.get_mouse_ids_in_experiment(

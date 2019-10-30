@@ -5,18 +5,12 @@ import matplotlib.pyplot as plt
 from matplotlib import cm
 
 import numpy as np
-
 import pandas as pd
 
 from looming_spots.analysis import plotting
-
-# from looming_spots.db.loom_trial_group import ExperimentalConditionGroup
 from looming_spots.db import loom_trial_group
 
 from looming_spots.db.experimental_log import get_mouse_ids_in_experiment
-
-# from looming_spots.db.session_group import MouseSessionGroup
-# from looming_spots.db.loom_trial_group import MouseLoomTrialGroup
 
 
 def get_flee_probabilities_from_trials(trials):
