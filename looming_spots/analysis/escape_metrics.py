@@ -35,20 +35,22 @@ def get_behaviour_metric_dataframe(mtgs, metric, test_type):
     return all_df
 
 
-def get_escape_metric_df_trials(trials, metric, mid=None, experimental_condition=None):
+def get_escape_metric_df_trials(
+    trials, metric, mid=None, experimental_condition=None
+):
     all_df = pd.DataFrame()
     event_metric_dict = {}
     vals = []
     for t in trials:
-        val = t.metric_functions[
-            metric
-        ]()  # / t.normalisation_dict[metric]
+        val = t.metric_functions[metric]()  # / t.normalisation_dict[metric]
         vals.append(val)
 
     mids = [mid] * len(trials)
     experimental_conditions = [experimental_condition] * len(trials)
     event_metric_dict.setdefault("mouse id", mids)
-    event_metric_dict.setdefault("experimental condition", experimental_conditions)
+    event_metric_dict.setdefault(
+        "experimental condition", experimental_conditions
+    )
     event_metric_dict.setdefault(
         "loom number", [t.get_stimulus_number() for t in trials]
     )
@@ -67,6 +69,8 @@ def get_escape_metric_df_trials(trials, metric, mid=None, experimental_condition
 def get_escape_metrics_mtgs(mtgs, metric, experimental_condition=None):
     all_df = pd.DataFrame()
     for mtg in mtgs:
-        df = get_escape_metric_df_trials(mtg.all_trials, metric, int(mtg.mouse_id), experimental_condition)
+        df = get_escape_metric_df_trials(
+            mtg.all_trials, metric, int(mtg.mouse_id), experimental_condition
+        )
         all_df = all_df.append(df)
     return all_df
