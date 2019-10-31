@@ -160,17 +160,6 @@ def get_auditory_onsets_from_analog_input(directory, save=True):
                 np.array(np.where(aud_on)[0])[1:][aud_diff > 1000],
             ]
         )
-
-        # auditory_on = np.where(aud < -1.05)[0]
-        # onsets = list(auditory_on[np.where(np.diff(auditory_on) > 1000)[0] + 1])
-        # auditory_onsets = [auditory_on[0]] + onsets
-
-    # aud_diff = np.diff(gaussian_filter(abs(np.diff(aud)), 2) )
-    # if np.count_nonzero(aud_diff) == 0:
-    #     auditory_onsets = []
-    # else:
-    #     auditory_onsets = np.where(aud_diff)[0][::2]  # > 0.15
-
     dest = os.path.join(directory, "auditory_starts.npy")
 
     if save:

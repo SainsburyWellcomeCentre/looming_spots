@@ -82,6 +82,13 @@ class LoomTrial(object):
     def __eq__(self, other):
         return self.time == other.time
 
+    def __add__(self, a):
+        if not isinstance(a, int):
+            raise TypeError
+        self.sample_number += a
+        self.start += a
+        self.end += a
+
     @classmethod
     def set_next_trial(cls, self, other):
         setattr(self, "next_trial", other)
@@ -787,7 +794,6 @@ class LoomTrial(object):
                 ]
             except Exception as e:
                 return np.nan
-
 
 
 class VisualStimulusTrial(LoomTrial):

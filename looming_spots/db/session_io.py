@@ -1,8 +1,6 @@
 import os
 import numpy as np
 from datetime import datetime
-
-import scipy.ndimage
 from cached_property import cached_property
 
 import looming_spots.preprocess.io
@@ -14,7 +12,7 @@ from looming_spots.db.constants import (
 from looming_spots.db import loomtrial
 from looming_spots.exceptions import LoomsNotTrackedError
 
-from looming_spots.preprocess import photodiode
+from looming_spots.preprocess import photodiode, normalisation
 from looming_spots.util import generic_functions
 from looming_spots.db.metadata import experiment_metadata
 from photometry import demodulation, load
@@ -35,12 +33,17 @@ class Session(object):
         self.n_habituation_looms = n_habituation_looms
         self.n_trials_to_include = n_trials_to_consider
         self.next_session = None
+        self.previous_session = None
 
     def __lt__(self, other):
         return self.dt < other.dt
 
     def __gt__(self, other):
         return self.dt > other.dt
+
+    def __add__(self, a):
+        for t in self.trials:
+            t + a
 
     def directory(self):
         return os.path.join(PROCESSED_DATA_DIRECTORY, self.mouse_id)
@@ -152,7 +155,7 @@ class Session(object):
         return [t for t in self.trials if t.trial_type == key]
 
     @property
-    def context(self):
+    def context(self):  # FIXME: this is BS
         try:
             return experiment_metadata.get_context_from_stimulus_mat(self.path)
         except FileNotFoundError as e:
@@ -230,22 +233,18 @@ class Session(object):
                 self.path
             )
         else:
-            pd = looming_spots.preprocess.io.load_pd_on_clock_ups(self.path)
+            pd = self.data["photodiode"]
         return pd
 
     @property
-    def auditory_trace(self):
-        return looming_spots.preprocess.io.load_auditory_on_clock_ups(
-            self.path
-        )
-
-    def load_demodulated_photometry_on_clock_ups(self):
-        pd, clock, auditory = looming_spots.preprocess.io.load_pd_and_clock_raw(
-            self.path
-        )
-        clock_ups = looming_spots.preprocess.io.get_clock_ups(clock)
-        dm_signal, dm_background = self.load_demodulated_photometry()
-        return dm_signal[clock_ups], dm_background[clock_ups]
+    def auditory_trace(self, raw=False):
+        if raw:
+            ad = looming_spots.preprocess.io.load_auditory_on_clock_ups(
+                self.path
+            )
+        else:
+            ad = self.data["auditory_stimulus"]
+        return ad
 
     def load_demodulated_photometry(self):
         pd, _, auditory, photometry, led211, led531 = load.load_all_channels_raw(
@@ -263,17 +262,12 @@ class Session(object):
         return dm_signal, dm_background
 
     @cached_property
-    def dm_signal(self):
-        return self.load_demodulated_photometry_on_clock_ups()[0]
+    def signal(self):
+        return self.data["signal"]
 
     @cached_property
-    def dm_background(self):
-        return self.load_demodulated_photometry_on_clock_ups()[1]
-
-    def load_all_channels_on_clock_ups(self):
-        all_channels = load.load_all_channels_raw(self.path)
-        clock_ups = looming_spots.preprocess.io.get_clock_ups(all_channels[1])
-        return [channel[clock_ups] for channel in all_channels]
+    def background(self):
+        return self.data["background"]
 
     @cached_property
     def fully_sampled_delta_f(self, filter_artifact_cutoff_samples=40000):
@@ -292,16 +286,8 @@ class Session(object):
         delta_f = demodulation.lerner_deisseroth_preprocess(
             pmt, led211, led531
         )
-        delta_f[:filter_artifact_cutoff_samples] = np.median(
-            delta_f
-        )  # to remove filter artifact
+        delta_f[:filter_artifact_cutoff_samples] = np.median(delta_f)
         return delta_f, clock
-
-    @cached_property
-    def delta_f(self):
-        delta_f, clock = self.fully_sampled_delta_f
-        clock_ups = looming_spots.preprocess.io.get_clock_ups(clock)
-        return delta_f[clock_ups]
 
     @cached_property
     def data(self):
@@ -379,19 +365,9 @@ class Session(object):
         for t in self.trials:
             t.extract_video()
 
-    def track_trials(self):
-        for t in self.trials:
-            t.extract_track()
-
     @property
     def metadata(self):
         return experiment_metadata.load_metadata(self.path)
-
-    def histology(self, histology_name="injection_site.png"):
-        histology_path = os.path.join(self.parent_path, histology_name)
-        if os.path.isfile(histology_path):
-            return scipy.ndimage.imread(histology_path)
-        return False
 
     @property
     def grid_location(self):
@@ -409,3 +385,81 @@ class Session(object):
 
     def get_auditory_trials_idx(self):
         return self.auditory_idx
+
+    def get_data(self, key):
+        data_func_dict = {
+            "photodiode": self.get_photodiode_trace,
+            "x_pos": self.x_pos,
+            "y_pos": self.y_pos,
+            "delta_f": self.get_delta_f,
+            "loom_onsets": self.get_loom_idx,
+            "auditory_onsets": self.get_auditory_idx,
+            "x_pos_norm": self.get_normalised_x_pos,
+            "trials": self.get_session_trials,
+        }
+
+        return data_func_dict[key]
+
+    def get_photodiode_trace(self):
+        return self.photodiode_trace - np.median(self.photodiode_trace)
+
+    def track(self):
+        if "dlc_x_tracks.npy" in os.listdir(self.path):
+            x_path = os.path.join(self.path, "dlc_x_tracks.npy")
+            y_path = os.path.join(self.path, "dlc_y_tracks.npy")
+            x = np.load(x_path)
+            y = np.load(y_path)
+            return x, y
+
+    def x_pos(self):
+        return self.track()[0]
+
+    def y_pos(self):
+        return self.track()[1]
+
+    def get_delta_f(self):
+        return self.data["delta_f"]
+
+    def get_loom_idx(self):
+        current_session = self
+        prev_samples = 0
+        while current_session is not None:
+            print(f"prev_samples: {prev_samples}")
+            current_session = current_session.previous_session
+            if current_session is not None:
+                prev_samples += len(current_session.photodiode_trace)
+
+        return self.loom_idx + prev_samples
+
+    def get_auditory_idx(self):
+        current_session = self
+        prev_samples = 0
+        while current_session is not None:
+            print(f"prev_samples: {prev_samples}")
+            current_session = current_session.previous_session
+            if current_session is not None:
+                prev_samples += len(current_session.auditory_trace)
+
+        return self.auditory_idx + prev_samples
+
+    @classmethod
+    def set_next_session(cls, self, other):
+        setattr(self, "next_session", other)
+
+    @classmethod
+    def set_previous_session(cls, self, other):
+        setattr(self, "previous_session", other)
+
+    def get_normalised_x_pos(self):
+        return normalisation.normalise_x_track(self.x_pos(), self.context)
+
+    def get_session_trials(self):
+        current_session = self
+        prev_samples = 0
+        while current_session is not None:
+            print(f"prev_samples: {prev_samples}")
+            current_session = current_session.previous_session
+            if current_session is not None:
+                prev_samples += len(current_session.auditory_trace)
+        self + prev_samples
+        return self.trials
