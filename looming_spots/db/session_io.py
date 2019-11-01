@@ -1,4 +1,6 @@
 import os
+import warnings
+
 import numpy as np
 from datetime import datetime
 from cached_property import cached_property
@@ -34,6 +36,9 @@ class Session(object):
         self.n_trials_to_include = n_trials_to_consider
         self.next_session = None
         self.previous_session = None
+
+    def __len__(self):
+        return len(self.data['photodiode'])
 
     def __lt__(self, other):
         return self.dt < other.dt
@@ -181,10 +186,6 @@ class Session(object):
             return "gradient"
         else:
             return "constant"
-
-    @property
-    def manual_loom_idx(self):
-        return self.metadata["manual_loom_idx"]
 
     @property
     def trials_results(self):
@@ -409,7 +410,11 @@ class Session(object):
             y_path = os.path.join(self.path, "dlc_y_tracks.npy")
             x = np.load(x_path)
             y = np.load(y_path)
-            return x, y
+            if len(x) - len(self) > 5:
+                warning_text = f'noticed a mismatch between track length: {len(x)} and session data: {len(self)}'
+                warnings.warn(warning_text)
+
+            return x[:len(self)], y[:len(self)]
 
     def x_pos(self):
         return self.track()[0]
@@ -420,27 +425,36 @@ class Session(object):
     def get_delta_f(self):
         return self.data["delta_f"]
 
-    def get_loom_idx(self):
+    def get(self, key):
         current_session = self
         prev_samples = 0
+
+        selection_dict = {
+                          'loom_idx': self.loom_idx,
+                          'auditory_idx': self.auditory_idx,
+                          'trials': self.trials,
+                          }
+
         while current_session is not None:
             print(f"prev_samples: {prev_samples}")
             current_session = current_session.previous_session
             if current_session is not None:
-                prev_samples += len(current_session.photodiode_trace)
+                prev_samples += len(current_session)
 
-        return self.loom_idx + prev_samples
+        if key == 'trials':
+            self + prev_samples
+            return self.trials
+
+        return selection_dict[key] + prev_samples
+
+    def get_loom_idx(self):
+        return self.get('loom_idx')
 
     def get_auditory_idx(self):
-        current_session = self
-        prev_samples = 0
-        while current_session is not None:
-            print(f"prev_samples: {prev_samples}")
-            current_session = current_session.previous_session
-            if current_session is not None:
-                prev_samples += len(current_session.auditory_trace)
+        return self.get('auditory_idx')
 
-        return self.auditory_idx + prev_samples
+    def get_session_trials(self):
+        return self.get('trials')
 
     @classmethod
     def set_next_session(cls, self, other):
@@ -452,14 +466,3 @@ class Session(object):
 
     def get_normalised_x_pos(self):
         return normalisation.normalise_x_track(self.x_pos(), self.context)
-
-    def get_session_trials(self):
-        current_session = self
-        prev_samples = 0
-        while current_session is not None:
-            print(f"prev_samples: {prev_samples}")
-            current_session = current_session.previous_session
-            if current_session is not None:
-                prev_samples += len(current_session.auditory_trace)
-        self + prev_samples
-        return self.trials
