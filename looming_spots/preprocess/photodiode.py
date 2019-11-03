@@ -119,7 +119,7 @@ def find_pd_threshold_crossings(ai, threshold=0.4):
         return [], []
 
     threshold = np.median(filtered_pd) + np.nanstd(filtered_pd) * 3  # 3
-    print("threshold: {threshold}")
+    print(f"threshold: {threshold}")
     loom_on = (filtered_pd > threshold).astype(int)
     loom_ups = np.diff(loom_on) == 1
     loom_starts = np.where(loom_ups)[0]
