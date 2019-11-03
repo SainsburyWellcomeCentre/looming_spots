@@ -3,7 +3,7 @@ from scipy.ndimage import gaussian_filter
 
 from looming_spots.preprocess.normalisation import (
     load_normalised_track,
-    normalised_home_front,
+    normalised_shelter_front,
 )
 from looming_spots.db.constants import (
     CLASSIFICATION_WINDOW_END,
@@ -21,7 +21,7 @@ def leaves_house(smoothed_track, context):
         smoothed_track[
             CLASSIFICATION_WINDOW_END : CLASSIFICATION_WINDOW_END + 150
         ]
-        > normalised_home_front(context)
+        > normalised_shelter_front(context)
     ):
         return False
     else:
@@ -40,7 +40,7 @@ def fast_enough(speed):
 
 
 def reaches_home(track, context):
-    house_front = normalised_home_front(context)
+    house_front = normalised_shelter_front(context)
     return any(
         [
             x < house_front
@@ -79,7 +79,7 @@ def time_spent_hiding_deprecated(loom_folder, context):
     track = gaussian_filter(load_normalised_track(loom_folder, context), 3)
     stimulus_relevant_track = track[CLASSIFICATION_WINDOW_START:]
 
-    home_front = normalised_home_front(context)
+    home_front = normalised_shelter_front(context)
     safety_zone_border_crossings = np.where(
         np.diff(stimulus_relevant_track < home_front)
     )
@@ -104,7 +104,7 @@ def time_spent_hiding(normalised_track, context):
     track = gaussian_filter(normalised_track, 3)
     stimulus_relevant_track = track[CLASSIFICATION_WINDOW_START:]
 
-    home_front = normalised_home_front(context)
+    home_front = normalised_shelter_front(context)
     safety_zone_border_crossings = np.where(
         np.diff(stimulus_relevant_track < home_front)
     )
@@ -140,7 +140,7 @@ def estimate_latency(
 
 def get_flee_duration(loom_folder, context):
     track = load_normalised_track(loom_folder, context)
-    house_front = normalised_home_front(context)
+    house_front = normalised_shelter_front(context)
 
     for i, x in enumerate(track[STIMULUS_ONSETS[0] :]):
         if x < house_front:
@@ -149,10 +149,26 @@ def get_flee_duration(loom_folder, context):
 
 
 def time_to_reach_home(track, context):
-    house_front = normalised_home_front(context)
+    house_front = normalised_shelter_front(context)
     in_home_idx = np.where(
         [x < house_front for x in track[CLASSIFICATION_WINDOW_START:]]
     )[0]
     if len(in_home_idx) == 0:
         return np.nan
     return in_home_idx[0] / FRAME_RATE
+
+
+def get_peak_speed_and_latency(normalised_track):
+    """
+    :return peak_speed:
+    :return arg_peak: the frame number of the peak speed
+    """
+    filtered_track = gaussian_filter(normalised_track, 3)
+    distances = np.diff(filtered_track)
+    peak_speed = np.nanmin(
+        distances[CLASSIFICATION_WINDOW_START:CLASSIFICATION_WINDOW_END]
+    )
+    arg_peak = np.argmin(
+        distances[CLASSIFICATION_WINDOW_START:CLASSIFICATION_WINDOW_END]
+    )
+    return -peak_speed, arg_peak + CLASSIFICATION_WINDOW_START
