@@ -1,6 +1,3 @@
-from looming_spots.analysis.trial_group_analysis import (
-    make_trial_heatmap_location_overlay,
-)
 from looming_spots.db import loom_trial_group, experimental_log
 from matplotlib import patches
 import matplotlib.pyplot as plt
@@ -8,6 +5,13 @@ import matplotlib.pyplot as plt
 ICHLOC_MIDS = experimental_log.get_mouse_ids_in_experiment(
     "block_DA_during_pretest_flexichloc_SNLfibre"
 )
+
+
+def make_trial_heatmap_location_overlay(trials):
+    hm = None
+    for t in trials:
+        hm = t.track_overlay(track_heatmap=hm)
+    return hm
 
 
 def plot_ichloc_pretest_disruption(mids=ICHLOC_MIDS):
