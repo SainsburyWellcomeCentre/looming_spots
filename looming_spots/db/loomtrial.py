@@ -1,4 +1,6 @@
 import os
+import warnings
+
 import numpy as np
 import matplotlib.pyplot as plt
 from cached_property import cached_property
@@ -21,18 +23,17 @@ from looming_spots.db.constants import (
     ARENA_SIZE_CM,
     N_LOOMS_PER_STIMULUS,
     FRAME_RATE,
-    TRACK_LENGTH,
     N_SAMPLES_BEFORE,
     N_SAMPLES_AFTER,
-)
+    N_SAMPLES_TO_SHOW)
 
-from looming_spots.analysis import tracks, plotting, escape_classification
+from looming_spots.analysis import escape_classification, arena_region_crossings
 from looming_spots.preprocess import extract_videos, photodiode
-from looming_spots.tracking.pyper_backend.auto_track import (
+from looming_spots.deprecated.tracking.pyper_backend.auto_track import (
     pyper_cli_track_trial,
 )
-from looming_spots.tracking.pyper_backend.reference_frames.viewer import Viewer
-from looming_spots.util import video_processing
+from looming_spots.deprecated.tracking.pyper_backend.reference_frames.viewer import Viewer
+from looming_spots.util import video_processing, plotting
 from photometry.event_detect import (
     get_starts_and_ends,
     subtract_event_from_trace,
@@ -303,7 +304,17 @@ class LoomTrial(object):
             y_path = os.path.join(self.session.path, "dlc_y_tracks.npy")
 
             start = self.sample_number - N_SAMPLES_BEFORE
-            end = self.sample_number + N_SAMPLES_AFTER
+
+            if self.next_trial is not None:
+                if self.next_trial.session != self.session:
+                    end = len(self.session)
+                    print('next trial in next session, taking end of this session for track limit')
+                else:
+                    end = self.next_trial.sample_number
+                    print('next trial in same session, taking start of next trial for track limit')
+            else:
+                end = len(self.session)
+            print('no next trial, taking end of this session for track limit')
 
             x = np.load(x_path)[start:end]
             y = np.load(y_path)[start:end]
@@ -315,11 +326,11 @@ class LoomTrial(object):
 
     @property
     def x_track(self):
-        return self.raw_track[0][:TRACK_LENGTH]
+        return self.raw_track[0]
 
     @property
     def y_track(self):
-        return self.raw_track[1][:TRACK_LENGTH]
+        return self.raw_track[1]
 
     @property
     def normalised_x_track(self):
@@ -425,7 +436,7 @@ class LoomTrial(object):
         plt.plot(x_track[start:end], y_track[start:end], color=track_color)
 
     def peak_speed(self):
-        peak_speed, arg_peak_speed = tracks.get_peak_speed_and_latency(
+        peak_speed, arg_peak_speed = looming_spots.analysis.escape_classification.get_peak_speed_and_latency(
             self.normalised_x_track
         )
         return peak_speed * FRAME_RATE * ARENA_SIZE_CM
@@ -439,7 +450,7 @@ class LoomTrial(object):
         return self.peak_x_acc_idx() - LOOMING_STIMULUS_ONSET
 
     def estimate_latency(self, smooth=False):
-        home_front = looming_spots.preprocess.normalisation.normalised_home_front(
+        home_front = looming_spots.preprocess.normalisation.normalised_shelter_front(
             self.context
         )
 
@@ -491,7 +502,7 @@ class LoomTrial(object):
         x, y = self.mouse_location_at_stimulus_onset
         plt.plot(x, y, "o", color="k", markersize=20)
 
-    def plot_track(self, ax=None, color=None):
+    def plot_track(self, ax=None, color=None, n_samples_to_show=N_SAMPLES_TO_SHOW):
         if ax is None:
             ax = plt.gca()
         else:
@@ -507,6 +518,7 @@ class LoomTrial(object):
 
         self.convert_y_axis(0, 1, 0, ARENA_SIZE_CM, n_steps=6)
         self.convert_x_axis(track_length, n_steps=11)
+        plt.xlim([0, n_samples_to_show])
         sns.despine(ax=ax, top=True, right=True, left=False, bottom=False)
 
     @staticmethod
@@ -748,29 +760,10 @@ class LoomTrial(object):
         else:
             plotting.plot_looms_ax(ax)
 
-    def returns_to_house_by(self, limit=400):
-        home_front = looming_spots.preprocess.normalisation.normalised_home_front(
-            self.context
-        )
-        inside_house = self.normalised_x_track < home_front
-
-        return any(inside_house[LOOMING_STIMULUS_ONSET:limit])
-
     def raw_start(self):
         return photodiode.find_nearest_pd_up_from_frame_number(
             self.session.path, self.start
         )
-
-    #
-    # def integral_at_latency(self):
-    #     if self.is_flee():
-    #         latency = int(self.estimate_latency(False)*10000/30)
-    #         integral = self.integral[latency]
-    #         return integral
-    #
-    # def integral_at_end(self, end_p=350):
-    #     end_p = int(end_p*10000/30) - 1
-    #     return self.integral[end_p]
 
     def plot_track_and_delta_f(self):
         fig1 = plt.figure()
@@ -793,7 +786,46 @@ class LoomTrial(object):
                     self.estimate_latency(False)
                 ]
             except Exception as e:
+                warnings.warn('returning NaN for escape metric')
                 return np.nan
+
+    def n_samples_to_shelter(self):
+        return arena_region_crossings.get_next_entry_from_track(self.smoothed_x_track,
+                                                                self.context,
+                                                                'shelter',
+                                                                'middle',
+                                                                LOOMING_STIMULUS_ONSET)
+
+    def samples_to_leave_shelter(self):
+        start = self.n_samples_to_shelter()
+        if start is None:
+            print('mouse never returns to shelter, not computing time to leave shelter')
+            return None
+        return arena_region_crossings.get_next_entry_from_track(self.smoothed_x_track,
+                                                                self.context,
+                                                                'middle',
+                                                                'shelter',
+                                                                start)
+
+    def n_samples_to_tz_reentry(self):
+        return arena_region_crossings.get_next_entry_from_track(self.smoothed_x_track,
+                                                                self.context,
+                                                                'tz',
+                                                                'middle',
+                                                                LOOMING_STIMULUS_ONSET)
+
+    def track_overlay(self, duration_in_samples=200, track_heatmap=None):
+        if track_heatmap is None:
+            track_heatmap = np.zeros((480, 640))  # TODO: get shape from raw
+
+        x, y = (
+            np.array(self.raw_track[0][LOOMING_STIMULUS_ONSET:LOOMING_STIMULUS_ONSET+duration_in_samples]),
+            np.array(self.raw_track[1][LOOMING_STIMULUS_ONSET:LOOMING_STIMULUS_ONSET+duration_in_samples]),
+            )
+        for coordinate in zip(x, y):
+            if not np.isnan(coordinate).any():
+                track_heatmap[int(coordinate[1]), int(coordinate[0])] += 1
+        return track_heatmap
 
 
 class VisualStimulusTrial(LoomTrial):
