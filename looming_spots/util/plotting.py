@@ -47,10 +47,10 @@ def plot_stimulus(fig, onset=200, n_samples=90):
     return fig
 
 
-def plot_home(fig, context):
+def plot_shelter_location(fig, context):
     for ax in fig.axes:
         plt.sca(ax)
-        house_front = looming_spots.preprocess.normalisation.normalised_home_front(
+        house_front = looming_spots.preprocess.normalisation.normalised_shelter_front(
             context
         )
         plt.axhline(house_front, 0, 400, ls="--")
@@ -153,14 +153,14 @@ def format_plots(axes):
         ax.spines["top"].set_visible(False)
 
 
-def format_ax(xlabel, ylabel, ax=None):
+def format_ax(xlabel='contrast', ylabel='escape probability', ax=None):
     if ax is None:
         ax = plt.gca()
 
     plt.ylabel(
-        "escape probability", fontsize=15, fontweight="black", color="#333F4B"
+       ylabel, fontsize=15, fontweight="black", color="#333F4B"
     )
-    plt.xlabel("contrast", fontsize=15, fontweight="black", color="#333F4B")
+    plt.xlabel(xlabel, fontsize=15, fontweight="black", color="#333F4B")
 
     ax.spines["left"].set_smart_bounds(True)
     ax.spines["bottom"].set_smart_bounds(True)
