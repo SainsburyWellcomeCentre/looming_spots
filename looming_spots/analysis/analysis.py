@@ -7,7 +7,7 @@ from matplotlib import cm
 import numpy as np
 import pandas as pd
 
-from looming_spots.analysis import plotting
+from looming_spots.util import plotting
 from looming_spots.db import loom_trial_group
 
 from looming_spots.db.experimental_log import get_mouse_ids_in_experiment
@@ -185,12 +185,6 @@ def plot_photometry_with_thresholds(pre_trials, post_trials, rescale_factor=1):
             else:
                 plt.sca(ax)
                 [plt.axhline(t) for t in thresholds]
-
-
-def plot_cumulative_event_traces(trials, limit=400):
-    for t in trials:
-        color = "r" if t.returns_to_house_by(limit) else "k"
-        plt.plot(t.cumulative_sum_raw, color)
 
 
 def plot_habituation(habituation_trials, max_df=1):
