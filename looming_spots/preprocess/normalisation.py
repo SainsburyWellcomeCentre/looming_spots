@@ -32,7 +32,7 @@ def load_normalised_speeds(loom_folder, context):
     return norm_speeds
 
 
-def normalised_home_front(context):
+def normalised_shelter_front(context):
     house_front_raw = constants.context_params[context].house_front
     house_front_normalised = normalise_x_track(house_front_raw, context)
     # print(house_front_normalised)
