@@ -1,17 +1,17 @@
 import pandas as pd
 import pingouin as pg
 
-from looming_spots.analysis.escape_metrics import (
+from looming_spots.analysis.escape_metric_dataframes import (
     get_behaviour_metric_dataframe,
 )
 from looming_spots.db import experimental_log, loom_trial_group
-
+#"CA451A_4",ohda
 GROUPS = {
     "OHDA": [
         "CA451A_1",
         "CA451A_2",
         "CA451A_3",
-        "CA451A_4",
+
         "CA478_2",
         "CA476_4",
     ],
@@ -25,7 +25,7 @@ GROUPS = {
         "CA459A_2",
         "CA478_3",
     ],
-    "": experimental_log.get_mouse_ids_in_experiment(
+    "d1_caspase": experimental_log.get_mouse_ids_in_experiment(
         "d1MSN_caspase_lesion_TS"
     ),
     "d2_caspase": experimental_log.get_mouse_ids_in_experiment(
