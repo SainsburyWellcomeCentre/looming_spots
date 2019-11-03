@@ -58,7 +58,6 @@ def plot_max_integral_bars(mtgs):
             np.nanmax(t.integral_downsampled) / max_event
             for t in mtg.post_test_trials()[:3]
         ]
-        # all_max_integrals.append(max_integrals)
 
         plt.scatter(
             np.ones_like(max_integrals_pre),
@@ -116,7 +115,6 @@ def plot_integral_at_latency_bars(mtgs, bar_colors=("k", "k")):
             / normalising_factor
             for t in mtg.post_test_trials()[:3]
         ]
-        # all_max_integrals.append(max_integrals)
 
         plt.scatter(
             np.ones_like(max_integrals_pre),
@@ -178,15 +176,11 @@ def get_max_integral_habituations(mtgs):
             np.nanmax(t.integral_downsampled()) / max_event
             for t in mtg.habituation_trials()[:24]
         ]
-        # all_max_integrals.append(max_integrals)
 
         plt.scatter(
             np.arange(max_integrals), max_integrals, color="w", edgecolor="k"
         )
 
-        # plt.scatter(1, np.mean(max_integrals_pre), color=c, zorder=1000, s=60)
-        # plt.scatter(2, np.mean(max_integrals_post), color=c, zorder=1000, s=60)
-        # plt.plot([1, 2], [np.mean(max_integrals_pre), np.mean(max_integrals_post)], color='k')
         all_integrals.append(np.mean(max_integrals))
     return all_integrals
 
@@ -314,7 +308,6 @@ def get_signal_metric_dataframe_variable_contrasts(mtgs, metric):
         vals = []
         signals = []
         event_metric_dict = {}
-        # trials = mtg.pre_test_trials()[:3]
         trials = mtg.all_trials[:18]
         norm_factor = max(
             [max(t.integral_downsampled()[200:214]) for t in mtg.all_trials]
@@ -365,7 +358,7 @@ def get_signal_metric_dataframe(mtgs, metric):
                 signal = (
                     t.integral_escape_metric(int(pre_test_latency))
                     / norm_factor
-                )  # t.integral_downsampled()[200:214]
+                )
                 vals.append(val)
                 signals.append(signal)
 
@@ -432,7 +425,7 @@ def get_time_series_df(mtgs):
         start = 0
         norm_factor = max(
             [max(t.integral_downsampled()[200:400]) for t in mtg.all_trials]
-        )  # t.integral_downsampled()[200:214]
+        )
         for trials, test_type in zip(
             [mtg.pre_test_trials()[:3], mtg.post_test_trials()[:3]],
             ["pre test", "post test"],
@@ -481,12 +474,7 @@ def habituation_df(mtg_groups, mtg_group_labels):
                     )
                 ]
             )
-            all_trials = (
-                mtg.pre_test_trials()[:3]
-                + mtg.habituation_trials()[:23]
-                + mtg.post_test_trials()[:3]
-            )
-            # norm_factor = max([max(t.integral_downsampled()[200:214]) for t in all_trials])
+
             for trials, test_type in zip(
                 [
                     mtg.pre_test_trials()[:3],
@@ -499,7 +487,6 @@ def habituation_df(mtg_groups, mtg_group_labels):
                 contrasts = []
                 signals = []
                 for t in trials:
-                    # signal = max(t.integral_downsampled()[200:214])/norm_factor
                     signal = (
                         t.integral_escape_metric(int(pre_test_latency))
                         / norm_factor
@@ -543,7 +530,7 @@ def get_trials_df(mtgs, metric):
             val = t.metric_functions[metric]()
             signal = (
                 t.integral_escape_metric() / norm_factor
-            )  # t.integral_downsampled()[200:214]
+            )
             metric_val = t.metric_functions[metric]()
             vals.append(val)
             signals.append(signal)

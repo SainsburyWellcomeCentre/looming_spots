@@ -1,39 +1,10 @@
 import os
 import subprocess
 import sys
-import warnings
-
 import numpy as np
 import pims
 
 import looming_spots.preprocess.io
-from looming_spots.db import load
-from looming_spots.db.constants import (
-    get_processed_mouse_directory,
-    get_raw_path,
-    RAW_DATA_DIRECTORY,
-)
-from looming_spots.db.metadata import experiment_metadata
-from looming_spots.deprecated.deprecated import (
-    copy_mouse_directory_to_processed,
-)
-
-
-def process_all_mids():
-    for mouse_directory in os.listdir(RAW_DATA_DIRECTORY):
-        try:
-            apply_all_preprocessing_to_mouse_id(mouse_directory)
-        except Exception as e:
-            print(e)
-            continue
-
-
-def apply_all_preprocessing_to_mouse_id(mouse_id):
-    raw_mouse_dir = get_raw_path(mouse_id)
-    if os.path.isdir(raw_mouse_dir):
-        mouse_dir = get_processed_mouse_directory(mouse_id)
-        copy_mouse_directory_to_processed(mouse_id)
-        # apply_all_preprocessing(mouse_dir)
 
 
 class NoPdError(Exception):
@@ -62,34 +33,6 @@ def compare_pd_and_video(directory):
             downsampled_ai = pd_trace[:: int(n_samples_ratio)]
             save_path = os.path.join(directory, "AI_corrected")
             np.save(save_path, downsampled_ai)
-
-
-def apply_all_preprocessing(mouse_id, video_name="camera"):
-    raw_video_name = video_name + ".avi"
-    processed_video_name = video_name + ".mp4"
-
-    sessions = load.load_sessions(mouse_id)
-    for s in sessions:
-        print(s.path)
-        raw_video_path = os.path.join(s.path, raw_video_name)
-        processed_video_path = os.path.join(s.path, processed_video_name)
-        if not os.path.isfile(processed_video_path) and os.path.isfile(
-            raw_video_path
-        ):
-            try:
-                convert_to_mp4(raw_video_name, s.path, remove_avi=True)
-                initialise_metadata(s.path, remove_txt=True)
-            except FileNotFoundError as e:
-                print(e)
-                continue
-        if not os.path.isfile(processed_video_path):
-
-            warnings.warn("no video file in this session")
-            # NoProcessedVideoError
-            continue
-
-        # s.extract_trials()
-        # s.track_trials()
 
 
 def convert_to_mp4(
@@ -140,17 +83,6 @@ def convert_avi_to_mp4(avi_path):
         )
 
     subprocess.check_call([cmd], shell=True)
-
-
-def initialise_metadata(session_folder, remove_txt=False):
-    metadata_cfg_path = os.path.join(session_folder, "metadata.cfg")
-    metadata_txt_path = os.path.join(session_folder, "metadata.txt")
-    if not os.path.isfile(metadata_cfg_path):
-        experiment_metadata.initialise_metadata(session_folder)
-    if remove_txt:
-        if os.path.isfile(metadata_txt_path):
-            os.remove(metadata_txt_path)
-            print("deleting: {}".format(metadata_txt_path))
 
 
 class NoProcessedVideoError(Exception):

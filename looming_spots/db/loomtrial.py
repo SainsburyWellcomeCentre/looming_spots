@@ -27,9 +27,7 @@ from looming_spots.db.constants import (
     N_SAMPLES_TO_SHOW,
 )
 
-from looming_spots.analysis import (
-    escape_classification,
-    arena_region_crossings,
+from looming_spots.analysis import (arena_region_crossings,
 )
 from looming_spots.preprocess import extract_videos, photodiode
 from looming_spots.deprecated.tracking.pyper_backend.auto_track import (
@@ -651,11 +649,12 @@ class LoomTrial(object):
         return pd.DataFrame.from_dict(metric_dict)
 
     def detect_events(self):
-        return self.detect_events_scipy()
+        return self.detect_events_scipy(self.delta_f())
 
-    def detect_events_scipy(self):
-        df = self.delta_f() - apply_butterworth_lowpass_filter(
-            self.delta_f(), 0.1, 30, order=8
+    @staticmethod
+    def detect_events_scipy(delta_f):
+        df = delta_f - apply_butterworth_lowpass_filter(
+            delta_f, 0.1, 30, order=8
         )
 
         pks = signal.find_peaks(df, np.std(df), width=2)  # 1.5 * np.std(df)
