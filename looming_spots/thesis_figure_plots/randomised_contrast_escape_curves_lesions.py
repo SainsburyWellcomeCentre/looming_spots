@@ -5,16 +5,10 @@ from looming_spots.analysis.escape_metric_dataframes import (
     get_behaviour_metric_dataframe,
 )
 from looming_spots.db import experimental_log, loom_trial_group
-#"CA451A_4",ohda
-GROUPS = {
-    "OHDA": [
-        "CA451A_1",
-        "CA451A_2",
-        "CA451A_3",
 
-        "CA478_2",
-        "CA476_4",
-    ],
+# "CA451A_4",ohda
+GROUPS = {
+    "OHDA": ["CA451A_1", "CA451A_2", "CA451A_3", "CA478_2", "CA476_4"],
     "NMDA": ["276585A", "276585B", "CA439_1", "CA439_4"],
     "CONTROL": [
         "276585D",

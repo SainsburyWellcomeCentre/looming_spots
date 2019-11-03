@@ -221,7 +221,9 @@ def compare_groups_lsie_exploration(
 ):
     import matplotlib.pyplot as plt
     from looming_spots.db import loom_trial_group, experimental_log
-    from looming_spots.deprecated.deprecated import make_trial_heatmap_location_overlay
+    from looming_spots.deprecated.deprecated import (
+        make_trial_heatmap_location_overlay,
+    )
 
     immediate = experimental_log.get_mouse_ids_in_experiment(groups[0])
     day_before = experimental_log.get_mouse_ids_in_experiment(groups[1])
@@ -284,7 +286,9 @@ def get_group_lsie_exploration_hms(
     groups=("pre_hab_post_immediate", "pre_hab_post_24hr")
 ):
     from looming_spots.db import loom_trial_group, experimental_log
-    from looming_spots.deprecated.deprecated import make_trial_heatmap_location_overlay
+    from looming_spots.deprecated.deprecated import (
+        make_trial_heatmap_location_overlay,
+    )
 
     group_hms = {}
 

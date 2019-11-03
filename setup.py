@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 setup(
     name="looming_spots",
     version="",
-    packages=find_packages(exclude=["zarchive", "tests", "doc", "deprecated"]),
+    packages=find_packages(exclude=["tests", "doc", "deprecated"]),
     url="https://github.com/stephenlenzi/looming_spots.git",
     license="MIT",
     author="Stephen Lenzi",

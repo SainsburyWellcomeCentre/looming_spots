@@ -153,13 +153,11 @@ def format_plots(axes):
         ax.spines["top"].set_visible(False)
 
 
-def format_ax(xlabel='contrast', ylabel='escape probability', ax=None):
+def format_ax(xlabel="contrast", ylabel="escape probability", ax=None):
     if ax is None:
         ax = plt.gca()
 
-    plt.ylabel(
-       ylabel, fontsize=15, fontweight="black", color="#333F4B"
-    )
+    plt.ylabel(ylabel, fontsize=15, fontweight="black", color="#333F4B")
     plt.xlabel(xlabel, fontsize=15, fontweight="black", color="#333F4B")
 
     ax.spines["left"].set_smart_bounds(True)

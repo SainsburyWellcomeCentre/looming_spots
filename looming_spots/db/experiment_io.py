@@ -4,7 +4,7 @@ from cached_property import cached_property
 from looming_spots.db import load
 
 
-class ExperimentIo(object):  #TODO: merge with ltg
+class ExperimentIo(object):  # TODO: merge with ltg
     def __init__(self, mouse_id):
         self.mouse_id = mouse_id
 
@@ -32,10 +32,8 @@ class ExperimentIo(object):  #TODO: merge with ltg
         return doubly_linked_sessions
 
     @cached_property
-    def linked_trials(
-        self
-    ):
-        unlinked_trials = self.data('trials')
+    def linked_trials(self):
+        unlinked_trials = self.data("trials")
         singly_linked_trials = []
         doubly_linked_trials = []
 

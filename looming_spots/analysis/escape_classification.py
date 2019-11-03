@@ -75,56 +75,6 @@ def classify_flee(loom_folder, context):
     return False
 
 
-def time_spent_hiding_deprecated(loom_folder, context):
-    track = gaussian_filter(load_normalised_track(loom_folder, context), 3)
-    stimulus_relevant_track = track[CLASSIFICATION_WINDOW_START:]
-
-    home_front = normalised_shelter_front(context)
-    safety_zone_border_crossings = np.where(
-        np.diff(stimulus_relevant_track < home_front)
-    )
-
-    if len(safety_zone_border_crossings[0]) == 0:  # never runs away
-        return 0
-    elif len(safety_zone_border_crossings[0]) == 1:  # never comes back out
-        print(f"this mouse never leaves {loom_folder}")
-        print(safety_zone_border_crossings)
-        return (
-            int(
-                len(stimulus_relevant_track)
-                - int(safety_zone_border_crossings[0])
-            )
-            / FRAME_RATE
-        )
-    else:
-        return int(safety_zone_border_crossings[0][1]) / FRAME_RATE
-
-
-def time_spent_hiding(normalised_track, context):
-    track = gaussian_filter(normalised_track, 3)
-    stimulus_relevant_track = track[CLASSIFICATION_WINDOW_START:]
-
-    home_front = normalised_shelter_front(context)
-    safety_zone_border_crossings = np.where(
-        np.diff(stimulus_relevant_track < home_front)
-    )
-
-    if len(safety_zone_border_crossings[0]) == 0:  # never runs away
-        return 0
-    elif len(safety_zone_border_crossings[0]) == 1:  # never comes back out
-        print("this mouse never leaves")
-        print(safety_zone_border_crossings)
-        return (
-            int(
-                len(stimulus_relevant_track)
-                - int(safety_zone_border_crossings[0])
-            )
-            / FRAME_RATE
-        )
-    else:
-        return int(safety_zone_border_crossings[0][1]) / FRAME_RATE
-
-
 def estimate_latency(
     track,
     start=CLASSIFICATION_WINDOW_START,

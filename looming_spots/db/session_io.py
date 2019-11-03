@@ -38,7 +38,7 @@ class Session(object):
         self.previous_session = None
 
     def __len__(self):
-        return len(self.data['photodiode'])
+        return len(self.data["photodiode"])
 
     def __lt__(self, other):
         return self.dt < other.dt
@@ -411,10 +411,10 @@ class Session(object):
             x = np.load(x_path)
             y = np.load(y_path)
             if len(x) - len(self) > 5:
-                warning_text = f'noticed a mismatch between track length: {len(x)} and session data: {len(self)}'
+                warning_text = f"noticed a mismatch between track length: {len(x)} and session data: {len(self)}"
                 warnings.warn(warning_text)
 
-            return x[:len(self)], y[:len(self)]
+            return x[: len(self)], y[: len(self)]
 
     def x_pos(self):
         return self.track()[0]
@@ -430,10 +430,10 @@ class Session(object):
         prev_samples = 0
 
         selection_dict = {
-                          'loom_idx': self.loom_idx,
-                          'auditory_idx': self.auditory_idx,
-                          'trials': self.trials,
-                          }
+            "loom_idx": self.loom_idx,
+            "auditory_idx": self.auditory_idx,
+            "trials": self.trials,
+        }
 
         while current_session is not None:
             print(f"prev_samples: {prev_samples}")
@@ -441,20 +441,20 @@ class Session(object):
             if current_session is not None:
                 prev_samples += len(current_session)
 
-        if key == 'trials':
+        if key == "trials":
             self + prev_samples
             return self.trials
 
         return selection_dict[key] + prev_samples
 
     def get_loom_idx(self):
-        return self.get('loom_idx')
+        return self.get("loom_idx")
 
     def get_auditory_idx(self):
-        return self.get('auditory_idx')
+        return self.get("auditory_idx")
 
     def get_session_trials(self):
-        return self.get('trials')
+        return self.get("trials")
 
     @classmethod
     def set_next_session(cls, self, other):

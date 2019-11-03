@@ -6,7 +6,9 @@ import scipy.io
 from cached_property import cached_property
 from tqdm import tqdm
 from looming_spots.util.generic_functions import flatten_list
-from looming_spots.deprecated.deprecated import make_trial_heatmap_location_overlay
+from looming_spots.deprecated.deprecated import (
+    make_trial_heatmap_location_overlay,
+)
 from looming_spots.db import load, experimental_log
 
 
