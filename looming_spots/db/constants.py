@@ -54,6 +54,7 @@ TRACK_LENGTH = 600
 
 N_SAMPLES_BEFORE = 200
 N_SAMPLES_AFTER = 400
+N_SAMPLES_TO_SHOW = 600
 
 
 def get_processed_mouse_directory(mouse_id):
