@@ -59,9 +59,8 @@ def load_sessions(mouse_id):
             session_list.append(s)
 
         if len(session_list) == 0:
-            raise MouseNotFoundError(
-                f"the mouse: {mouse_id} has not been processed"
-            )
+            msg = f"the mouse: {mouse_id} has not been processed"
+            raise MouseNotFoundError(msg)
 
         return sorted(session_list)
     msg = f"the mouse: {mouse_id} has not been copied to the processed data directory"
