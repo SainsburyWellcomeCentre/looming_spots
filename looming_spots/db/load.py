@@ -4,7 +4,6 @@ import warnings
 from pathlib import Path
 from shutil import copyfile
 
-import looming_spots.preprocess.extract_videos
 import looming_spots.util.generic_functions
 from looming_spots.db import session_io
 from looming_spots.db.constants import PROCESSED_DATA_DIRECTORY

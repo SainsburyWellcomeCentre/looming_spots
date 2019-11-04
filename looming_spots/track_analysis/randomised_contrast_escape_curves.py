@@ -3,7 +3,7 @@ import scipy
 from scipy import stats
 from matplotlib import pyplot as plt
 
-from looming_spots.analysis.analysis import plot_trials
+from looming_spots.deprecated.analysis import plot_trials
 from looming_spots.db import loom_trial_group, experimental_log
 
 

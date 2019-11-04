@@ -2,8 +2,6 @@ import itertools
 import numpy as np
 import scipy.stats
 
-import looming_spots.deprecated.session_functions
-import looming_spots.deprecated.session_group
 import itertools as it
 import collections
 import pandas as pd

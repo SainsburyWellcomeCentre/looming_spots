@@ -1,7 +1,7 @@
 import pandas as pd
 import pingouin as pg
 
-from looming_spots.analysis.escape_metric_dataframes import (
+from looming_spots.track_analysis.escape_metric_dataframes import (
     get_behaviour_metric_dataframe,
 )
 from looming_spots.db import experimental_log, loom_trial_group

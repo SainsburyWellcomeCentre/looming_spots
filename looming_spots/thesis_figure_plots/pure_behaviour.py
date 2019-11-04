@@ -1,13 +1,15 @@
 import numpy as np
 from matplotlib import pyplot as plt
 
-from looming_spots.analysis.escape_metric_dataframes import (
+import looming_spots.exceptions
+from looming_spots.track_analysis.escape_metric_dataframes import (
     get_behaviour_metric_dataframe,
 )
-from looming_spots.analysis.randomised_contrast_escape_curves import (
+from looming_spots.track_analysis.randomised_contrast_escape_curves import (
     get_contrast_escape_curve_from_group_label,
 )
 from looming_spots.db import experimental_log, loom_trial_group
+from looming_spots.db.loom_trial_group import make_trial_heatmap_location_overlay
 from looming_spots.preprocess import photodiode
 import pandas as pd
 import seaborn as sns
@@ -125,7 +127,7 @@ def plot_pre_test_effect():
 
                 for t in mtg.post_test_trials()[:3]:
                     t.plot_track(ax)
-            except photodiode.LoomNumberError as e:
+            except looming_spots.exceptions.LoomNumberError as e:
                 print(e)
 
         for ax in axes:
@@ -166,7 +168,7 @@ def plot_pre_test_effect_post_test_only():
                 mtg = loom_trial_group.MouseLoomTrialGroup(mid)
                 for t in mtg.post_test_trials()[:3]:
                     t.plot_track(ax)
-            except photodiode.LoomNumberError as e:
+            except looming_spots.exceptions.LoomNumberError as e:
                 print(e)
 
         t.plot_stimulus()
@@ -221,9 +223,6 @@ def compare_groups_lsie_exploration(
 ):
     import matplotlib.pyplot as plt
     from looming_spots.db import loom_trial_group, experimental_log
-    from looming_spots.deprecated.deprecated import (
-        make_trial_heatmap_location_overlay,
-    )
 
     immediate = experimental_log.get_mouse_ids_in_experiment(groups[0])
     day_before = experimental_log.get_mouse_ids_in_experiment(groups[1])
@@ -285,11 +284,6 @@ def compare_groups_lsie_exploration(
 def get_group_lsie_exploration_hms(
     groups=("pre_hab_post_immediate", "pre_hab_post_24hr")
 ):
-    from looming_spots.db import loom_trial_group, experimental_log
-    from looming_spots.deprecated.deprecated import (
-        make_trial_heatmap_location_overlay,
-    )
-
     group_hms = {}
 
     for group in groups:
@@ -311,8 +305,6 @@ def get_group_lsie_exploration_hms(
 def get_lsie_exploration_dataframe(
     groups=("pre_hab_post_immediate", "pre_hab_post_24hr")
 ):
-    from looming_spots.db import experimental_log
-
     df = pd.DataFrame()
 
     for group_label in groups:

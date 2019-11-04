@@ -2,6 +2,8 @@ import os
 from collections import namedtuple
 from datetime import datetime
 
+from configobj import ConfigObj
+
 FRAME_RATE = 30
 VIDEO_SHAPE = (480, 640)
 ARENA_SIZE_CM = 50
@@ -72,3 +74,17 @@ FIGURE_DIRECTORY = "/home/slenzi/figures/"
 OLD_RAW_DIRECTORY = (
     "/home/slenzi/spine_shares/loomer/srv/glusterfs/imaging/l/loomer/raw_data/"
 )
+CONTEXT_B_SPOT_POSITION = 1240
+
+
+def load_metadata(directory):
+    config_path = os.path.join(directory, METADATA_PATH)
+    metadata = ConfigObj(
+        config_path,
+        encoding="UTF8",
+        indent_type="    ",
+        unrepr=False,
+        create_empty=True,
+        write_empty_values=True,
+    )
+    return metadata

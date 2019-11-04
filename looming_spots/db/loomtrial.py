@@ -11,8 +11,9 @@ from datetime import timedelta
 import seaborn as sns
 import pandas as pd
 
-import looming_spots.analysis.escape_classification
+import looming_spots.track_analysis.escape_classification
 import looming_spots.preprocess.normalisation
+import looming_spots.util.video_processing
 from looming_spots.util.event_detection.events_collection import (
     EventsCollection,
 )
@@ -27,15 +28,10 @@ from looming_spots.db.constants import (
     N_SAMPLES_TO_SHOW,
 )
 
-from looming_spots.analysis import (arena_region_crossings,
-)
-from looming_spots.preprocess import extract_videos, photodiode
-from looming_spots.deprecated.tracking.pyper_backend.auto_track import (
-    pyper_cli_track_trial,
-)
-from looming_spots.deprecated.tracking.pyper_backend.reference_frames.viewer import (
-    Viewer,
-)
+from looming_spots.track_analysis import (arena_region_crossings,
+                                          )
+from looming_spots.preprocess import photodiode
+
 from looming_spots.util import video_processing, plotting
 from photometry.event_detect import (
     get_starts_and_ends,
@@ -230,7 +226,7 @@ class LoomTrial(object):
         if not overwrite:
             if os.path.isfile(self.video_path):
                 return "video already exists... skipping"
-        extract_videos.extract_loom_video_trial(
+        looming_spots.util.video_processing.extract_loom_video_trial(
             self.session.video_path,
             self.video_path,
             self.sample_number,
@@ -405,20 +401,20 @@ class LoomTrial(object):
         track = gaussian_filter(self.normalised_x_track, 3)
         speed = np.diff(track)
 
-        if looming_spots.analysis.escape_classification.fast_enough(
+        if looming_spots.track_analysis.escape_classification.fast_enough(
             speed
-        ) and looming_spots.analysis.escape_classification.reaches_home(
+        ) and looming_spots.track_analysis.escape_classification.reaches_home(
             track, self.context
         ):  # and not leaves_house(track, self.context)
-            leaves_house_within = looming_spots.analysis.escape_classification.leaves_house(
+            leaves_house_within = looming_spots.track_analysis.escape_classification.leaves_house(
                 track, self.context
             )
             print(f"leaves: {leaves_house_within}")
             return True
-        fast_enough = looming_spots.analysis.escape_classification.fast_enough(
+        fast_enough = looming_spots.track_analysis.escape_classification.fast_enough(
             speed
         )
-        reaches_shelter = looming_spots.analysis.escape_classification.reaches_home(
+        reaches_shelter = looming_spots.track_analysis.escape_classification.reaches_home(
             track, self.context
         )
         print(f"fast enough: {fast_enough}, reaches home: {reaches_shelter}")
@@ -442,7 +438,7 @@ class LoomTrial(object):
         plt.plot(x_track[start:end], y_track[start:end], color=track_color)
 
     def peak_speed(self):
-        peak_speed, arg_peak_speed = looming_spots.analysis.escape_classification.get_peak_speed_and_latency(
+        peak_speed, arg_peak_speed = looming_spots.track_analysis.escape_classification.get_peak_speed_and_latency(
             self.normalised_x_track
         )
         return peak_speed * FRAME_RATE * ARENA_SIZE_CM
@@ -455,17 +451,17 @@ class LoomTrial(object):
     def latency_p(self):
         return self.peak_x_acc_idx() - LOOMING_STIMULUS_ONSET
 
-    def estimate_latency(self, smooth=False):
+    def estimate_latency(self, smooth=False, limit=600):
         home_front = looming_spots.preprocess.normalisation.normalised_shelter_front(
             self.context
         )
 
-        inside_house = self.normalised_x_track < home_front
+        inside_house = self.normalised_x_track[:limit] < home_front
 
         if smooth:
-            speed = self.smoothed_x_speed
+            speed = self.smoothed_x_speed[:limit]
         else:
-            speed = self.normalised_x_speed
+            speed = self.normalised_x_speed[:limit]
 
         towards_house = speed < -0.0001
 

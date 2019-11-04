@@ -12,6 +12,7 @@ from looming_spots.db.constants import (
     AUDITORY_STIMULUS_CHANNEL_ADDED_DATE,
     OLD_RAW_DIRECTORY,
 )
+from looming_spots.exceptions import PdTooShortError
 
 """
 
@@ -96,10 +97,6 @@ def load_pd_and_clock_raw(
     pd = raw_ai[:, 0]
     clock = raw_ai[:, 1]
     return pd, clock, []  # FIXME: hack
-
-
-class PdTooShortError(ValueError):
-    pass
 
 
 def load_pd_on_clock_ups(directory, pd_threshold=2.5):

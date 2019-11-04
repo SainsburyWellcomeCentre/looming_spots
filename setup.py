@@ -8,7 +8,7 @@ setup(
     license="MIT",
     author="Stephen Lenzi",
     author_email="s.lenzi@ucl.ac.uk",
-    description="looming spot analysis in python",
+    description="looming spot track_analysis in python",
     install_requires=[
         "numpy",
         "configobj",
@@ -18,6 +18,6 @@ setup(
         "pandas",
         "pims",
         "scikit-video",
-        "pingouin",
+        "pingouin", 'nptdms'
     ],
 )

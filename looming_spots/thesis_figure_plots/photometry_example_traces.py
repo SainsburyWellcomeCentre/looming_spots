@@ -1,7 +1,7 @@
 import numpy as np
 from looming_spots.db.constants import FIGURE_DIRECTORY
 from looming_spots.db import loom_trial_group, experimental_log
-from looming_spots.analysis import photometry_habituations
+from looming_spots.track_analysis import photometry_habituations
 import seaborn as sns
 import pandas as pd
 
@@ -317,9 +317,6 @@ def plot_escape_metrics_variable_contrast_experiments(
         "classified as flee",
     )
 ):
-    from looming_spots.db import loom_trial_group
-    from looming_spots.analysis import photometry_habituations
-    import seaborn as sns
 
     all_dfs = []
     mouse_ids = ["898992", "916063", "921000", "907822"]

@@ -4,17 +4,15 @@ import numpy as np
 import pims
 import scipy.signal
 
-from looming_spots.db.metadata import experiment_metadata
-from looming_spots.util import convert_videos
-
+import looming_spots.util.video_processing
 from looming_spots.db.constants import FRAME_RATE
 
 from looming_spots.preprocess.io import (
     load_pd_on_clock_ups,
     load_auditory_on_clock_ups,
     load_pd_and_clock_raw,
-    PdTooShortError,
 )
+from looming_spots.exceptions import PdTooShortError
 
 
 def get_loom_idx_from_raw(directory, save=True):  # TODO: save npy file instead
@@ -24,7 +22,7 @@ def get_loom_idx_from_raw(directory, save=True):  # TODO: save npy file instead
         print(len(ai))
         aud = load_auditory_on_clock_ups(directory)
         loom_starts, loom_ends = find_pd_threshold_crossings(ai)
-    except convert_videos.NoPdError as e:
+    except looming_spots.util.video_processing.NoPdError as e:
         loom_starts = []
         loom_ends = []
 
@@ -186,11 +184,6 @@ def get_manual_looms_raw(directory):
     return get_manual_looms(loom_idx)
 
 
-def get_manual_looms_from_metadata(directory):
-    loom_idx = experiment_metadata.get_loom_idx(directory)
-    return get_manual_looms(loom_idx)
-
-
 def find_nearest_pd_up_from_frame_number(
     directory, frame_number, sampling_rate=10000
 ):
@@ -200,5 +193,3 @@ def find_nearest_pd_up_from_frame_number(
     return raw_pd_ups[np.argmin(abs(raw_pd_ups - start_p))]
 
 
-class LoomNumberError(Exception):
-    pass

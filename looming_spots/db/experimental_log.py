@@ -222,17 +222,24 @@ def get_combination(
 
 
 def get_pre_tests(
-    include=["pre_test"],
-    exclude=[],
-    matching_dict_pre_test={
+    include=("pre_test",),
+    exclude=(),
+    matching_dict_pre_test=None,
+):
+    """
+    matching_dict={
         "test_type": "== pre_test",
         "context": "== A9",
         "line": "== wt",
         "stimulus": "== looming",
         "contrast": "== 0.1600",
         "surgery": "== FALSE",
-    },
-):
+    }
+    :param include:
+    :param exclude:
+    :param matching_dict_pre_test:
+    :return:
+    """
     log = load_df()
     mouse_ids = get_mouse_ids_with_test_combination(log, include, exclude)
     filtered_db = get_subset_df_from_mouse_ids(log, mouse_ids)

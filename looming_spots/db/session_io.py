@@ -3,20 +3,21 @@ import warnings
 
 import numpy as np
 from datetime import datetime
+
+import scipy
 from cached_property import cached_property
 
 import looming_spots.preprocess.io
 from looming_spots.db.constants import (
     AUDITORY_STIMULUS_CHANNEL_ADDED_DATE,
     PROCESSED_DATA_DIRECTORY,
-)
+    CONTEXT_B_SPOT_POSITION)
 
 from looming_spots.db import loomtrial
 from looming_spots.exceptions import LoomsNotTrackedError
 
 from looming_spots.preprocess import photodiode, normalisation
 from looming_spots.util import generic_functions
-from looming_spots.db.metadata import experiment_metadata
 from photometry import demodulation, load
 
 
@@ -145,7 +146,7 @@ class Session(object):
                     else:
                         raise NotImplementedError
 
-                    t.time_to_first_loom = self.time_to_first_loom()
+                    #t.time_to_first_loom = self.time_to_first_loom()
                     trials.append(t)
                 return trials
             else:
@@ -162,7 +163,7 @@ class Session(object):
     @property
     def context(self):  # FIXME: this is BS
         try:
-            return experiment_metadata.get_context_from_stimulus_mat(self.path)
+            return get_context_from_stimulus_mat(self.path)
         except FileNotFoundError as e:
             print(e)
             print("guessing A10")
@@ -349,32 +350,9 @@ class Session(object):
             len(self.loom_idx) / 5
         )  # FIXME: hard code
 
-    def time_to_first_loom(self):
-        if len(self.loom_idx) > 0:
-            if "time_of_mouse_entry" in self.metadata:
-                return (
-                    (
-                        int(self.loom_idx[0])
-                        - int(self.metadata["time_of_mouse_entry"])
-                    )
-                    / 30
-                    / 60
-                )
-            return int(self.loom_idx[0]) / 30 / 60
-
     def extract_trials(self):
         for t in self.trials:
             t.extract_video()
-
-    @property
-    def metadata(self):
-        return experiment_metadata.load_metadata(self.path)
-
-    @property
-    def grid_location(self):
-        mtd = experiment_metadata.load_metadata(self.path)
-        grid_location = mtd["grid_location"]
-        return grid_location
 
     def contains_visual(self):
         pd = looming_spots.preprocess.io.load_pd_on_clock_ups(self.path)
@@ -466,3 +444,20 @@ class Session(object):
 
     def get_normalised_x_pos(self):
         return normalisation.normalise_x_track(self.x_pos(), self.context)
+
+
+def get_context_from_stimulus_mat(directory):
+    stimulus_path = os.path.join(directory, "stimulus.mat")
+    if os.path.isfile(stimulus_path):
+        stimulus_params = scipy.io.loadmat(stimulus_path)["params"]
+        dot_locations = [
+            x[0] for x in stimulus_params[0][0] if len(x[0]) == 2
+        ]  # only spot position has length 2
+
+        return (
+            "B"
+            if any(CONTEXT_B_SPOT_POSITION in x for x in dot_locations)
+            else "A"
+        )
+    else:
+        return "A10"

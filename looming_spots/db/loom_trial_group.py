@@ -6,91 +6,7 @@ import scipy.io
 from cached_property import cached_property
 from tqdm import tqdm
 from looming_spots.util.generic_functions import flatten_list
-from looming_spots.deprecated.deprecated import (
-    make_trial_heatmap_location_overlay,
-)
 from looming_spots.db import load, experimental_log
-
-
-class ExperimentalConditionGroup(object):
-    def __init__(self, labels, mouse_ids=None, ignore_ids=None, limit=None):
-        if isinstance(labels, str):
-            self.labels = [labels]
-        else:
-            self.labels = labels
-        self.mouse_ids = mouse_ids
-        self.avg_df = pd.DataFrame()
-        self.trials_df = pd.DataFrame()
-        self.ignore_ids = ignore_ids
-        self.limit = limit
-        if mouse_ids is None:
-            self.groups = self.get_groups_from_record_sheet()
-        else:
-            self.groups = {
-                label: list(mouse_id_group)
-                for label, mouse_id_group in zip(labels, mouse_ids)
-            }
-
-    def remove_ignore_mice(self, mouse_ids):
-        if self.ignore_ids is None:
-            return mouse_ids
-        return list(set(mouse_ids).symmetric_difference(set(self.ignore_ids)))
-
-    def get_groups_from_record_sheet(self):
-        mouse_group_dictionary = {}
-        for label in self.labels:
-            mouse_ids_in_group = experimental_log.get_mouse_ids_in_experiment(
-                label
-            )
-            mouse_ids_in_group = self.remove_ignore_mice(mouse_ids_in_group)
-            mouse_group_dictionary.setdefault(label, mouse_ids_in_group)
-
-        return mouse_group_dictionary
-
-    def trials(self, trial_type):
-        trial_group_dictionary = {}
-        for experimental_label, mouse_ids in self.groups.items():
-            trials = []
-            for mid in mouse_ids:
-                mltg = MouseLoomTrialGroup(mid)
-                trials.extend(mltg.get_trials_of_type(trial_type, self.limit))
-            trial_group_dictionary.setdefault(experimental_label, trials)
-        return trial_group_dictionary
-
-    def mouse_trial_groups(self):
-        mtg_dict = {}
-        for experimental_label, mouse_ids in self.groups.items():
-            mtgs = [MouseLoomTrialGroup(mid) for mid in mouse_ids]
-            mtg_dict.setdefault(experimental_label, mtgs)
-        return mtg_dict
-
-    def to_df(self, trial_type, average=False):
-        """
-
-        :param string trial_type:
-        :param boolean average: trial wise if False, mouse wise if True
-        :return : a pandas dataframe containing all trial metrics
-        """
-
-        for experimental_label, mouse_ids in self.groups.items():
-            experimental_condition_df = pd.DataFrame()
-            n_rows = 0
-            for mid in mouse_ids:
-                print(mouse_ids, type(mouse_ids))
-                mtg = MouseLoomTrialGroup(mid)
-                get_df_func = mtg.to_avg_df if average else mtg.to_trials_df
-
-                mouse_trials_df = get_df_func(trial_type)
-                experimental_condition_df = experimental_condition_df.append(
-                    mouse_trials_df
-                )
-                n_rows += len(mouse_trials_df)
-            experimental_labels = [experimental_label] * n_rows
-            experimental_condition_df["experimental condition"] = pd.Series(
-                experimental_labels, index=experimental_condition_df.index
-            )
-            self.trials_df = self.trials_df.append(experimental_condition_df)
-        return self.trials_df
 
 
 class MouseLoomTrialGroup(object):
@@ -344,3 +260,91 @@ class MouseLoomTrialGroup(object):
     def percentage_time_in_tz_middle(self):
         hm = make_trial_heatmap_location_overlay(self.habituation_trials())
         return sum(sum(hm[115:190, 150:245]) / sum(sum(hm)))
+
+
+class ExperimentalConditionGroup(object):
+    def __init__(self, labels, mouse_ids=None, ignore_ids=None, limit=None):
+        if isinstance(labels, str):
+            self.labels = [labels]
+        else:
+            self.labels = labels
+        self.mouse_ids = mouse_ids
+        self.avg_df = pd.DataFrame()
+        self.trials_df = pd.DataFrame()
+        self.ignore_ids = ignore_ids
+        self.limit = limit
+        if mouse_ids is None:
+            self.groups = self.get_groups_from_record_sheet()
+        else:
+            self.groups = {
+                label: list(mouse_id_group)
+                for label, mouse_id_group in zip(labels, mouse_ids)
+            }
+
+    def remove_ignore_mice(self, mouse_ids):
+        if self.ignore_ids is None:
+            return mouse_ids
+        return list(set(mouse_ids).symmetric_difference(set(self.ignore_ids)))
+
+    def get_groups_from_record_sheet(self):
+        mouse_group_dictionary = {}
+        for label in self.labels:
+            mouse_ids_in_group = experimental_log.get_mouse_ids_in_experiment(
+                label
+            )
+            mouse_ids_in_group = self.remove_ignore_mice(mouse_ids_in_group)
+            mouse_group_dictionary.setdefault(label, mouse_ids_in_group)
+
+        return mouse_group_dictionary
+
+    def trials(self, trial_type):
+        trial_group_dictionary = {}
+        for experimental_label, mouse_ids in self.groups.items():
+            trials = []
+            for mid in mouse_ids:
+                mltg = MouseLoomTrialGroup(mid)
+                trials.extend(mltg.get_trials_of_type(trial_type, self.limit))
+            trial_group_dictionary.setdefault(experimental_label, trials)
+        return trial_group_dictionary
+
+    def mouse_trial_groups(self):
+        mtg_dict = {}
+        for experimental_label, mouse_ids in self.groups.items():
+            mtgs = [MouseLoomTrialGroup(mid) for mid in mouse_ids]
+            mtg_dict.setdefault(experimental_label, mtgs)
+        return mtg_dict
+
+    def to_df(self, trial_type, average=False):
+        """
+
+        :param string trial_type:
+        :param boolean average: trial wise if False, mouse wise if True
+        :return : a pandas dataframe containing all trial metrics
+        """
+
+        for experimental_label, mouse_ids in self.groups.items():
+            experimental_condition_df = pd.DataFrame()
+            n_rows = 0
+            for mid in mouse_ids:
+                print(mouse_ids, type(mouse_ids))
+                mtg = MouseLoomTrialGroup(mid)
+                get_df_func = mtg.to_avg_df if average else mtg.to_trials_df
+
+                mouse_trials_df = get_df_func(trial_type)
+                experimental_condition_df = experimental_condition_df.append(
+                    mouse_trials_df
+                )
+                n_rows += len(mouse_trials_df)
+            experimental_labels = [experimental_label] * n_rows
+            experimental_condition_df["experimental condition"] = pd.Series(
+                experimental_labels, index=experimental_condition_df.index
+            )
+            self.trials_df = self.trials_df.append(experimental_condition_df)
+        return self.trials_df
+
+
+def make_trial_heatmap_location_overlay(trials):
+    hm = None
+    for t in trials:
+        hm = t.track_overlay(track_heatmap=hm)
+    return hm

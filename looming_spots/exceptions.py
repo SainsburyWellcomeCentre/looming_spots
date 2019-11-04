@@ -43,3 +43,11 @@ class LoomsNotTrackedError(Exception):
 
 class NoReferenceFrameError(Exception):
     pass
+
+
+class PdTooShortError(ValueError):
+    pass
+
+
+class LoomNumberError(Exception):
+    pass
