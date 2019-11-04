@@ -528,9 +528,7 @@ def get_trials_df(mtgs, metric):
         trials = mtg.auditory_trials()[:3]
         for t in trials:
             val = t.metric_functions[metric]()
-            signal = (
-                t.integral_escape_metric() / norm_factor
-            )
+            signal = t.integral_escape_metric() / norm_factor
             metric_val = t.metric_functions[metric]()
             vals.append(val)
             signals.append(signal)

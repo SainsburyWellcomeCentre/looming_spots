@@ -1,7 +1,7 @@
 import numpy as np
 from looming_spots.db.constants import FIGURE_DIRECTORY
 from looming_spots.db import loom_trial_group, experimental_log
-from looming_spots.track_analysis import photometry_habituations
+from looming_spots.trial_group_analysis import photometry_habituations
 import seaborn as sns
 import pandas as pd
 

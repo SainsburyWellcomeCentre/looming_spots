@@ -18,6 +18,7 @@ setup(
         "pandas",
         "pims",
         "scikit-video",
-        "pingouin", 'nptdms'
+        "pingouin",
+        "nptdms",
     ],
 )

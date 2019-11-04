@@ -2,15 +2,16 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 import looming_spots.exceptions
-from looming_spots.track_analysis.escape_metric_dataframes import (
+from looming_spots.trial_group_analysis.escape_metric_dataframes import (
     get_behaviour_metric_dataframe,
 )
-from looming_spots.track_analysis.randomised_contrast_escape_curves import (
+from looming_spots.trial_group_analysis.randomised_contrast_escape_curves import (
     get_contrast_escape_curve_from_group_label,
 )
 from looming_spots.db import experimental_log, loom_trial_group
-from looming_spots.db.loom_trial_group import make_trial_heatmap_location_overlay
-from looming_spots.preprocess import photodiode
+from looming_spots.db.loom_trial_group import (
+    make_trial_heatmap_location_overlay,
+)
 import pandas as pd
 import seaborn as sns
 

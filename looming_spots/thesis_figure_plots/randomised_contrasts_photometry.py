@@ -1,4 +1,4 @@
-from looming_spots.track_analysis.photometry_habituations import (
+from looming_spots.trial_group_analysis.photometry_habituations import (
     get_signal_metric_dataframe_variable_contrasts,
 )
 from looming_spots.db import loom_trial_group

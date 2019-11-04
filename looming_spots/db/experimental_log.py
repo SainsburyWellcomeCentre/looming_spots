@@ -222,9 +222,7 @@ def get_combination(
 
 
 def get_pre_tests(
-    include=("pre_test",),
-    exclude=(),
-    matching_dict_pre_test=None,
+    include=("pre_test",), exclude=(), matching_dict_pre_test=None
 ):
     """
     matching_dict={

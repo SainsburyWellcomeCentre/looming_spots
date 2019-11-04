@@ -28,8 +28,7 @@ from looming_spots.db.constants import (
     N_SAMPLES_TO_SHOW,
 )
 
-from looming_spots.track_analysis import (arena_region_crossings,
-                                          )
+from looming_spots.track_analysis import arena_region_crossings
 from looming_spots.preprocess import photodiode
 
 from looming_spots.util import video_processing, plotting

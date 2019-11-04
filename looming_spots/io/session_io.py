@@ -1,5 +1,7 @@
 import os
 import warnings
+from pathlib import Path
+from shutil import copyfile
 
 import numpy as np
 from datetime import datetime
@@ -7,14 +9,16 @@ from datetime import datetime
 import scipy
 from cached_property import cached_property
 
-import looming_spots.preprocess.io
+import looming_spots.io.io
+import looming_spots.util
 from looming_spots.db.constants import (
     AUDITORY_STIMULUS_CHANNEL_ADDED_DATE,
     PROCESSED_DATA_DIRECTORY,
-    CONTEXT_B_SPOT_POSITION)
+    CONTEXT_B_SPOT_POSITION,
+)
 
-from looming_spots.db import loomtrial
-from looming_spots.exceptions import LoomsNotTrackedError
+from looming_spots.db import loom_trial
+from looming_spots.exceptions import LoomsNotTrackedError, MouseNotFoundError
 
 from looming_spots.preprocess import photodiode, normalisation
 from looming_spots.util import generic_functions
@@ -105,9 +109,7 @@ class Session(object):
             return True
 
         if recording_date > AUDITORY_STIMULUS_CHANNEL_ADDED_DATE:
-            ad = looming_spots.preprocess.io.load_auditory_on_clock_ups(
-                self.path
-            )
+            ad = looming_spots.io.io.load_auditory_on_clock_ups(self.path)
             if (ad > 0.7).any():
                 return True
 
@@ -128,7 +130,7 @@ class Session(object):
                 trials = []
                 for i, onset_in_samples in enumerate(idx):
                     if stimulus_type == "visual":
-                        t = loomtrial.VisualStimulusTrial(
+                        t = loom_trial.VisualStimulusTrial(
                             self,
                             directory=self.path,
                             sample_number=onset_in_samples,
@@ -136,7 +138,7 @@ class Session(object):
                             stimulus_type="loom",
                         )
                     elif stimulus_type == "auditory":
-                        t = loomtrial.AuditoryStimulusTrial(
+                        t = loom_trial.AuditoryStimulusTrial(
                             self,
                             directory=self.path,
                             sample_number=onset_in_samples,
@@ -146,7 +148,7 @@ class Session(object):
                     else:
                         raise NotImplementedError
 
-                    #t.time_to_first_loom = self.time_to_first_loom()
+                    # t.time_to_first_loom = self.time_to_first_loom()
                     trials.append(t)
                 return trials
             else:
@@ -231,9 +233,7 @@ class Session(object):
     @property
     def photodiode_trace(self, raw=False):
         if raw:
-            pd, clock = looming_spots.preprocess.io.load_pd_and_clock_raw(
-                self.path
-            )
+            pd, clock = looming_spots.io.io.load_pd_and_clock_raw(self.path)
         else:
             pd = self.data["photodiode"]
         return pd
@@ -241,9 +241,7 @@ class Session(object):
     @property
     def auditory_trace(self, raw=False):
         if raw:
-            ad = looming_spots.preprocess.io.load_auditory_on_clock_ups(
-                self.path
-            )
+            ad = looming_spots.io.io.load_auditory_on_clock_ups(self.path)
         else:
             ad = self.data["auditory_stimulus"]
         return ad
@@ -355,7 +353,7 @@ class Session(object):
             t.extract_video()
 
     def contains_visual(self):
-        pd = looming_spots.preprocess.io.load_pd_on_clock_ups(self.path)
+        pd = looming_spots.io.io.load_pd_on_clock_ups(self.path)
         if (pd > 0.5).any():
             return True
 
@@ -461,3 +459,86 @@ def get_context_from_stimulus_mat(directory):
         )
     else:
         return "A10"
+
+
+def load_sessions(mouse_id):
+    mouse_directory = os.path.join(PROCESSED_DATA_DIRECTORY, mouse_id)
+    print(f"loading.... {mouse_directory}")
+    session_list = []
+    if os.path.isdir(mouse_directory):
+
+        for s in os.listdir(mouse_directory):
+
+            session_directory = os.path.join(mouse_directory, s)
+            if not os.path.isdir(session_directory):
+                continue
+
+            file_names = os.listdir(session_directory)
+
+            if not contains_analog_input(file_names):
+                continue
+
+            if "contrasts.mat" not in s:
+                print("no contrasts mat")
+
+                if not os.path.isdir(session_directory):
+                    continue
+
+                if not looming_spots.util.generic_functions.is_datetime(s):
+                    print("not datetime, skipping")
+                    continue
+
+                if not contains_video(file_names) and not contains_tracks(
+                    file_names
+                ):
+                    print("no video or tracks")
+                    if not get_tracks_from_raw(
+                        mouse_directory.replace("processed_data", "raw_data")
+                    ):
+                        continue
+
+            date = datetime.strptime(s, "%Y%m%d_%H_%M_%S")
+            s = Session(dt=date, mouse_id=mouse_id)
+            session_list.append(s)
+
+        if len(session_list) == 0:
+            msg = f"the mouse: {mouse_id} has not been processed"
+            raise MouseNotFoundError(msg)
+
+        return sorted(session_list)
+    msg = f"the mouse: {mouse_id} has not been copied to the processed data directory"
+    warnings.warn(msg)
+
+    raise MouseNotFoundError()
+
+
+def contains_analog_input(file_names):
+    if "AI.bin" in file_names or "AI.tdms" in file_names:
+        return True
+    return False
+
+
+def contains_video(file_names):
+    return any(".avi" in fname for fname in file_names) or any(
+        ".mp4" in fname for fname in file_names
+    )
+
+
+def contains_tracks(file_names):
+    return any("dlc_x_tracks.npy" in fname for fname in file_names)
+
+
+def get_tracks_from_raw(directory):
+    print(f"getting tracks from {directory}")
+    p = Path(directory)
+    track_paths = p.rglob("*tracks.npy")
+    if len(list(p.rglob("*tracks.npy"))) == 0:
+        print("no track paths found...")
+        return False
+
+    for tp in track_paths:
+        raw_path = str(tp)
+        processed_path = raw_path.replace("raw_data", "processed_data")
+        print(f"copying {raw_path} to {processed_path}")
+        copyfile(raw_path, processed_path)
+    return True

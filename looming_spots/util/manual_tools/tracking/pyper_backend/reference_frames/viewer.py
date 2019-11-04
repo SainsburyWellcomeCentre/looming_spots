@@ -205,9 +205,7 @@ class Ref(object):
     def __init__(self, directory, path=None):
         if not path:
             self.path = DEFAULT_VIDEO_PATH
-        self.metadata = looming_spots.db.constants.load_metadata(
-            directory
-        )
+        self.metadata = looming_spots.db.constants.load_metadata(directory)
         self.initialise_metadata()
         self.left = None
         self.right = None

@@ -2,7 +2,9 @@ from looming_spots.db import loom_trial_group, experimental_log
 from matplotlib import patches
 import matplotlib.pyplot as plt
 
-from looming_spots.db.loom_trial_group import make_trial_heatmap_location_overlay
+from looming_spots.db.loom_trial_group import (
+    make_trial_heatmap_location_overlay,
+)
 
 ICHLOC_MIDS = experimental_log.get_mouse_ids_in_experiment(
     "block_DA_during_pretest_flexichloc_SNLfibre"

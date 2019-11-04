@@ -51,3 +51,11 @@ class PdTooShortError(ValueError):
 
 class LoomNumberError(Exception):
     pass
+
+
+class NotExtractedError(Exception):
+    pass
+
+
+class MouseNotFoundError(Exception):
+    pass

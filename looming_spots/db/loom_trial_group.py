@@ -5,8 +5,10 @@ import pandas as pd
 import scipy.io
 from cached_property import cached_property
 from tqdm import tqdm
+
+import looming_spots.io.session_io
 from looming_spots.util.generic_functions import flatten_list
-from looming_spots.db import load, experimental_log
+from looming_spots.db import experimental_log
 
 
 class MouseLoomTrialGroup(object):
@@ -56,7 +58,14 @@ class MouseLoomTrialGroup(object):
     ):  # TODO: this can probably be achieved more elegantly  #TODO: weakref
         print(self.mouse_id)
         unlinked_trials = sorted(
-            flatten_list([s.trials for s in load.load_sessions(self.mouse_id)])
+            flatten_list(
+                [
+                    s.trials
+                    for s in looming_spots.io.session_io.load_sessions(
+                        self.mouse_id
+                    )
+                ]
+            )
         )
         singly_linked_trials = []
         doubly_linked_trials = []
@@ -82,7 +91,9 @@ class MouseLoomTrialGroup(object):
 
     @cached_property
     def sessions(self):  # TODO: weakref
-        unlinked_sessions = load.load_sessions(self.mouse_id)
+        unlinked_sessions = looming_spots.io.session_io.load_sessions(
+            self.mouse_id
+        )
         singly_linked_trials, doubly_linked_sessions = [], []
 
         for i, (s_current, s_next) in enumerate(

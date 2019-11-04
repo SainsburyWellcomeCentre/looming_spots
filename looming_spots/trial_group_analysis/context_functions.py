@@ -1,6 +1,7 @@
 import itertools
 import matplotlib.pyplot as plt
-from looming_spots.db import load
+
+import looming_spots.io.session_io
 
 
 def get_all_context_combos(df):
@@ -46,7 +47,7 @@ def plot_from_mid_dict(condition_mouse_id_dictionary):
         condition_mouse_id_dictionary.items()
     ):
         for mid in mids:
-            sessions = load.load_sessions(mid)
+            sessions = looming_spots.io.session_io.load_sessions(mid)
             for i, s in enumerate(sorted(sessions)):
                 plt.sca(axes[j][i])
                 title = f"{condition}_{s.contains_habituation}"
