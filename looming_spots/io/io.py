@@ -12,7 +12,7 @@ from looming_spots.db.constants import (
     AUDITORY_STIMULUS_CHANNEL_ADDED_DATE,
     OLD_RAW_DIRECTORY,
 )
-from looming_spots.exceptions import PdTooShortError
+from looming_spots import exceptions
 
 """
 
@@ -111,7 +111,7 @@ def load_pd_on_clock_ups(directory, pd_threshold=2.5):
         clock_ups = get_clock_ups(clock, pd_threshold)
         print(f"number of clock ups found: {len(clock_ups)}")
         if len(clock_ups) < 12:
-            raise PdTooShortError()
+            raise exceptions.PdTooShortError()
         return pd[clock_ups]
 
 
