@@ -2,6 +2,27 @@ import numpy as np
 
 from looming_spots.preprocess.normalisation import normalised_shelter_front
 
+"""
+Functions for labelling mouse position and defining crossings from each region 
+into the others for analysis of responses to aversive stimuli.
+
+ --------
+|        |
+|        |
+|   TZ   |
+|        |
+------------ (30cm)
+|        |
+|        |
+| MIDDLE |
+|        |
+------------ (10cm)
+|SHELTER |
+|        |
+ --------
+
+"""
+
 
 def is_entry(sample, place_of_entry, place_of_exit):
     if place_of_entry[sample + 1]:
