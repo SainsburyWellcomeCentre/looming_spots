@@ -15,7 +15,7 @@ def get_behaviour_metric_dataframe(mtgs, metric, test_type):
         for t in trials:
             val = t.metric_functions[
                 metric
-            ]()  # / t.normalisation_dict[metric]
+            ]()
             vals.append(val)
 
         mids = [mtg.mouse_id] * len(trials)
@@ -42,7 +42,7 @@ def get_escape_metric_df_trials(
     event_metric_dict = {}
     vals = []
     for t in trials:
-        val = t.metric_functions[metric]()  # / t.normalisation_dict[metric]
+        val = t.metric_functions[metric]()
         vals.append(val)
 
     mids = [mid] * len(trials)
