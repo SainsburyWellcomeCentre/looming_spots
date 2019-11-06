@@ -544,40 +544,6 @@ class LoomTrial(object):
             np.linspace(new_min, new_max, n_steps),
         )
 
-    def get_reference_frame(self):
-        self.make_reference_frames()
-        return self.session.get_reference_frame(self.trial_type)
-
-    def extract_track(self, overwrite=True):
-        if not overwrite:
-            if os.path.isdir(self.folder):
-                return "skipping... already tracked"
-
-        if self.get_reference_frame() is None:
-            print(self.directory)
-            Viewer(
-                self.directory,
-                video_fname=f"{self.stimulus_type}{self.stimulus_number()}.h264",
-                trial_type=self.trial_type,
-            )
-            # raise NoReferenceFrameError
-        pyper_cli_track_trial(self.video_path, f"{self.trial_type}_ref.npy")
-
-    def make_reference_frames(self):
-        if self.session.get_reference_frame(self.trial_type) is None:
-            Viewer(
-                self.directory,
-                video_fname=f"{self.stimulus_type}{self.stimulus_number()}.h264",
-                trial_type=self.trial_type,
-            )
-
-    def viewer(self):
-        Viewer(
-            self.directory,
-            trial_type=self.trial_type,
-            video_fname=self.video_name,
-        )
-
     def days_since_last_session_type(self):
         if self.habituation_loom_before():
             last_habituation_trial = self.get_last_habituation_trial()
