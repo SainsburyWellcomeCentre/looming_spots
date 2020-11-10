@@ -72,11 +72,17 @@ def calculate_theoretical_escape_threshold(mtg):
             print(f'latency: {latency}')
             if latency < 600:
                 plt.axhline(t.integral_downsampled()[int(latency)], color='b')
+                plt.axvline(latency, color='r', ls='--')
 
         plt.plot(t.integral_downsampled())
         plt.xlim([0, 600])
 
         plt.sca(axes[1])
+
+        if latency is not None:
+            print(f'latency: {latency}')
+            if latency < 600:
+                plt.axvline(latency, color='r', ls='--')
         t.plot_stimulus()
         [plt.axvline(x, color='k', ls='--') for x in LOOM_ONSETS]
         plt.plot(t.normalised_x_track[:600])
