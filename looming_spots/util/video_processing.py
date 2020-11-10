@@ -10,7 +10,7 @@ import skvideo.io
 import pims
 
 import looming_spots.preprocess
-from looming_spots.db.constants import STIMULUS_ONSETS
+from looming_spots.db.constants import LOOM_ONSETS
 
 
 def load_video_from_path(vid_path):
@@ -76,11 +76,29 @@ def crop_video(video, width, height, origin=(0, 0)):
     return new_video
 
 
-def plot_loom_on_video(video, radius_profile):
-    new_video = np.empty_like(video)
+def plot_loom_on_video(video, radius_profile,track):
 
+    pts_list = []
+    for pos in zip(track[0].astype(int), track[1].astype(int)):
+        pts_list.append(pos)
+
+    new_video = np.empty_like(video)
     for i, (frame, radius) in enumerate(zip(video, radius_profile)):
-        cv2.circle(frame, (150, 120), int(radius), -1)
+        overlay = frame.copy()
+        cv2.circle(frame, (150, 120), int(radius), (0, 0, 0), -1)
+        for x in range(i):
+            cv2.line(frame, pts_list[:-1][x], pts_list[1:][x], (0, 0, 0), 5)
+        alpha=0.4
+        new_image=cv2.addWeighted(overlay, alpha, frame, 1-alpha, 0)
+        new_video[i, :, :] = new_image
+
+    return new_video
+
+
+def plot_track_on_video(video, track):
+    new_video = np.empty_like(video)
+    for i, (frame, radius) in enumerate(zip(video, track)):
+        cv2.polylines(frame, track[:600], False)
         new_video[i, :, :] = frame
 
     return new_video
@@ -88,12 +106,14 @@ def plot_loom_on_video(video, radius_profile):
 
 def loom_radius_profile(n_frames):  # TODO: make this using the maths
     radius_profile = np.zeros(n_frames)
-    for onset in STIMULUS_ONSETS:
-        radius_profile[onset : onset + 14] = np.linspace(5, 140, 14)
+    for onset in LOOM_ONSETS:
+        onset+=1
+        radius_profile[onset : onset + 7] = np.linspace(5, 140, 7)
+        radius_profile[onset + 7 : onset + 14] = np.ones(7)*140
     return radius_profile
 
 
-def loom_superimposed_video(path_in, path_out, width, height, origin):
+def loom_superimposed_video(path_in, path_out, width, height, origin, track):
     """
     function for overlaying illustrative looming stimulus on video and cropping
 
@@ -110,7 +130,7 @@ def loom_superimposed_video(path_in, path_out, width, height, origin):
         vid = crop_video(vid, width, height, origin)
 
         looming_stimulus_radius_profile = loom_radius_profile(len(vid))
-        new_vid = plot_loom_on_video(vid, looming_stimulus_radius_profile)
+        new_vid = plot_loom_on_video(vid, looming_stimulus_radius_profile, track)
 
         save_video(new_vid, path_out)
     return load_video_from_path(path_out)
@@ -208,13 +228,16 @@ def extract_loom_video_trial(
     overwrite=False,
 ):
     if not os.path.isfile(path_in):
+        print(path_in)
         path_in = path_in.replace(".mp4", ".avi")
         path_in = path_in.replace("processed", "raw")
     loom_start = int(loom_start)
     if not overwrite:
         if os.path.isfile(path_out):
+            print('aleady file')
             return
-    print(path_in)
+    print('extracting......')
+    print(path_out)
     extract_video(
         path_in,
         path_out,
@@ -226,6 +249,7 @@ def extract_loom_video_trial(
 def extract_video(fin_path, fout_path, start, end):
     v = pims.Video(fin_path)
     out_video = v[start:end]
+    print(f'writign tp {fout_path}')
     skvideo.io.vwrite(fout_path, out_video)
 
 
