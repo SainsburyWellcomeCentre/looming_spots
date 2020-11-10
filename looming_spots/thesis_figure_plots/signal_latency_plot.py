@@ -56,7 +56,7 @@ def calculate_theoretical_escape_threshold(mtg):
     plt.title(title)
     plt.axhline(theoretical_escape_threshold)
     for t in post_test_trials:
-        plt.plot(t.integral_downsampled)
+        plt.plot(t.integral_downsampled())
     fig.savefig(f'/home/slenzi/thesis_latency_plots/{title}.png')
     fig.close()
 
