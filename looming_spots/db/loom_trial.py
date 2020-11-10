@@ -199,6 +199,7 @@ class LoomTrial(object):
             "speed": self.peak_speed,
             "acceleration": self.absolute_acceleration,
             "latency to escape": self.latency,
+            "latency peak detect samples": self.latency_peak_detect,
             "latency peak detect": self.latency_peak_detect_s,
             "reaction time": self.reaction_time_s,
             "time in safety zone": self.time_in_safety_zone,
@@ -918,7 +919,6 @@ class LoomTrial(object):
             except Exception as e:
                 warnings.warn("returning NaN for escape metric")
                 return np.nan
-
 
     def n_samples_to_reach_shelter(self):
         n_samples = arena_region_crossings.get_next_entry_from_track(
