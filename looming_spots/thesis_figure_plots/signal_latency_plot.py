@@ -1,6 +1,7 @@
 from looming_spots.db import loom_trial_group, experimental_log
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 
 from looming_spots.db.constants import LOOM_ONSETS
 
@@ -99,10 +100,45 @@ def plot_all_theoretical_escape_thresholds():
         calculate_theoretical_escape_threshold(mtg)
 
 
+def get_df_non_escape_relative_to_estimated_threshold_mtg(mtg):
+    df_dict = {}
+    pre_test_trials = mtg.pre_test_trials()[:3]
+    post_test_trials = mtg.post_test_trials()[:3]
+    #pre_test_latency = np.nanmean([t.latency_peak_detect() for t in pre_test_trials])
+    theoretical_escape_threshold = np.mean(
+        [t.integral_escape_metric(int(t.latency_peak_detect())) for t in pre_test_trials])
+    df_dict['escape ∆F threshold'] = [theoretical_escape_threshold]*len(post_test_trials)
+    latencies = []
+    speeds = []
+    escapes = []
+    for t in post_test_trials:
+        latencies.append(t.metric_functions['latency peak detect samples']())
+        speeds.append(t.metric_functions['speed']())
+        escapes.append(t.metric_functions['classified as flee']())
+    df_dict.setdefault('latency', latencies)
+    df_dict.setdefault('speed', speeds)
+    df_dict.setdefault('escape', escapes)
+    return pd.DataFrame.from_dict(df_dict)
+
+
+def get_df_non_escape_relative_to_estimated_threshold():
+    df_all = pd.DataFrame()
+    mtgs = get_mtgs(LSIE_SNL_KEYS)
+    for mtg in mtgs:
+        df = get_df_non_escape_relative_to_estimated_threshold_mtg(mtg)
+        df_all = df_all.append(df)
+    df_all.to_csv('~/home/slenzi/thesis_latency_plots/df.csv')
+
+
+def proportion_exceeding_threshold():
+    pass
+
+
+
 def main():
     #get_snl_pre_test_and_high_contrast_trials()
-    plot_all_theoretical_escape_thresholds()
-
+    #plot_all_theoretical_escape_thresholds()
+    get_df_non_escape_relative_to_estimated_threshold()
 
 if __name__ == '__main__':
     main()
