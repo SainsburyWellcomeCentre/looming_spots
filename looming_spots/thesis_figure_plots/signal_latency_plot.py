@@ -64,6 +64,7 @@ def calculate_theoretical_escape_threshold(mtg):
         [plt.axvline(x, color='k', ls='--') for x in LOOM_ONSETS]
 
         x_at_threshold = np.where(t.integral_downsampled() > theoretical_escape_threshold)[0]
+        print(f'x: {x_at_threshold}')
         if len(x_at_threshold) > 0:
             plt.axvline(x_at_threshold, color='r', ls='--')
 
