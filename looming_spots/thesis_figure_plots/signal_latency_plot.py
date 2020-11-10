@@ -61,7 +61,8 @@ def calculate_theoretical_escape_threshold(mtg):
         plt.plot(t.integral_downsampled())
 
         plt.sca(axes[1])
-        t.plot_track()
+        plt.plot(t.normalised_x_track[200:350])
+        t.plot_stimulus()
         fig.savefig(f'/home/slenzi/thesis_latency_plots/{title}.png')
         plt.close()
 
