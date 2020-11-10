@@ -56,9 +56,9 @@ def get_habituation_loom_idx(loom_idx, n_looms_per_stimulus=5):
     if contains_habituation(loom_idx):
         loom_burst_onsets = np.diff(loom_idx[::n_looms_per_stimulus])
         min_ili = min(loom_burst_onsets)
-        habituation_loom_idx = np.where(loom_burst_onsets < min_ili + 25)[
+        habituation_loom_idx = np.where(loom_burst_onsets < min_ili + 150)[
             0
-        ]  # FIXME: this value is chosen for.. reasons
+        ]  # FIXME: this value is chosen for.. reasons 25
         habituation_loom_idx = np.concatenate(
             [habituation_loom_idx, [max(habituation_loom_idx) + 1]]
         )  # adds last loom as ILI will always be bigger
@@ -69,7 +69,7 @@ def get_habituation_idx(idx, n_looms_per_stimulus=5):
     if contains_habituation(idx, n_looms_per_stimulus):
         onsets_diff = np.diff(idx[::n_looms_per_stimulus])
         min_ili = min(onsets_diff)
-        habituation_loom_idx = np.where(onsets_diff < min_ili + 25)[
+        habituation_loom_idx = np.where(onsets_diff < min_ili + 150)[
             0
         ]  # FIXME: this value is chosen for.. reasons
         habituation_loom_idx = np.concatenate(
