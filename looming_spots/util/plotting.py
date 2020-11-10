@@ -5,12 +5,12 @@ from matplotlib import pyplot as plt, patches as patches
 from matplotlib.collections import LineCollection
 
 import looming_spots.preprocess.normalisation
-from looming_spots.db.constants import STIMULUS_ONSETS
+from looming_spots.db.constants import LOOM_ONSETS
 
 
 def plot_looms(fig):
     for ax in fig.axes:
-        for loom in [create_loom_patch(stim) for stim in STIMULUS_ONSETS]:
+        for loom in [create_loom_patch(stim) for stim in LOOM_ONSETS]:
             ax.add_patch(loom)
     return fig
 
@@ -21,7 +21,7 @@ def plot_looms_upsampled(fig):
             create_loom_patch(
                 stim * 10000 / 30, upsample_factor=int(10000 / 30)
             )
-            for stim in STIMULUS_ONSETS
+            for stim in LOOM_ONSETS
         ]:
             ax.add_patch(loom)
     return fig
@@ -32,7 +32,7 @@ def plot_upsampled_looms_ax(ax=None):
         ax = plt.gca()
     looms = [
         create_loom_patch(stim * 10000 / 30, upsample_factor=int(10000 / 30))
-        for stim in STIMULUS_ONSETS
+        for stim in LOOM_ONSETS
     ]
     for loom in looms:
         ax.add_patch(loom)
@@ -56,19 +56,28 @@ def plot_shelter_location(fig, context):
         plt.axhline(house_front, 0, 400, ls="--")
 
 
-def plot_looms_ax(ax=None):
+def plot_looms_ax(ax=None, vertical=True, height=1.3, loom_n_samples=14, relative=False, upsample_factor=1):
     if ax is None:
         ax = plt.gca()
-    looms = [create_loom_patch(stim) for stim in STIMULUS_ONSETS]
+    loom_onsets = LOOM_ONSETS
+    if relative:
+        loom_onsets =[x-200 for x in loom_onsets]
+    looms = [create_loom_patch(stim, vertical=vertical, height=height, loom_n_samples=loom_n_samples, upsample_factor=upsample_factor) for stim in loom_onsets]
     for loom in looms:
         ax.add_patch(loom)
 
 
-def create_loom_patch(start, upsample_factor=1):
+def create_loom_patch(start, upsample_factor=1, vertical=True, height=1.3, loom_n_samples=14):
+    width = loom_n_samples * upsample_factor
+    x=start * upsample_factor
+    y=-0.2
+    if not vertical:
+        width, height = height, width
+        x, y = y, x
     return patches.Rectangle(
-        (start, -0.2),
-        int(14 * upsample_factor),
-        1.3,
+        (x, y),
+        width,
+        height,
         alpha=0.1,
         color="k",
         linewidth=0,
