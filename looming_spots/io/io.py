@@ -106,20 +106,22 @@ def load_pd_on_clock_ups(directory, pd_threshold=2.5):
         downsampled_processed_ai = np.load(path)
         return downsampled_processed_ai
     else:
-        print(directory)
         pd, clock, auditory = load_pd_and_clock_raw(directory)
         clock_ups = get_clock_ups(clock, pd_threshold)
-        print(f"number of clock ups found: {len(clock_ups)}")
         if len(clock_ups) < 12:
             raise exceptions.PdTooShortError()
         return pd[clock_ups]
 
 
 def load_auditory_on_clock_ups(directory, pd_threshold=2.5):
-    pd, clock, auditory = load_pd_and_clock_raw(directory)
-    clock_ups = get_clock_ups(clock, pd_threshold)
-    print(f"number of clock ups found: {len(clock_ups)}")
-    return auditory[clock_ups]
+    auditory_path = Path(directory) / 'auditory_stimulus.npy'
+    if not os.path.isfile(str(auditory_path)):
+        pd, clock, auditory = load_pd_and_clock_raw(directory)
+        clock_ups = get_clock_ups(clock, pd_threshold)
+        np.save(str(auditory_path), auditory[clock_ups])
+        return auditory[clock_ups]
+    else:
+        return np.load(str(auditory_path))
 
 
 def get_clock_ups(clock, threshold=2.5):
