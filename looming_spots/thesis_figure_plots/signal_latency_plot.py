@@ -60,7 +60,7 @@ def calculate_theoretical_escape_threshold(mtg):
         plt.title(title)
         plt.sca(axes[0])
         plt.axhline(theoretical_escape_threshold)
-        t.plot_stimulus()
+        #t.plot_stimulus()
         [plt.axvline(x, color='k', ls='--') for x in LOOM_ONSETS]
 
         x_at_threshold = np.where(t.integral_downsampled() > theoretical_escape_threshold)[0]
@@ -74,6 +74,7 @@ def calculate_theoretical_escape_threshold(mtg):
         t.plot_stimulus()
         [plt.axvline(x, color='k', ls='--') for x in LOOM_ONSETS]
         plt.plot(t.normalised_x_track[:600])
+        plt.sca(axes[1])
         plt.ylim([0, 1])
         fig.savefig(f'/home/slenzi/thesis_latency_plots/{title}.png')
         plt.close()
