@@ -7,12 +7,11 @@ from looming_spots.preprocess.normalisation import (
 )
 from looming_spots.db.constants import (
     CLASSIFICATION_WINDOW_END,
-    CLASSIFICATION_SPEED,
     CLASSIFICATION_WINDOW_START,
     CLASSIFICATION_LATENCY,
     FRAME_RATE,
     SPEED_THRESHOLD,
-    STIMULUS_ONSETS,
+    LOOM_ONSETS,
 )
 
 
@@ -92,7 +91,7 @@ def get_flee_duration(loom_folder, context):
     track = load_normalised_track(loom_folder, context)
     house_front = normalised_shelter_front(context)
 
-    for i, x in enumerate(track[STIMULUS_ONSETS[0] :]):
+    for i, x in enumerate(track[LOOM_ONSETS[0] :]):
         if x < house_front:
             return i
     return np.nan
@@ -106,6 +105,16 @@ def time_to_reach_home(track, context):
     if len(in_home_idx) == 0:
         return np.nan
     return in_home_idx[0] / FRAME_RATE
+
+
+def samples_to_shelter(normalised_x_track):
+    house_front = 0.2
+    in_home_idx = np.where(
+        [x < house_front for x in normalised_x_track[CLASSIFICATION_WINDOW_START:]]
+    )[0]
+    if len(in_home_idx) == 0:
+        return np.nan
+    return in_home_idx[0]
 
 
 def get_peak_speed_and_latency(normalised_track):
@@ -122,3 +131,34 @@ def get_peak_speed_and_latency(normalised_track):
         distances[CLASSIFICATION_WINDOW_START:CLASSIFICATION_WINDOW_END]
     )
     return -peak_speed, arg_peak + CLASSIFICATION_WINDOW_START
+
+
+def loom_evoked_speed_change(
+    normalised_x_speed, loom_onset, window_before=25, window_after=150
+):
+    return (
+        np.mean(normalised_x_speed[(loom_onset - window_before) : loom_onset]),
+        np.mean(
+            normalised_x_speed[loom_onset + 5 : (loom_onset + window_after)]
+        ),
+    )
+
+
+def get_mean_speed_in_range(normalised_x_speed, s, e):
+    return np.mean(normalised_x_speed[s:e])
+
+
+def movement_loom_on_vs_loom_off(normalised_x_speed):
+    loom_on_speeds = [
+        get_mean_speed_in_range(
+            normalised_x_speed, loom_onset, loom_onset + 14
+        )
+        for loom_onset in LOOM_ONSETS
+    ]
+    loom_off_speeds = [
+        get_mean_speed_in_range(
+            normalised_x_speed, loom_onset + 14, loom_onset + 28
+        )
+        for loom_onset in LOOM_ONSETS
+    ]
+    return min(loom_on_speeds) - min(loom_off_speeds)
