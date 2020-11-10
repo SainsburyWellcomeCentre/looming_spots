@@ -104,9 +104,9 @@ def get_df_non_escape_relative_to_estimated_threshold_mtg(mtg):
     df_dict = {}
     pre_test_trials = mtg.pre_test_trials()[:3]
     post_test_trials = mtg.post_test_trials()[:3]
-    #pre_test_latency = np.nanmean([t.latency_peak_detect() for t in pre_test_trials])
+    pre_test_latency = np.nanmean([t.latency_peak_detect() for t in pre_test_trials])
     theoretical_escape_threshold = np.mean(
-        [t.integral_escape_metric(int(t.latency_peak_detect())) for t in pre_test_trials])
+        [t.integral_escape_metric(int(pre_test_latency)) for t in pre_test_trials])
     df_dict['escape ∆F threshold'] = [theoretical_escape_threshold]*len(post_test_trials)
 
     latencies = []
@@ -123,7 +123,7 @@ def get_df_non_escape_relative_to_estimated_threshold_mtg(mtg):
     df_dict.setdefault('speed', speeds)
     df_dict.setdefault('escape', escapes)
     df_dict.setdefault('deltaf max in trial', delta_f_metrics)
-    
+
     return pd.DataFrame.from_dict(df_dict)
 
 
