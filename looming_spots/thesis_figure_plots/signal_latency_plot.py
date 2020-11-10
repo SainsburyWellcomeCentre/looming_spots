@@ -70,7 +70,7 @@ def calculate_theoretical_escape_threshold(mtg):
         #plot integral at latency
         if latency is not None:
             print(f'latency: {latency}')
-            plt.axhline(t.integral_downsampled()[int(latency)], 'b')
+            plt.axhline(t.integral_downsampled()[int(latency)], color='b')
         plt.plot(t.integral_downsampled())
         plt.xlim([0, 600])
 
