@@ -65,7 +65,7 @@ def calculate_theoretical_escape_threshold(mtg):
 
         x_at_threshold = np.where(t.integral_downsampled() > theoretical_escape_threshold)[0]
         if len(x_at_threshold) > 0:
-            plt.axvline(x_at_threshold[0], color='r', ls='--')
+            plt.axvline(int(pre_test_latency), color='r')
 
         plt.plot(t.integral_downsampled())
         plt.xlim([0, 600])
