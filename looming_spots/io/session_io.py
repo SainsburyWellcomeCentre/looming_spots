@@ -66,7 +66,7 @@ class Session(object):
 
     @property
     def video_path(self):
-        return os.path.join(self.path, "camera.mp4")
+        return os.path.join(self.path.replace('processed_data', 'raw_data'), "camera.avi")
 
     @property
     def parent_path(self):
