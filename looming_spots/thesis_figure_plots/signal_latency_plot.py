@@ -55,6 +55,7 @@ def calculate_theoretical_escape_threshold(mtg):
     theoretical_escape_threshold = np.mean([t.integral_escape_metric(int(pre_test_latency)) for t in pre_test_trials])
 
     for t in post_test_trials:
+        latency = int(t.latency_peak_detect())
         title = f'theoretical_threshold_{mtg.mouse_id}__loom_number_{t.loom_number}'
         fig, axes = plt.subplots(2, 1)
         plt.title(title)
@@ -63,10 +64,12 @@ def calculate_theoretical_escape_threshold(mtg):
         [plt.axvline(x, color='k', ls='--') for x in LOOM_ONSETS]
 
         #plot average latency to escape in pre test
+
         plt.axvline(int(pre_test_latency), color='r')
 
         #plot integral at latency
-        plt.axhline(t.integral_downsampled()[int(t.latency_peak_detect())], 'b')
+        if latency is not None:
+            plt.axhline(t.integral_downsampled()[latency], 'b')
         plt.plot(t.integral_downsampled())
         plt.xlim([0, 600])
 
