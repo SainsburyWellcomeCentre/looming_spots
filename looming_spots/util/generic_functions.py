@@ -16,7 +16,7 @@ def sort_by(list_to_sort, list_to_sort_by, descend=True):
     """
 
     sorted_lists = [
-        (cid, did) for did, cid in sorted(zip(list_to_sort_by, list_to_sort))
+        (cid, did) for did, cid in sorted(zip(list_to_sort_by, list_to_sort), key=lambda x: x[0])
     ]
     if descend:
         sorted_lists = sorted_lists[::-1]
