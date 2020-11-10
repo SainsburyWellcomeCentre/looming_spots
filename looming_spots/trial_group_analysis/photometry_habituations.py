@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import pingouin
 import scipy.stats
 import pandas as pd
 import seaborn as sns
@@ -89,45 +90,36 @@ def plot_max_integral_bars(mtgs):
 def plot_integral_at_latency_bars(mtgs, bar_colors=("k", "k")):
     group_avg_pre = []
     group_avg_post = []
+    all_trials_pre = []
+    all_trials_post = []
 
     for mtg in mtgs:
         pre_test_latency = np.nanmean(
-            [t.estimate_latency(False) for t in mtg.pre_test_trials()[:3]]
+            [t.latency_peak_detect() for t in mtg.pre_test_trials()[:3]]
         )
+        # pre_test_latency = max(207, pre_test_latency )
+
         normalising_factor = max(
             [
                 np.nanmax(
                     [
                         t.integral_escape_metric(int(pre_test_latency))
-                        for t in mtg.loom_trials()[:30]
+                        for t in mtg.pre_test_trials()[:3] + mtg.post_test_trials()[:3]  #mtg.loom_trials()[:30]
                     ]
                 )
             ]
         )
 
         max_integrals_pre = [
-            np.nanmax(t.integral_escape_metric(int(pre_test_latency)))
+            t.integral_escape_metric(int(pre_test_latency))
             / normalising_factor
             for t in mtg.pre_test_trials()[:3]
         ]
         max_integrals_post = [
-            np.nanmax(t.integral_escape_metric(int(pre_test_latency)))
+            t.integral_escape_metric(int(pre_test_latency))
             / normalising_factor
             for t in mtg.post_test_trials()[:3]
         ]
-
-        plt.scatter(
-            np.ones_like(max_integrals_pre),
-            max_integrals_pre,
-            color="w",
-            edgecolor="k",
-        )
-        plt.scatter(
-            np.ones_like(max_integrals_post) * 2,
-            max_integrals_post,
-            color="w",
-            edgecolor="k",
-        )
 
         plt.scatter(
             1, np.mean(max_integrals_pre), color="k", zorder=1000, s=60
@@ -145,6 +137,10 @@ def plot_integral_at_latency_bars(mtgs, bar_colors=("k", "k")):
         )
         group_avg_pre.append(np.mean(max_integrals_pre))
         group_avg_post.append(np.mean(max_integrals_post))
+
+        all_trials_pre.extend(max_integrals_pre)
+        all_trials_post.extend(max_integrals_post)
+
     plt.bar(1, np.mean(group_avg_pre), color=bar_colors[0], zorder=0)
     plt.bar(2, np.mean(group_avg_post), color=bar_colors[1], zorder=0)
     plt.errorbar(
@@ -160,6 +156,9 @@ def plot_integral_at_latency_bars(mtgs, bar_colors=("k", "k")):
         color="Grey",
     )
     print(scipy.stats.ttest_ind(group_avg_pre, group_avg_post))
+    print(pingouin.wilcoxon(group_avg_pre, group_avg_post))
+    print('all trials wilcoxon:')
+    print(pingouin.wilcoxon(all_trials_pre, all_trials_post))
 
 
 def get_max_integral_habituations(mtgs):
@@ -308,14 +307,14 @@ def get_signal_metric_dataframe_variable_contrasts(mtgs, metric):
         vals = []
         signals = []
         event_metric_dict = {}
-        trials = mtg.all_trials[:18]
+        trials = mtg.loom_trials()[:18]
         norm_factor = max(
-            [max(t.integral_downsampled()[200:214]) for t in mtg.all_trials]
+            [max(t.integral_downsampled()[200:220]) for t in mtg.all_trials]
         )
 
         for t in trials:
             val = t.metric_functions[metric]()
-            signal = max(t.integral_downsampled()[200:214]) / norm_factor
+            signal = max(t.integral_downsampled()[200:220]) / norm_factor
             vals.append(val)
             signals.append(signal)
 
@@ -330,6 +329,7 @@ def get_signal_metric_dataframe_variable_contrasts(mtgs, metric):
         # event_metric_dict.setdefault('metric', metrics)
         event_metric_dict.setdefault("contrast", [t.contrast for t in trials])
         event_metric_dict.setdefault("escape", [t.is_flee() for t in trials])
+        event_metric_dict.setdefault("loom number", [t.get_loom_trial_idx() for t in trials])
 
         metric_df = pd.DataFrame.from_dict(event_metric_dict)
         all_df = all_df.append(metric_df, ignore_index=True)
@@ -462,14 +462,15 @@ def habituation_df(mtg_groups, mtg_group_labels):
         for mtg in mtgs:
             start = 0
             pre_test_latency = np.nanmean(
-                [t.estimate_latency(False) for t in mtg.pre_test_trials()[:3]]
+                [t.latency_peak_detect() for t in mtg.pre_test_trials()[:3]]
             )
+            print(f"pre_test_latency: {pre_test_latency}, mouse: {mtg.mouse_id}")
             norm_factor = max(
                 [
                     np.nanmax(
                         [
                             t.integral_escape_metric(int(pre_test_latency))
-                            for t in mtg.loom_trials()[:30]
+                            for t in mtg.pre_test_trials()[:3] + mtg.post_test_trials()[:3]
                         ]
                     )
                 ]
@@ -486,6 +487,12 @@ def habituation_df(mtg_groups, mtg_group_labels):
                 event_metric_dict = {}
                 contrasts = []
                 signals = []
+
+                if test_type != 'habituation':
+                    escape_result = [t.is_flee() for t in trials]
+                else:
+                    escape_result = [False for _ in trials]
+
                 for t in trials:
                     signal = (
                         t.integral_escape_metric(int(pre_test_latency))
@@ -507,6 +514,8 @@ def habituation_df(mtg_groups, mtg_group_labels):
                 event_metric_dict.setdefault(
                     "trial number", np.arange(start, len(trials) + start)
                 )
+                event_metric_dict.setdefault("result", escape_result)
+
                 start += len(trials)
 
                 metric_df = pd.DataFrame.from_dict(event_metric_dict)
@@ -545,3 +554,25 @@ def get_trials_df(mtgs, metric):
         metric_df = pd.DataFrame.from_dict(event_metric_dict)
         all_df = all_df.append(metric_df, ignore_index=True)
     return all_df
+
+
+def compare_integrals_tracks(mids):
+    import matplotlib.pyplot as plt
+    plt.close('all')
+    for mid in mids:
+        plt.figure()
+        plt.title(mid)
+        mtg = loom_trial_group.MouseLoomTrialGroup(mid)
+        for t in mtg.pre_test_trials()[:3]:
+            print(t.estimate_latency(False))
+            plt.plot(t.integral_downsampled(), color='r')
+
+        for t in mtg.post_test_trials()[:3]:
+            print(t.estimate_latency(False))
+            plt.plot(t.integral_downsampled(), color='k')
+        plt.figure()
+        plt.title(mid)
+        for t in mtg.pre_test_trials()[:3]:
+            t.plot_track()
+        for t in mtg.post_test_trials()[:3]:
+            t.plot_track()
