@@ -55,21 +55,21 @@ def get_next_entry(start, place_of_entry, place_of_exit):
             continue
         if is_entry(t, place_of_entry, place_of_exit):
             return t
+    print('no entries found')
 
 
 def get_next_entry_from_track(
-    normalised_x_track, context, place_of_entry_key, place_of_exit_key, start
+    normalised_x_track, place_of_entry_key, place_of_exit_key, start
 ):
     """
 
     :param normalised_x_track:
-    :param context:
     :param place_of_entry_key:
     :param place_of_exit_key:
     :param start:
     :return:
     """
-    shelter_boundary = normalised_shelter_front(context)
+    shelter_boundary = 0.2 #normalised_shelter_front(context)
     tz_boundary = 0.6
     positions = {
         "shelter": normalised_x_track < shelter_boundary,
@@ -82,3 +82,56 @@ def get_next_entry_from_track(
     return get_next_entry(
         start, positions[place_of_entry_key], positions[place_of_exit_key]
     )
+
+
+def get_all_entries_from_track(normalised_x_track):
+
+    shelter_boundary = 0.2 #normalised_shelter_front(context)
+    tz_boundary = 0.6
+    positions = {
+        "shelter": normalised_x_track < shelter_boundary,
+        "middle": np.logical_and(
+            (tz_boundary > normalised_x_track),
+            (normalised_x_track > shelter_boundary),
+        ),
+        "tz": normalised_x_track > tz_boundary,
+    }
+    return positions
+
+
+def entry_bools(normalised_x_track):
+    shelter_boundary = 0.2  # normalised_shelter_front(context)
+    tz_boundary = 0.6
+    positions = {
+        "shelter": normalised_x_track < shelter_boundary,
+        "middle": np.logical_and(
+            (tz_boundary > normalised_x_track),
+            (normalised_x_track > shelter_boundary),
+        ),
+        "tz": normalised_x_track > tz_boundary,
+    }
+    return positions
+
+
+def get_all_entries(normalised_x_track):
+    entries = entry_bools(normalised_x_track)
+    shelter_entries = np.where(np.diff(entries['shelter'].astype(int)) == 1)[0]
+    tz_entries = np.where(np.diff(entries['tz'].astype(int))==1)[0]
+    middle_entries=np.where(np.diff(entries['middle'].astype(int)) ==1)[0]
+    track_starts=[]
+
+    for i, tz_entry in enumerate(tz_entries):
+        try:
+            first_next_middle = min(middle_entries[middle_entries > tz_entry], key=lambda x: abs(x - tz_entry))
+
+            first_next_shelter = min(shelter_entries[shelter_entries > first_next_middle], key=lambda x: abs(x - first_next_middle))
+            first_next_tz = min(tz_entries[tz_entries > first_next_middle], key=lambda x: abs(x - first_next_middle))
+            if first_next_tz < first_next_shelter:
+                continue
+            else:
+                track_starts.append(tz_entry)
+        except Exception as e:
+            return track_starts
+
+    return track_starts
+
