@@ -20,6 +20,17 @@ class MouseLoomTrialGroup(object):
         if len(self.contrasts()) > 0:
             self.set_contrasts()
 
+        self.set_loom_trial_idx()
+        self.set_auditory_trial_idx()
+
+    def set_loom_trial_idx(self):
+        for i, t in enumerate(self.loom_trials()):
+            t.set_loom_trial_idx(i)
+
+    def set_auditory_trial_idx(self):
+        for i, t in enumerate(self.auditory_trials()):
+            t.set_auditory_trial_idx(i)
+
     def contrasts(self):
         for t in self.all_trials:
             for fname in os.listdir(t.directory):
@@ -31,7 +42,7 @@ class MouseLoomTrialGroup(object):
         return []
 
     def set_contrasts(self):
-        for t, c in zip(self.all_trials, self.contrasts()):
+        for t, c in zip(self.loom_trials(), self.contrasts()):
             t.set_contrast(c)
 
     @classmethod
@@ -40,10 +51,13 @@ class MouseLoomTrialGroup(object):
             "speed",
             "acceleration",
             "latency to escape",
+            "latency peak detect",
             "time in safety zone",
             "classified as flee",
             "time of loom",
             "loom number",
+            "time to reach shelter stimulus onset",
+
         ]
         return metrics
 
@@ -271,6 +285,14 @@ class MouseLoomTrialGroup(object):
     def percentage_time_in_tz_middle(self):
         hm = make_trial_heatmap_location_overlay(self.habituation_trials())
         return sum(sum(hm[115:190, 150:245]) / sum(sum(hm)))
+
+    def sort_trials_by_contrast(self):
+        test_contrast_trials = [t for t in self.all_trials if t.contrast == 0]
+        low_contrast_trials = [t for t in self.all_trials if t.contrast != 0]
+        low_contrast_values = [t.contrast for t in low_contrast_trials]
+
+        Z = [x for _, x in sorted(zip(low_contrast_values, low_contrast_trials))]
+        return Z
 
 
 class ExperimentalConditionGroup(object):
