@@ -58,7 +58,7 @@ def calculate_theoretical_escape_threshold(mtg):
     for t in post_test_trials:
         latency = t.latency_peak_detect()
         title = f'theoretical_threshold_{mtg.mouse_id}__loom_number_{t.loom_number}'
-        fig, axes = plt.subplots(2, 1)
+        fig, axes = plt.subplots(3, 1)
         plt.title(title)
         plt.sca(axes[0])
         plt.axhline(theoretical_escape_threshold)
@@ -90,6 +90,9 @@ def calculate_theoretical_escape_threshold(mtg):
         plt.plot(t.normalised_x_track[:600])
         plt.sca(axes[1])
         plt.ylim([0, 1])
+
+        plt.sca(axes[2])
+        t.plot_delta_f_with_track('k')
 
         fig.savefig(f'/home/slenzi/thesis_latency_plots/{title}.png')
         plt.close()
