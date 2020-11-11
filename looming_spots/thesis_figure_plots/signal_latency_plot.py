@@ -107,7 +107,7 @@ def get_df_non_escape_relative_to_estimated_threshold_mtg(mtg):
     pre_test_latency = np.nanmean([t.latency_peak_detect() for t in pre_test_trials])
     theoretical_escape_threshold = np.mean(
         [t.integral_escape_metric(int(pre_test_latency)) for t in pre_test_trials])
-    df_dict['escape ∆F threshold'] = [theoretical_escape_threshold]*len(post_test_trials)
+
 
     latencies = []
     speeds = []
@@ -124,14 +124,15 @@ def get_df_non_escape_relative_to_estimated_threshold_mtg(mtg):
 
     if mtg.mouse_id == '898990':
         escapes = [True] * 3
+    theoretical_escape_thresholds = [theoretical_escape_threshold] * len(post_test_trials)
 
-    df_dict.setdefault('mouse id', [mtg.mouse_id] * 3)
+    df_dict.setdefault('escape ∆F threshold', theoretical_escape_thresholds)
+    df_dict.setdefault('mouse id', [mtg.mouse_id] * len(post_test_trials))
     df_dict.setdefault('latency', latencies)
     df_dict.setdefault('speed', speeds)
     df_dict.setdefault('escape', escapes)
     df_dict.setdefault('deltaf max in trial', delta_f_metrics)
     df_dict.setdefault('deltaf max in trial up to 5th', delta_f_metrics_short)
-
     return pd.DataFrame.from_dict(df_dict)
 
 
@@ -141,10 +142,16 @@ def get_df_non_escape_relative_to_estimated_threshold():
     for mtg in mtgs:
         df = get_df_non_escape_relative_to_estimated_threshold_mtg(mtg)
         df_all = df_all.append(df, ignore_index=True)
+    df_all['exceeds theoretical threshold']  =  df_all['deltaf max in trial'] > df_all['escape ∆F threshold']
+    df_all['exceeds theoretical threshold short']  =  df_all['deltaf max in trial up to 5th'] > df_all['escape ∆F threshold']
+
     df_all.to_csv('/home/slenzi/thesis_latency_plots/df_2.csv')
 
 
-def proportion_exceeding_threshold():
+def proportion_exceeding_threshold(df_path='/Users/stephenlenzi/thesis_latency_plots/df_2.csv'):
+    df = pd.read_csv(df_path)
+    df_no_escape = df[~df['escape']]
+    df_no_escape df_no_escape['deltaf max in trial'] > df_no_escape['escape ∆F threshold']
     pass
 
 
