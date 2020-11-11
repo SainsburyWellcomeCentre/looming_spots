@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 
 from looming_spots.db.constants import LOOM_ONSETS
+from looming_spots.thesis_figure_plots import photometry_example_traces
 
 ALL_SNL_KEYS = ['photometry_habituation_tre-GCaMP_24hr_pre',
                 'photometry_habituation_tre-GCaMP_same_day_pre',
@@ -181,12 +182,18 @@ def get_df_non_escape_relative_to_estimated_threshold():
 
     df_all.to_csv('/home/slenzi/thesis_latency_plots/df_2.csv')
 
+def replot_lsie():
+    mids24 = experimental_log.get_mouse_ids_in_experiment(LSIE_SNL_KEYS[0])
+    mids_sameday = experimental_log.get_mouse_ids_in_experiment(LSIE_SNL_KEYS[1])
 
+    fig= photometry_example_traces.plot_LSIE_bars_all_groups(groups=(mids24, mids_sameday))
+    fig.savefig('/home/slenzi/thesis_latency_plots/LSIE.png')
 
 def main():
     #get_snl_pre_test_and_high_contrast_trials()
     plot_all_theoretical_escape_thresholds()
     get_df_non_escape_relative_to_estimated_threshold()
+    replot_lsie()
 
 if __name__ == '__main__':
     main()

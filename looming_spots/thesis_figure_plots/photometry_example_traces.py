@@ -860,7 +860,7 @@ def plot_LSIE_bars_all_groups(groups=(pre_test_sameday, pre_test_24hr)):
             plt.subplots_adjust(bottom=0.35, left=0.3, right=0.8)
         ax.spines["left"].set_visible(False)
         ax.get_yaxis().set_visible(False)
-
+    return fig
 
 def analyse_signal_by_escape_latency():
     groups = [pre_test_24hr + pre_test_sameday]
