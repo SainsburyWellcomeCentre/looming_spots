@@ -54,8 +54,8 @@ def calculate_theoretical_escape_threshold(mtg):
     pre_test_latency = np.nanmean([t.latency_peak_detect() for t in pre_test_trials])
 
     theoretical_escape_threshold = np.mean([t.integral_escape_metric(int(t.latency_peak_detect())) for t in pre_test_trials])
-    theoretical_escape_threshold_minimum = np.min([t.integral_escape_metric(int(t.latency_peak_detect())) for t in pre_test_trials])
-    theoretical_escape_threshold_maximum = np.max([t.integral_escape_metric(int(t.latency_peak_detect())) for t in pre_test_trials])
+    theoretical_escape_threshold_minimum = np.min([np.max(t.integral_escape_metric(int(t.latency_peak_detect()))) for t in pre_test_trials])
+    theoretical_escape_threshold_maximum = np.max([np.max(t.integral_escape_metric(int(t.latency_peak_detect()))) for t in pre_test_trials])
 
     for t in post_test_trials:
         latency = t.latency_peak_detect()
