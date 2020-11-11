@@ -574,7 +574,10 @@ class LoomTrial(object):
                 return 239
             elif self.mouse_id == 'CA109_2' and self.loom_number == 2:
                 return 252
-
+            elif self.mouse_id == '074743' and self.loom_number == 1:
+                return 235
+            elif self.mouse_id == '898989' and self.loom_number == 0:
+                return 240
             return all_peak_starts[0] + 200  # signal.find_peaks(acc, height=0.0002)[0][0]
 
     def latency_peak_detect_s(self):
@@ -872,7 +875,7 @@ class LoomTrial(object):
         )
         plt.plot(self.normalised_x_track, color=color)
         self.plot_stimulus()
-        plt.xlim([0,600])
+        plt.xlim([0, 600])
 
     def plot_stimulus(self):  # FIXME: duplicated elsewhere
         ax = plt.gca()
