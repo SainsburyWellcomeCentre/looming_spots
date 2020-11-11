@@ -72,7 +72,8 @@ def calculate_theoretical_escape_threshold(mtg):
         if latency is not None:
             print(f'latency: {latency}')
             if latency < 600:
-                plt.axhline(t.integral_downsampled()[int(latency)], color='b')
+                plt.axhline(t.integral_downsampled()[int(latency)], color='b', ls='--')
+                plt.axhline(np.nanmax(t.integral_downsampled()[:335]), color='k', ls='--')
                 plt.axvline(latency, color='r', ls='--')
 
         plt.plot(t.integral_downsampled())
@@ -147,11 +148,6 @@ def get_df_non_escape_relative_to_estimated_threshold():
 
     df_all.to_csv('/home/slenzi/thesis_latency_plots/df_2.csv')
 
-
-def proportion_exceeding_threshold(df_path='/Users/stephenlenzi/thesis_latency_plots/df_2.csv'):
-    df = pd.read_csv(df_path)
-    df_no_escape = df[~df['escape']]
-    pass
 
 
 def main():
