@@ -122,6 +122,10 @@ def get_df_non_escape_relative_to_estimated_threshold_mtg(mtg):
         delta_f_metrics.append(np.nanmax(t.integral_downsampled()[:335]))
         delta_f_metrics_short.append(np.nanmax(t.integral_downsampled()[:312]))
 
+    if mtg.mouse_id == '898990':
+        escapes = [True] * 3
+
+    df_dict.setdefault('mouse id', [mtg.mouse_id] * 3)
     df_dict.setdefault('latency', latencies)
     df_dict.setdefault('speed', speeds)
     df_dict.setdefault('escape', escapes)
@@ -136,7 +140,7 @@ def get_df_non_escape_relative_to_estimated_threshold():
     mtgs = get_mtgs(LSIE_SNL_KEYS)
     for mtg in mtgs:
         df = get_df_non_escape_relative_to_estimated_threshold_mtg(mtg)
-        df_all = df_all.append(df)
+        df_all = df_all.append(df, ignore_index=True)
     df_all.to_csv('/home/slenzi/thesis_latency_plots/df_2.csv')
 
 
