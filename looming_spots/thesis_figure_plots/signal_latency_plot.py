@@ -118,7 +118,7 @@ def get_df_non_escape_relative_to_estimated_threshold_mtg(mtg):
         latencies.append(t.metric_functions['latency peak detect samples']())
         speeds.append(t.metric_functions['speed']())
         escapes.append(t.metric_functions['classified as flee']())
-        delta_f_metrics.append(np.nanmax(t.integral_downsampled()))
+        delta_f_metrics.append(np.nanmax(t.integral_downsampled()[:335]))
     df_dict.setdefault('latency', latencies)
     df_dict.setdefault('speed', speeds)
     df_dict.setdefault('escape', escapes)
@@ -138,7 +138,6 @@ def get_df_non_escape_relative_to_estimated_threshold():
 
 def proportion_exceeding_threshold():
     pass
-
 
 
 def main():
