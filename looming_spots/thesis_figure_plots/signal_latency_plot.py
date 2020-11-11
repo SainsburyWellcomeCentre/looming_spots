@@ -108,17 +108,23 @@ def calculate_theoretical_escape_threshold(mtg):
 
 def plot_pre_test_trial(mtg, pre_test_trials):
     pre_test_latency = np.nanmean([t.latency_peak_detect() for t in pre_test_trials])
+
     for t in pre_test_trials:
-        fig1 = plt.figure()
+        fig, axes = plt.subplots(2, 1)
+        plt.sca(axes[0])
         latency = t.latency_peak_detect()
         title = f'pre_test__{mtg.mouse_id}__loom_number_{t.loom_number}'
         plt.title(title)
         plt.axhline(t.integral_escape_metric(int(latency)), color='g')
         [plt.axvline(x, color='k', ls='--') for x in LOOM_ONSETS]
-
+        plt.plot(t.integral_downsampled())
         plt.axvline(int(pre_test_latency), color='r')
         plt.ylim([0, 0.09])
-        fig1.savefig(f'/home/slenzi/thesis_latency_plots/{title}.png')
+        plt.xlim([0, 600])
+
+        plt.sca(axes[1])
+        t.plot_delta_f_with_track('k')
+        fig.savefig(f'/home/slenzi/thesis_latency_plots/{title}.png')
         plt.close()
 
 
