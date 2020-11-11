@@ -578,6 +578,8 @@ class LoomTrial(object):
                 return 235
             elif self.mouse_id == '898989' and self.loom_trial_idx == 0:
                 return 240
+            elif self.mouse_id == '977659' and self.loom_trial_idx == 28:
+                return 250
             return all_peak_starts[0] + 200  # signal.find_peaks(acc, height=0.0002)[0][0]
 
     def latency_peak_detect_s(self):
