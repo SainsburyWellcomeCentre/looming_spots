@@ -151,7 +151,6 @@ def get_df_non_escape_relative_to_estimated_threshold():
 def proportion_exceeding_threshold(df_path='/Users/stephenlenzi/thesis_latency_plots/df_2.csv'):
     df = pd.read_csv(df_path)
     df_no_escape = df[~df['escape']]
-    df_no_escape df_no_escape['deltaf max in trial'] > df_no_escape['escape ∆F threshold']
     pass
 
 
