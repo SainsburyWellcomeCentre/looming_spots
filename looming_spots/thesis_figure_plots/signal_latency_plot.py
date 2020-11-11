@@ -126,7 +126,7 @@ def get_df_non_escape_relative_to_estimated_threshold_mtg(mtg):
     df_dict.setdefault('speed', speeds)
     df_dict.setdefault('escape', escapes)
     df_dict.setdefault('deltaf max in trial', delta_f_metrics)
-    df_dict.setdefault('deltaf max in trial up to 5th', delta_f_metrics)
+    df_dict.setdefault('deltaf max in trial up to 5th', delta_f_metrics_short)
 
     return pd.DataFrame.from_dict(df_dict)
 
