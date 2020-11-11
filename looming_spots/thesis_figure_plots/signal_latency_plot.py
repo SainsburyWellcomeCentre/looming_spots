@@ -69,7 +69,7 @@ def calculate_theoretical_escape_threshold(mtg):
         plt.title(title)
         plt.sca(axes[0])
         plt.axhline(theoretical_escape_threshold)
-        [plt.axvline(x, color='k', ls='--') for x in LOOM_ONSETS]
+        #[plt.axvline(x, color='k', ls='--') for x in LOOM_ONSETS]
 
         #plot average latency to escape in pre test
 
