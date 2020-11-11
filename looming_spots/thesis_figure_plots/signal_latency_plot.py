@@ -113,7 +113,7 @@ def plot_pre_test_trial(mtg, pre_test_trials):
         latency = t.latency_peak_detect()
         title = f'pre_test__{mtg.mouse_id}__loom_number_{t.loom_number}'
         plt.title(title)
-        plt.axhline(t.integral_escape_metric(int(latency), color='g'))
+        plt.axhline(t.integral_escape_metric(int(latency)), color='g')
         [plt.axvline(x, color='k', ls='--') for x in LOOM_ONSETS]
 
         # plot average latency to escape in pre test
