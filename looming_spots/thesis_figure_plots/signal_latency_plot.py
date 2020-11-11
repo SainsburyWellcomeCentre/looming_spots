@@ -113,16 +113,20 @@ def get_df_non_escape_relative_to_estimated_threshold_mtg(mtg):
     speeds = []
     escapes = []
     delta_f_metrics = []
+    delta_f_metrics_short = []
 
     for t in post_test_trials:
         latencies.append(t.metric_functions['latency peak detect samples']())
         speeds.append(t.metric_functions['speed']())
         escapes.append(t.metric_functions['classified as flee']())
         delta_f_metrics.append(np.nanmax(t.integral_downsampled()[:335]))
+        delta_f_metrics_short.append(np.nanmax(t.integral_downsampled()[:312]))
+
     df_dict.setdefault('latency', latencies)
     df_dict.setdefault('speed', speeds)
     df_dict.setdefault('escape', escapes)
     df_dict.setdefault('deltaf max in trial', delta_f_metrics)
+    df_dict.setdefault('deltaf max in trial up to 5th', delta_f_metrics)
 
     return pd.DataFrame.from_dict(df_dict)
 
@@ -133,7 +137,7 @@ def get_df_non_escape_relative_to_estimated_threshold():
     for mtg in mtgs:
         df = get_df_non_escape_relative_to_estimated_threshold_mtg(mtg)
         df_all = df_all.append(df)
-    df_all.to_csv('/home/slenzi/thesis_latency_plots/df.csv')
+    df_all.to_csv('/home/slenzi/thesis_latency_plots/df_2.csv')
 
 
 def proportion_exceeding_threshold():
