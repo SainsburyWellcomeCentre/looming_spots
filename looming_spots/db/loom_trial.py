@@ -560,23 +560,23 @@ class LoomTrial(object):
         std = np.nanstd(speed[:600])
         all_peak_starts = signal.find_peaks(speed, std * n_stds, width=1)[1]['left_ips']
         if len(all_peak_starts) > 0:
-            if self.mouse_id == '1029105' and self.loom_number == 0:
+            if self.mouse_id == '1029105' and self.loom_trial_idx == 0:
                 return all_peak_starts[1] + 200
-            elif self.mouse_id == 'CA105_2' and self.loom_number == 2:
+            elif self.mouse_id == 'CA105_2' and self.loom_trial_idx == 2:
                 return 260
-            elif self.mouse_id == 'CA105_4' and self.loom_number == 2:
+            elif self.mouse_id == 'CA105_4' and self.loom_trial_idx == 2:
                 return 244
-            elif self.mouse_id == 'CA106_5' and self.loom_number == 0:
+            elif self.mouse_id == 'CA106_5' and self.loom_trial_idx == 0:
                 return 239
-            elif self.mouse_id == 'CA109_2' and self.loom_number == 2:
+            elif self.mouse_id == 'CA109_2' and self.loom_trial_idx == 2:
                 return 252
-            elif self.mouse_id == 'CA109_3' and self.loom_number == 0:
+            elif self.mouse_id == 'CA109_3' and self.loom_trial_idx == 0:
                 return 239
-            elif self.mouse_id == 'CA109_2' and self.loom_number == 2:
+            elif self.mouse_id == 'CA109_2' and self.loom_trial_idx == 2:
                 return 252
-            elif self.mouse_id == '074743' and self.loom_number == 1:
+            elif self.mouse_id == '074743' and self.loom_trial_idx == 1:
                 return 235
-            elif self.mouse_id == '898989' and self.loom_number == 0:
+            elif self.mouse_id == '898989' and self.loom_trial_idx == 0:
                 return 240
             return all_peak_starts[0] + 200  # signal.find_peaks(acc, height=0.0002)[0][0]
 
