@@ -118,7 +118,7 @@ def plot_pre_test_trial(mtg, pre_test_trials):
         plt.axhline(t.integral_escape_metric(int(latency)), color='g')
         [plt.axvline(x, color='k', ls='--') for x in LOOM_ONSETS]
         plt.plot(t.integral_downsampled())
-        plt.axvline(int(pre_test_latency), color='r')
+        plt.axvline(int(t.latency_peak_detect()), color='r', ls='--')
         plt.ylim([0, 0.09])
         plt.xlim([0, 600])
 
