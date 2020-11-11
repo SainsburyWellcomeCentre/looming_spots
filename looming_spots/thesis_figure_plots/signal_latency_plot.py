@@ -117,6 +117,7 @@ def plot_pre_test_trial(mtg, pre_test_trials):
         [plt.axvline(x, color='k', ls='--') for x in LOOM_ONSETS]
 
         plt.axvline(int(pre_test_latency), color='r')
+        plt.ylim([0, 0.09])
         fig1.savefig(f'/home/slenzi/thesis_latency_plots/{title}.png')
         plt.close()
 
