@@ -80,6 +80,7 @@ def calculate_theoretical_escape_threshold(mtg):
         plt.axhline(np.nanmax(t.integral_downsampled()[:335]), color='k')
         plt.plot(t.integral_downsampled())
         plt.xlim([0, 600])
+        plt.axhspan(theoretical_escape_threshold_minimum, theoretical_escape_threshold_maximum, color='r', alpha=0.2)
 
         plt.sca(axes[1])
 
@@ -92,8 +93,6 @@ def calculate_theoretical_escape_threshold(mtg):
         plt.plot(t.normalised_x_track[:600])
         plt.sca(axes[1])
         plt.ylim([0, 1])
-
-        plt.axhspan(theoretical_escape_threshold_minimum, theoretical_escape_threshold_maximum,color='r', alpha=0.2)
 
         plt.sca(axes[2])
         t.plot_delta_f_with_track('k')
