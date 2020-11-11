@@ -152,7 +152,7 @@ def get_df_non_escape_relative_to_estimated_threshold():
 
 def main():
     #get_snl_pre_test_and_high_contrast_trials()
-    #plot_all_theoretical_escape_thresholds()
+    plot_all_theoretical_escape_thresholds()
     get_df_non_escape_relative_to_estimated_threshold()
 
 if __name__ == '__main__':
