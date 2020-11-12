@@ -124,9 +124,9 @@ def plot_pre_test_trial(mtg, pre_test_trials):
         plt.xlim([0, 600])
 
         plt.sca(axes[1])
-        t.plot_delta_f_with_track('k')
+        t.plot_delta_f_with_track()
         plt.axvline(int(t.latency_peak_detect()), color='r', ls='--')
-        fig.savefig(f'/home/slenzi/thesis_latency_plots/{title}.eps',format='eps')
+        fig.savefig(f'/home/slenzi/thesis_latency_plots/{title}.eps', format='eps')
         plt.close()
 
 

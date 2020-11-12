@@ -869,14 +869,20 @@ class LoomTrial(object):
     def get_cumsum(self, scale_factor):
         return self.cumulative_sum_raw / scale_factor
 
-    def plot_delta_f_with_track(self, color, scale_factor=10):
+    def plot_delta_f_with_track(self, color=None, scale_factor=10):
+        if color is None:
+            color_df = 'k'
+            color_track = 'r'
+        else:
+            color_df = color
+            color_track = color
         scale_factor = max(self.delta_f()[:600])
         plt.plot(
             self.delta_f() / scale_factor, #delta_f_with_pre_stimulus_events_removed
-            color=color,
+            color=color_df,
             linestyle="--",
         )
-        plt.plot(self.normalised_x_track, color=color)
+        plt.plot(self.normalised_x_track, color=color_track)
         self.plot_stimulus()
         plt.xlim([0, 600])
         plt.ylim([0, 1])
