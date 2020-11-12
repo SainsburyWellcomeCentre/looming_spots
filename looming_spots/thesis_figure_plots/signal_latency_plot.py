@@ -128,11 +128,22 @@ def plot_pre_test_trial(mtg, pre_test_trials):
         t.plot_delta_f_with_track()
         plt.axvline(int(t.latency_peak_detect()), color='r', ls='--')
         [plt.axvline(x, color='k', ls='--') for x in LOOM_ONSETS]
-        if t.latency_peak_detect() < LOOM_ONSETS[1]:
-            title += '_1st_loom_escape'
+        title += escape_on(t.latency_peak_detect())
         fig.savefig(f'/home/slenzi/thesis_latency_plots/{title}.eps', format='eps')
         plt.close()
 
+
+def escape_on(latency):
+    if latency < LOOM_ONSETS[1]:
+        return '_1st_loom_escape'
+    elif LOOM_ONSETS[1] < latency < LOOM_ONSETS[2]:
+        return '_2nd_loom_escape'
+    elif LOOM_ONSETS[2] < latency < LOOM_ONSETS[3]:
+        return '_3rd_loom_escape'
+    elif LOOM_ONSETS[3] < latency < LOOM_ONSETS[4]:
+        return '_4th_loom_escape'
+    else:
+        return '_5th_loom_escape'
 
 def plot_all_theoretical_escape_thresholds():
     mtgs = get_mtgs(LSIE_SNL_KEYS)
