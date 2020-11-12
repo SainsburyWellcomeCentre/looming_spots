@@ -38,6 +38,7 @@ def get_snl_pre_test_and_high_contrast_trials():
         title = f'deltaF_with_track__mouse_{t.mouse_id}__trial_{t.loom_number}'
         plt.title(title)
         t.plot_delta_f_with_track('k')
+        plt.axis('off')
         fig.savefig(f'/home/slenzi/thesis_latency_plots/{title}.png')
         fig.close()
 
