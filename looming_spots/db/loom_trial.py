@@ -889,6 +889,8 @@ class LoomTrial(object):
         plt.hlines(0.5, 500, 530)
         plt.vlines(500, 0.5, 0.5+(0.01/scale_factor))
 
+        plt.vlines(550, 0.5, 0.6, color='r')
+
     def plot_stimulus(self):  # FIXME: duplicated elsewhere
         ax = plt.gca()
         if self.stimulus_type == "auditory":
