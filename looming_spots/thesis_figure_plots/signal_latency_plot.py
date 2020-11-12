@@ -120,7 +120,7 @@ def plot_pre_test_trial(mtg, pre_test_trials):
         [plt.axvline(x, color='k', ls='--') for x in LOOM_ONSETS]
         plt.plot(t.integral_downsampled())
         plt.axvline(int(t.latency_peak_detect()), color='r', ls='--')
-        plt.ylim([0, max(t.integral_downsampled())])
+        plt.ylim([0, np.nanmax(t.integral_downsampled())])
         plt.xlim([0, 600])
 
         plt.sca(axes[1])
