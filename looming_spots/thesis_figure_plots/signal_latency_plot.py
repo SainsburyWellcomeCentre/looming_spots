@@ -120,11 +120,12 @@ def plot_pre_test_trial(mtg, pre_test_trials):
         [plt.axvline(x, color='k', ls='--') for x in LOOM_ONSETS]
         plt.plot(t.integral_downsampled())
         plt.axvline(int(t.latency_peak_detect()), color='r', ls='--')
-        plt.ylim([0, 0.09])
+        plt.ylim([0, max(t.integral_downsampled())])
         plt.xlim([0, 600])
 
         plt.sca(axes[1])
         t.plot_delta_f_with_track('k')
+        plt.axvline(int(t.latency_peak_detect()), color='r', ls='--')
         fig.savefig(f'/home/slenzi/thesis_latency_plots/{title}.eps',format='eps')
         plt.close()
 
@@ -190,6 +191,8 @@ def replot_lsie():
     fig.savefig('/home/slenzi/thesis_latency_plots/LSIE.eps',format='eps')
 
 def main():
+    import seaborn as sns
+    sns.set_style("white")
     #get_snl_pre_test_and_high_contrast_trials()
     plot_all_theoretical_escape_thresholds()
     get_df_non_escape_relative_to_estimated_threshold()
