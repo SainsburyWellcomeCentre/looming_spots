@@ -102,7 +102,7 @@ def calculate_theoretical_escape_threshold(mtg):
         plt.sca(axes[2])
         t.plot_delta_f_with_track('k')
 
-        fig.savefig(f'/home/slenzi/thesis_latency_plots/{title}.png')
+        fig.savefig(f'/home/slenzi/thesis_latency_plots/{title}.eps')
         plt.close()
     plot_pre_test_trial(mtg, pre_test_trials)
 
@@ -125,7 +125,7 @@ def plot_pre_test_trial(mtg, pre_test_trials):
 
         plt.sca(axes[1])
         t.plot_delta_f_with_track('k')
-        fig.savefig(f'/home/slenzi/thesis_latency_plots/{title}.png')
+        fig.savefig(f'/home/slenzi/thesis_latency_plots/{title}.eps')
         plt.close()
 
 
@@ -187,7 +187,7 @@ def replot_lsie():
     mids_sameday = experimental_log.get_mouse_ids_in_experiment(LSIE_SNL_KEYS[1])
 
     fig= photometry_example_traces.plot_LSIE_bars_all_groups(groups=(mids24, mids_sameday))
-    fig.savefig('/home/slenzi/thesis_latency_plots/LSIE.png')
+    fig.savefig('/home/slenzi/thesis_latency_plots/LSIE.eps')
 
 def main():
     #get_snl_pre_test_and_high_contrast_trials()
