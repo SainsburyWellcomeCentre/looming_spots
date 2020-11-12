@@ -129,7 +129,7 @@ def plot_pre_test_trial(mtg, pre_test_trials):
         plt.axvline(int(t.latency_peak_detect()), color='r', ls='--')
         [plt.axvline(x, color='k', ls='--') for x in LOOM_ONSETS]
         if t.latency_peak_detect() < LOOM_ONSETS[1]:
-            title += '1st_loom_escape'
+            title += '_1st_loom_escape'
         fig.savefig(f'/home/slenzi/thesis_latency_plots/{title}.eps', format='eps')
         plt.close()
 
