@@ -881,7 +881,7 @@ class LoomTrial(object):
         plt.xlim([0, 600])
         plt.ylim([0, 1])
         plt.hlines(0.5, 500, 530)
-        plt.vlines(500, 0.5, 0.5+(0.001/scale_factor))
+        plt.vlines(500, 0.5, 0.5+(0.01/scale_factor))
 
     def plot_stimulus(self):  # FIXME: duplicated elsewhere
         ax = plt.gca()
