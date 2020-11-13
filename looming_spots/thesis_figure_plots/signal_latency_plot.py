@@ -55,13 +55,16 @@ def calculate_theoretical_escape_threshold(mtg):
     post_test_trials = mtg.post_test_trials()[:3]
     pre_test_latency = np.nanmean([t.latency_peak_detect() for t in pre_test_trials])
 
-    theoretical_escape_threshold = np.mean([t.integral_escape_metric(int(t.latency_peak_detect())) for t in pre_test_trials])
+    theoretical_escape_threshold = np.mean([t.integral_escape_metric(int(pre_test_latency)) for t in pre_test_trials])
+        #np.mean([t.integral_escape_metric(int(t.latency_peak_detect())) for t in pre_test_trials])
+
+
+    pre_test_trial_integral_metric_values = [np.nanmax(t.integral_escape_metric(int(pre_test_latency))) for t in pre_test_trials]
+    theoretical_escape_threshold_minimum = np.min(pre_test_trial_integral_metric_values)
+    theoretical_escape_threshold_maximum = np.max(pre_test_trial_integral_metric_values)
 
     print('latencies:', [int(t.latency_peak_detect()) for t in pre_test_trials])
-    print('min thresholds:', [np.nanmax(t.integral_escape_metric(int(t.latency_peak_detect()))) for t in pre_test_trials])
-
-    theoretical_escape_threshold_minimum = np.min([np.nanmax(t.integral_escape_metric(int(pre_test_latency))) for t in pre_test_trials])
-    theoretical_escape_threshold_maximum = np.max([np.nanmax(t.integral_escape_metric(int(pre_test_latency))) for t in pre_test_trials])
+    print('min thresholds:', pre_test_trial_integral_metric_values)
 
     for t in post_test_trials:
         latency = t.latency_peak_detect()
@@ -72,20 +75,18 @@ def calculate_theoretical_escape_threshold(mtg):
         plt.axhline(theoretical_escape_threshold, color='k', linewidth=2)
         #[plt.axvline(x, color='k', ls='--') for x in LOOM_ONSETS]
 
-        #plot average latency to escape in pre test
-
         plt.axvline(int(pre_test_latency), color='r')
 
-        #plot integral at latency
         if latency is not None:
             print(f'latency: {latency}')
             if latency < 600:
                 plt.axhline(t.integral_downsampled()[int(latency)], color='b', ls='--')
-                plt.axvline(latency, color='r', ls='--')
-
+                plt.axvline(latency, color='b', ls='--')
+        plt.axvline(pre_test_latency, color='r', ls='--')
         plt.axhline(np.nanmax(t.integral_downsampled()[:335]), color='b')
         plt.plot(t.integral_downsampled())
         plt.xlim([0, 600])
+        print(f'min: {theoretical_escape_threshold_minimum}, max: {theoretical_escape_threshold_maximum}')
         plt.axhspan(theoretical_escape_threshold_minimum, theoretical_escape_threshold_maximum, color='r', alpha=0.2)
         t.plot_stimulus()
         plt.sca(axes[1])
@@ -95,7 +96,7 @@ def calculate_theoretical_escape_threshold(mtg):
             if latency < 600:
                 plt.axvline(latency, color='r', ls='--')
         t.plot_stimulus()
-        #[plt.axvline(x, color='k', ls='--') for x in LOOM_ONSETS]
+
         plt.plot(t.normalised_x_track[:600])
         plt.sca(axes[1])
         plt.ylim([0, 1])
