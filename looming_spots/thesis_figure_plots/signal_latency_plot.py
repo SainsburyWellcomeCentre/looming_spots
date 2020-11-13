@@ -221,7 +221,7 @@ def plot_pre_post_integral(mtg):
         plt.plot(t.integral_downsampled(), color='k')
 
     plt.axvline(int(pre_test_latency), color='r')
-    t.plot_stimulus()
+    #t.plot_stimulus()
     [plt.axvline(x, color='k', ls='--') for x in LOOM_ONSETS]
 
     plt.hlines(0.5, 500, 530)
