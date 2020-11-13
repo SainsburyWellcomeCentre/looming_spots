@@ -29,7 +29,7 @@ from looming_spots.db.constants import (
     N_SAMPLES_BEFORE,
     N_SAMPLES_AFTER,
     N_SAMPLES_TO_SHOW,
-    SPEED_THRESHOLD, CLASSIFICATION_WINDOW_END)
+    SPEED_THRESHOLD, CLASSIFICATION_WINDOW_END, LOOM_ONSETS)
 
 from looming_spots.track_analysis import arena_region_crossings
 from looming_spots.preprocess import photodiode
@@ -883,7 +883,8 @@ class LoomTrial(object):
             linestyle="--",
         )
         plt.plot(self.normalised_x_track, color=color_track)
-        self.plot_stimulus()
+        #self.plot_stimulus()
+        [plt.axvline(x, color='k', ls='--') for x in LOOM_ONSETS]
         plt.xlim([0, 600])
         plt.ylim([0, 1])
         plt.hlines(0.5, 500, 530)
