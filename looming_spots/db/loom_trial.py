@@ -871,7 +871,7 @@ class LoomTrial(object):
 
     def plot_delta_f_with_track(self, color=None, scale_factor=10):
         if color is None:
-            color_df = 'k'
+            color_df = 'b'
             color_track = 'r'
         else:
             color_df = color
