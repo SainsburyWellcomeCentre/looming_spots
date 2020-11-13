@@ -87,7 +87,7 @@ def calculate_theoretical_escape_threshold(mtg):
         plt.xlim([0, 600])
         print(f'min: {theoretical_escape_threshold_minimum}, max: {theoretical_escape_threshold_maximum}')
         plt.axhspan(theoretical_escape_threshold_minimum, theoretical_escape_threshold_maximum, color='r', alpha=0.2)
-        t.plot_stimulus()
+        #t.plot_stimulus()
 
         plt.sca(axes[1])
         if latency is not None:
