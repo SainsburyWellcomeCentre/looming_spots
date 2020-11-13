@@ -224,7 +224,7 @@ def plot_pre_post_integral(mtg):
     #t.plot_stimulus()
     [plt.axvline(x, color='k', ls='--') for x in LOOM_ONSETS]
 
-    plt.hlines(0.5, 500, 530)
+    plt.hlines(0.0, 500, 530)
     plt.vlines(500, 0.0, 0.01)
     plt.xlim([0, 600])
     title = f'integral_pre_post__{mtg.mouse_id}'
