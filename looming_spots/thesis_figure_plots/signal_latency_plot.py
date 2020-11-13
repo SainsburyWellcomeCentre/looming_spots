@@ -100,7 +100,7 @@ def calculate_theoretical_escape_threshold(mtg):
         title += str(t.is_flee())
         fig.savefig(f'/home/slenzi/thesis_latency_plots/{title}.eps', format='eps')
         plt.close()
-    plot_pre_test_trial(mtg, pre_test_trials)
+    #plot_pre_test_trial(mtg, pre_test_trials)
 
 
 def plot_pre_test_trial(mtg, pre_test_trials):
