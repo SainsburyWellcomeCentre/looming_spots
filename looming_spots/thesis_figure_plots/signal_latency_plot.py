@@ -102,7 +102,7 @@ def calculate_theoretical_escape_threshold(mtg):
         plt.xlim([0, 600])
         plt.sca(axes[2])
         t.plot_delta_f_with_track('k')
-        title += t.is_flee()
+        title += str(t.is_flee())
         fig.savefig(f'/home/slenzi/thesis_latency_plots/{title}.eps',format='eps')
         plt.close()
     plot_pre_test_trial(mtg, pre_test_trials)
