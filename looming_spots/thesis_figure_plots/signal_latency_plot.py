@@ -225,7 +225,7 @@ def plot_pre_post_integral(mtg):
     [plt.axvline(x, color='k', ls='--') for x in LOOM_ONSETS]
 
     plt.hlines(0.5, 500, 530)
-    plt.vlines(500, 0.5, 0.6)
+    plt.vlines(500, 0.0, 0.01)
     plt.xlim([0, 600])
     title = f'integral_pre_post__{mtg.mouse_id}'
     fig.savefig(f'/home/slenzi/thesis_latency_plots/{title}.eps', format='eps')
