@@ -88,20 +88,15 @@ def calculate_theoretical_escape_threshold(mtg):
         print(f'min: {theoretical_escape_threshold_minimum}, max: {theoretical_escape_threshold_maximum}')
         plt.axhspan(theoretical_escape_threshold_minimum, theoretical_escape_threshold_maximum, color='r', alpha=0.2)
         t.plot_stimulus()
-        plt.sca(axes[1])
 
+        plt.sca(axes[1])
         if latency is not None:
             print(f'latency: {latency}')
             if latency < 600:
                 plt.axvline(latency, color='r', ls='--')
-        t.plot_stimulus()
-
-        plt.plot(t.normalised_x_track[:600])
-        plt.sca(axes[1])
         plt.ylim([0, 1])
         plt.xlim([0, 600])
-        plt.sca(axes[2])
-        t.plot_delta_f_with_track('k')
+        t.plot_delta_f_with_track()
         title += str(t.is_flee())
         fig.savefig(f'/home/slenzi/thesis_latency_plots/{title}.eps',format='eps')
         plt.close()
