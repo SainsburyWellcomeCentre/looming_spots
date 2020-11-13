@@ -68,7 +68,7 @@ def calculate_theoretical_escape_threshold(mtg):
     for t in post_test_trials:
         latency = t.latency_peak_detect()
         title = f'theoretical_threshold_{mtg.mouse_id}__loom_number_{t.loom_trial_idx}_avg_latency_metric'
-        fig, axes = plt.subplots(3, 1)
+        fig, axes = plt.subplots(2, 1)
         plt.title(title)
         plt.sca(axes[0])
         plt.axhline(theoretical_escape_threshold, color='k', linewidth=2)
@@ -142,6 +142,7 @@ def escape_on(latency):
         return '_4th_loom_escape'
     else:
         return '_5th_loom_escape'
+
 
 def plot_all_theoretical_escape_thresholds():
     mtgs = get_mtgs(LSIE_SNL_KEYS)
@@ -240,9 +241,9 @@ def main():
     sns.set_style("white")
     #get_snl_pre_test_and_high_contrast_trials()
     plot_all_theoretical_escape_thresholds()
-    get_df_non_escape_relative_to_estimated_threshold()
-    replot_lsie()
-    plot_all_integrals()
+    #get_df_non_escape_relative_to_estimated_threshold()
+    #replot_lsie()
+    #plot_all_integrals()
 
 if __name__ == '__main__':
     main()
