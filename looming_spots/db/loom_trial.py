@@ -880,7 +880,6 @@ class LoomTrial(object):
         plt.plot(
             self.delta_f() / scale_factor, #delta_f_with_pre_stimulus_events_removed
             color=color_df,
-            linestyle="--",
         )
         plt.plot(self.normalised_x_track, color=color_track)
         #self.plot_stimulus()
