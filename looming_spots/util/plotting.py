@@ -67,10 +67,9 @@ def plot_looms_ax(ax=None, vertical=True, height=1.3, loom_n_samples=14, relativ
         ax.add_patch(loom)
 
 
-def create_loom_patch(start, upsample_factor=1, vertical=True, height=1.3, loom_n_samples=14):
+def create_loom_patch(start, upsample_factor=1, vertical=True, height=1.3, loom_n_samples=14, y=-0.2):
     width = loom_n_samples * upsample_factor
     x=start * upsample_factor
-    y=-0.2
     if not vertical:
         width, height = height, width
         x, y = y, x

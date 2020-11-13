@@ -201,12 +201,44 @@ def get_df_non_escape_relative_to_estimated_threshold():
 
     df_all.to_csv('/home/slenzi/thesis_latency_plots/df_2.csv')
 
+
+def plot_all_integrals():
+    mtgs = get_mtgs(LSIE_SNL_KEYS)
+    for mtg in mtgs:
+        plot_pre_post_integral(mtg)
+
+
+def plot_pre_post_integral(mtg):
+    pre_test_trials = mtg.pre_test_trials()[:3]
+    post_test_trials = mtg.post_test_trials()[:3]
+    pre_test_latency = np.nanmean([t.latency_peak_detect() for t in pre_test_trials])
+
+    fig = plt.figure()
+    for t in pre_test_trials:
+        plt.plot(t.integral_downsampled(), color='r')
+
+    for t in post_test_trials:
+        plt.plot(t.integral_downsampled(), color='k')
+
+    plt.axvline(int(pre_test_latency), color='r')
+    t.plot_stimulus()
+    [plt.axvline(x, color='k', ls='--') for x in LOOM_ONSETS]
+
+    plt.hlines(0.5, 500, 530)
+    plt.vlines(500, 0.5, 0.6)
+    plt.xlim([0, 600])
+    title = f'integral_pre_post__{mtg.mouse_id}'
+    fig.savefig(f'/home/slenzi/thesis_latency_plots/{title}.eps', format='eps')
+
+
 def replot_lsie():
     mids24 = experimental_log.get_mouse_ids_in_experiment(LSIE_SNL_KEYS[0])
     mids_sameday = experimental_log.get_mouse_ids_in_experiment(LSIE_SNL_KEYS[1])
 
     fig= photometry_example_traces.plot_LSIE_bars_all_groups(groups=(mids24, mids_sameday))
+
     fig.savefig('/home/slenzi/thesis_latency_plots/LSIE.eps',format='eps')
+
 
 def main():
     import seaborn as sns
@@ -215,6 +247,7 @@ def main():
     plot_all_theoretical_escape_thresholds()
     get_df_non_escape_relative_to_estimated_threshold()
     replot_lsie()
+    plot_all_integrals()
 
 if __name__ == '__main__':
     main()
