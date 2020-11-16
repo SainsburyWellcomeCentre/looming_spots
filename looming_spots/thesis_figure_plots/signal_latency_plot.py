@@ -126,7 +126,7 @@ def calculate_theoretical_escape_threshold(mtg, fig=None, axes=None):
             [plt.axvline(x, color='k', ls='--') for x in LOOM_ONSETS]
 
             #plot_optional_metrics(latency, pre_test_latency, t)
-            max_val_reached = np.nanmax(t.integral_downsampled()[:335])
+            max_val_reached = np.nanmax((t.integral_downsampled()/normalisation_factor)[:335])
             if max_val_reached > theoretical_escape_threshold:
                 color = 'r'
             else:
