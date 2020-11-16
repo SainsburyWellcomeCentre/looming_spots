@@ -209,9 +209,8 @@ def escape_on(latency):
 
 def plot_all_theoretical_escape_thresholds():
     mtgs = get_mtgs(LSIE_SNL_KEYS)
-    fig, axes = plt.subplots(2, 1)
     for mtg in mtgs:
-        calculate_theoretical_escape_threshold(mtg, fig=fig, axes=axes)
+        calculate_theoretical_escape_threshold(mtg)
 
 
 def get_df_non_escape_relative_to_estimated_threshold_mtg(mtg):
@@ -309,6 +308,7 @@ def main():
     sns.set_style("white")
     #get_snl_pre_test_and_high_contrast_trials()
 
+    plot_all_theoretical_escape_thresholds()
     plot_all_theoretical_escape_thresholds()
     #plot_snl_signal_escape_latency()
     #get_df_non_escape_relative_to_estimated_threshold()
