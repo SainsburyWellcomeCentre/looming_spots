@@ -113,7 +113,8 @@ def calculate_theoretical_escape_threshold(mtg):
 
     for t in post_test_trials:
         latency = t.latency_peak_detect()
-        title = f'theoretical_threshold_{mtg.mouse_id}__loom_number_{t.loom_trial_idx}_avg_latency_metric'
+        title = f'{mtg.mouse_id}__loom_number_{t.loom_trial_idx}'
+        fname = f'theoretical_threshold_{mtg.mouse_id}__loom_number_{t.loom_trial_idx}_avg_latency_metric'
         fig, axes = plt.subplots(2, 1)
         plt.title(title)
         plt.sca(axes[0])
@@ -130,10 +131,11 @@ def calculate_theoretical_escape_threshold(mtg):
         plt.axvline(pre_test_latency, color='r', ls='--')
         plt.axhline(np.nanmax(t.integral_downsampled()[:335]), color='b')
         plt.plot(t.integral_downsampled())
-        plt.xlim([0, 600])
+        plt.xlim([180, 370])
         print(f'min: {theoretical_escape_threshold_minimum}, max: {theoretical_escape_threshold_maximum}')
         plt.axhspan(theoretical_escape_threshold_minimum, theoretical_escape_threshold_maximum, color='r', alpha=0.2)
         #t.plot_stimulus()
+        plt.axis('off')
 
         plt.sca(axes[1])
         if latency is not None:
@@ -141,12 +143,12 @@ def calculate_theoretical_escape_threshold(mtg):
             if latency < 600:
                 plt.axvline(latency, color='r', ls='--')
         plt.ylim([0, 1])
-        plt.xlim([0, 600])
+        plt.xlim([180, 370])
         t.plot_delta_f_with_track()
         [plt.axvline(x, color='k', ls='--') for x in LOOM_ONSETS]
         title += str(t.is_flee())
         plt.axis('off')
-        fig.savefig(f'/home/slenzi/thesis_latency_plots/{title}.eps', format='eps')
+        fig.savefig(f'/home/slenzi/thesis_latency_plots/{fname}.eps', format='eps')
         plt.close()
     #plot_pre_test_trial(mtg, pre_test_trials)
 
@@ -292,7 +294,7 @@ def main():
     import seaborn as sns
     sns.set_style("white")
     #get_snl_pre_test_and_high_contrast_trials()
-    #plot_all_theoretical_escape_thresholds()
+    plot_all_theoretical_escape_thresholds()
     plot_snl_signal_escape_latency()
     #get_df_non_escape_relative_to_estimated_threshold()
     #replot_lsie()
