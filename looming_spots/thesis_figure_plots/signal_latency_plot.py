@@ -112,7 +112,7 @@ def calculate_theoretical_escape_threshold(mtg, fig=None, axes=None):
     print('min thresholds:', pre_test_trial_integral_metric_values)
 
     for t in post_test_trials:
-        if t.is_flee():
+        if not (t.is_flee() or mtg.mouse_id == '898990'):
 
             latency = t.latency_peak_detect()
 
