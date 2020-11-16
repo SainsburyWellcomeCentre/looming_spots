@@ -116,8 +116,8 @@ def calculate_theoretical_escape_threshold(mtg):
         title = f'{mtg.mouse_id}__loom_number_{t.loom_trial_idx}'
         fname = f'theoretical_threshold_{mtg.mouse_id}__loom_number_{t.loom_trial_idx}_avg_latency_metric'
         fig, axes = plt.subplots(2, 1)
-        plt.title(title)
         plt.sca(axes[0])
+        plt.title(title)
         plt.axhline(theoretical_escape_threshold, color='k', linewidth=2)
         [plt.axvline(x, color='k', ls='--') for x in LOOM_ONSETS]
 
@@ -145,7 +145,7 @@ def calculate_theoretical_escape_threshold(mtg):
         plt.ylim([0, 1])
         t.plot_delta_f_with_track()
         [plt.axvline(x, color='k', ls='--') for x in LOOM_ONSETS]
-        title += str(t.is_flee())
+        fname += str(t.is_flee())
         plt.xlim([180, 370])
         plt.axis('off')
         fig.savefig(f'/home/slenzi/thesis_latency_plots/{fname}.eps', format='eps')
