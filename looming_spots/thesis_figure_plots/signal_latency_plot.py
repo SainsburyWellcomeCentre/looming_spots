@@ -128,7 +128,7 @@ def calculate_theoretical_escape_threshold(mtg, fig=None, axes=None):
             plt.axhline(theoretical_escape_threshold, color='k', linewidth=2)
             [plt.axvline(x, color='k', ls='--') for x in LOOM_ONSETS]
 
-            plot_optional_metrics(latency, pre_test_latency, t)
+            #plot_optional_metrics(latency, pre_test_latency, t)
             plt.plot(t.integral_downsampled())
             plt.xlim([180, 370])
             print(f'min: {theoretical_escape_threshold_minimum}, max: {theoretical_escape_threshold_maximum}')
