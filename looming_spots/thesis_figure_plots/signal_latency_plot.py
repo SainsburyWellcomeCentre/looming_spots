@@ -146,7 +146,7 @@ def calculate_theoretical_escape_threshold(mtg, fig=None, axes=None):
                 print(f'latency: {latency}')
                 if latency < 600:
                     plt.axvline(latency, color='r', ls='--')
-            t.plot_delta_f_with_track()
+            t.plot_delta_f_with_track(norm_factor= normalisation_factor)
             plt.ylim([0, 1])
             [plt.axvline(x, color='k', ls='--') for x in LOOM_ONSETS]
             plt.xlim([180, 370])
