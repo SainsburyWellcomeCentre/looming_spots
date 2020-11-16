@@ -102,7 +102,7 @@ def calculate_theoretical_escape_threshold(mtg):
     pre_test_latency = np.nanmean([t.latency_peak_detect() for t in pre_test_trials])
 
     theoretical_escape_threshold = np.mean([t.integral_escape_metric(int(pre_test_latency)) for t in pre_test_trials])
-        #np.mean([t.integral_escape_metric(int(t.latency_peak_detect())) for t in pre_test_trials])
+    #np.mean([t.integral_escape_metric(int(t.latency_peak_detect())) for t in pre_test_trials])
 
     pre_test_trial_integral_metric_values = [t.integral_escape_metric(int(pre_test_latency)) for t in pre_test_trials]
     theoretical_escape_threshold_minimum = np.min(pre_test_trial_integral_metric_values)
@@ -143,10 +143,10 @@ def calculate_theoretical_escape_threshold(mtg):
             if latency < 600:
                 plt.axvline(latency, color='r', ls='--')
         plt.ylim([0, 1])
-        plt.xlim([180, 370])
         t.plot_delta_f_with_track()
         [plt.axvline(x, color='k', ls='--') for x in LOOM_ONSETS]
         title += str(t.is_flee())
+        plt.xlim([180, 370])
         plt.axis('off')
         fig.savefig(f'/home/slenzi/thesis_latency_plots/{fname}.eps', format='eps')
         plt.close()
