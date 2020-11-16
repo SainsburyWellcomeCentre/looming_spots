@@ -22,12 +22,58 @@ def get_pre_test_and_high_contrast_trials_mtg(mtg):
 def get_pre_test_and_high_contrast_trials(mtgs):
     all_trials = []
     for mtg in mtgs:
-        if mtg.exp_key == 'photometry_habituation_tre-GCaMP-contrasts':
-            trials = [t for t in mtg.all_trials[:18] if t.contrast == 0]
-        else:
-            trials = mtg.pre_test_trials()[:3]
+        trials = get_high_contrast_naive_trials(mtg)
         all_trials.extend(trials)
     return all_trials
+
+
+def get_high_contrast_naive_trials(mtg):
+    if mtg.exp_key == 'photometry_habituation_tre-GCaMP-contrasts':
+        trials = [t for t in mtg.all_trials[:18] if t.contrast == 0]
+    else:
+        trials = mtg.pre_test_trials()[:3]
+    return trials
+
+
+def get_signal_df_mtgs(groups, timepoint=215):
+    all_df = pd.DataFrame()
+    for group in groups:
+        mtgs = experimental_log.get_mtgs_in_experiment(group)
+
+        for mtg in mtgs:
+            mtg_dict = {}
+            vals = []
+            escapes = []
+            contrasts = []
+            trials = get_high_contrast_naive_trials(mtg)
+            if timepoint is None:
+                timepoint = np.mean([t.latency_peak_detect() for t in trials])
+            normalising_factor = photometry_example_traces.get_normalisation_factor(mtg, timepoint)
+
+            for t in trials:
+                val = (
+                        t.integral_escape_metric(int(timepoint))
+                        / normalising_factor
+                )
+                vals.append(val)
+                escapes.append(t.is_flee())
+                contrasts.append(t.contrast)
+
+            for metric in mtg.analysed_metrics():
+                metric_vals = []
+                for t in trials:
+                    metric_vals.append(t.metric_functions[metric]())
+                mtg_dict.setdefault(metric, metric_vals)
+
+            mtg_dict.setdefault("group", [group] * len(trials))
+            mtg_dict.setdefault("deltaf metric", vals)
+            mtg_dict.setdefault("contrast", contrasts)
+            mtg_dict.setdefault("escape", escapes)
+            mtg_dict.setdefault("mouse id", [mtg.mouse_id] * len(trials))
+            mtg_df = pd.DataFrame.from_dict(mtg_dict)
+            all_df = all_df.append(mtg_df, ignore_index=True)
+    all_df.to_csv(f'/home/slenzi/thesis_latency_plots/signal_df_naive_high_ctst.csv')
+    return all_df
 
 
 def get_snl_pre_test_and_high_contrast_trials():
@@ -99,6 +145,7 @@ def calculate_theoretical_escape_threshold(mtg):
         t.plot_delta_f_with_track()
         [plt.axvline(x, color='k', ls='--') for x in LOOM_ONSETS]
         title += str(t.is_flee())
+        plt.axis('off')
         fig.savefig(f'/home/slenzi/thesis_latency_plots/{title}.eps', format='eps')
         plt.close()
     #plot_pre_test_trial(mtg, pre_test_trials)
@@ -234,17 +281,23 @@ def replot_lsie():
 
     fig= photometry_example_traces.plot_LSIE_bars_all_groups(groups=(mids24, mids_sameday))
 
-    fig.savefig('/home/slenzi/thesis_latency_plots/LSIE.eps',format='eps')
+    fig.savefig('/home/slenzi/thesis_latency_plots/LSIE.eps', format='eps')
+
+
+def plot_snl_signal_escape_latency():
+    get_signal_df_mtgs(ALL_SNL_KEYS, 215)
 
 
 def main():
     import seaborn as sns
     sns.set_style("white")
     #get_snl_pre_test_and_high_contrast_trials()
-    plot_all_theoretical_escape_thresholds()
+    #plot_all_theoretical_escape_thresholds()
+    plot_snl_signal_escape_latency()
     #get_df_non_escape_relative_to_estimated_threshold()
     #replot_lsie()
     #plot_all_integrals()
+
 
 if __name__ == '__main__':
     main()

@@ -880,7 +880,7 @@ def analyse_signal_by_escape_latency():
         t.plot_stimulus()
 
 
-def get_normalisation_factor(mtg, timepoint=220, escape_only=False):
+def get_normalisation_factor(mtg, timepoint=215, escape_only=False):
 
     normalising_factor = max(
         [
@@ -894,7 +894,7 @@ def get_normalisation_factor(mtg, timepoint=220, escape_only=False):
     return normalising_factor
 
 
-def get_signal_df(groups, timepoint = 300):
+def get_signal_df(groups, timepoint=300):
     all_df = pd.DataFrame()
     for group in groups:
         mtgs = experimental_log.get_mtgs_in_experiment(group)
@@ -918,11 +918,13 @@ def get_signal_df(groups, timepoint = 300):
                 vals.append(val)
                 escapes.append(t.is_flee())
                 contrasts.append(t.contrast)
+
             for metric in mtg.analysed_metrics():
                 metric_vals = []
                 for t in trials:
                     metric_vals.append(t.metric_functions[metric]())
                 mtg_dict.setdefault(metric, metric_vals)
+
             mtg_dict.setdefault("group", [group] * len(trials))
             mtg_dict.setdefault("deltaf metric", vals)
             mtg_dict.setdefault("contrast", contrasts)
