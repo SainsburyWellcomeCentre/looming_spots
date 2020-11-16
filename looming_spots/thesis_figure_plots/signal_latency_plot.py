@@ -101,15 +101,12 @@ def calculate_theoretical_escape_threshold(mtg, fig=None, axes=None):
     post_test_trials = mtg.post_test_trials()[:3]
     pre_test_latency = np.nanmean([t.latency_peak_detect() for t in pre_test_trials])
 
-    theoretical_escape_threshold = np.mean([t.integral_escape_metric(int(pre_test_latency)) for t in pre_test_trials])
-    #np.mean([t.integral_escape_metric(int(t.latency_peak_detect())) for t in pre_test_trials])
-
     pre_test_trial_integral_metric_values = [t.integral_escape_metric(int(pre_test_latency)) for t in pre_test_trials]
-    theoretical_escape_threshold_minimum = np.min(pre_test_trial_integral_metric_values)
-    theoretical_escape_threshold_maximum = np.max(pre_test_trial_integral_metric_values)
 
-    print('latencies:', [int(t.latency_peak_detect()) for t in pre_test_trials])
-    print('min thresholds:', pre_test_trial_integral_metric_values)
+    normalisation_factor = np.nanmax([t.integral_escape_metric(int(pre_test_latency)) for t in mtg.loom_trials()])
+    theoretical_escape_threshold = np.mean(pre_test_trial_integral_metric_values) / normalisation_factor
+    theoretical_escape_threshold_minimum = np.min(pre_test_trial_integral_metric_values) / normalisation_factor
+    theoretical_escape_threshold_maximum = np.max(pre_test_trial_integral_metric_values) / normalisation_factor
 
     for t in post_test_trials:
         if not (t.is_flee() or mtg.mouse_id == '898990'):
@@ -129,7 +126,7 @@ def calculate_theoretical_escape_threshold(mtg, fig=None, axes=None):
             [plt.axvline(x, color='k', ls='--') for x in LOOM_ONSETS]
 
             #plot_optional_metrics(latency, pre_test_latency, t)
-            plt.plot(t.integral_downsampled())
+            plt.plot(t.integral_downsampled()/normalisation_factor)
             plt.xlim([180, 370])
             print(f'min: {theoretical_escape_threshold_minimum}, max: {theoretical_escape_threshold_maximum}')
 
