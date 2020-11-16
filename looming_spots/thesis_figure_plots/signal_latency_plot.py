@@ -131,7 +131,7 @@ def calculate_theoretical_escape_threshold(mtg, fig=None, axes=None):
                 color='r'
             else:
                 color='k'
-            plt.plot(t.integral_downsampled()/normalisation_factor, color)
+            plt.plot(t.integral_downsampled()/normalisation_factor, color=color)
 
             plt.xlim([180, 370])
 
@@ -160,7 +160,7 @@ def plot_optional_metrics(latency, pre_test_latency, t, max_val_reached):
             plt.axhline(t.integral_downsampled()[int(latency)], color='b', ls='--')
             plt.axvline(latency, color='b', ls='--')
     plt.axvline(pre_test_latency, color='r', ls='--')
-    plt.axhline(np.nanmax(max_val_reached, color='b')
+    plt.axhline(np.nanmax(max_val_reached, color='b'))
 
 
 
