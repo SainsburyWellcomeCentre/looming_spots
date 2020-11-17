@@ -104,6 +104,7 @@ def calculate_theoretical_escape_threshold(mtg, fig=None, axes=None):
     pre_test_trial_integral_metric_values = [t.integral_escape_metric(int(pre_test_latency)) for t in pre_test_trials]
 
     normalisation_factor = np.nanmax([t.integral_escape_metric(int(pre_test_latency)) for t in mtg.loom_trials()])
+    normalisation_factor_trace = np.nanmax([np.nanmax(t.delta_f()[200:350]) for t in mtg.loom_trials()])
     theoretical_escape_threshold = np.mean(pre_test_trial_integral_metric_values) / normalisation_factor
     theoretical_escape_threshold_minimum = np.min(pre_test_trial_integral_metric_values) / normalisation_factor
     theoretical_escape_threshold_maximum = np.max(pre_test_trial_integral_metric_values) / normalisation_factor
@@ -146,7 +147,7 @@ def calculate_theoretical_escape_threshold(mtg, fig=None, axes=None):
                 print(f'latency: {latency}')
                 if latency < 600:
                     plt.axvline(latency, color='r', ls='--')
-            t.plot_delta_f_with_track(norm_factor= normalisation_factor)
+            t.plot_delta_f_with_track(norm_factor=normalisation_factor_trace)
             plt.ylim([0, 1])
             [plt.axvline(x, color='k', ls='--') for x in LOOM_ONSETS]
             plt.xlim([180, 370])
