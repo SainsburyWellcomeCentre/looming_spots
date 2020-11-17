@@ -29,7 +29,7 @@ def get_pre_test_and_high_contrast_trials(mtgs):
 
 def get_high_contrast_naive_trials(mtg):
     if mtg.exp_key == 'photometry_habituation_tre-GCaMP-contrasts':
-        trials = [t for t in mtg.all_trials[:18] if t.contrast == 0]
+        trials = [t for t in mtg.all_trials[:18]]
     else:
         trials = mtg.pre_test_trials()[:3]
     return trials
@@ -72,12 +72,12 @@ def get_signal_df_mtgs(groups, timepoint=215):
             mtg_dict.setdefault("mouse id", [mtg.mouse_id] * len(trials))
             mtg_df = pd.DataFrame.from_dict(mtg_dict)
             all_df = all_df.append(mtg_df, ignore_index=True)
-    all_df.to_csv(f'/home/slenzi/thesis_latency_plots/signal_df_naive_high_ctst.csv')
+    all_df.to_csv(f'/home/slenzi/thesis_latency_plots/signal_df_naive_all_ctst.csv')
     return all_df
 
 
 def get_snl_pre_test_and_high_contrast_trials():
-    mtgs = get_mtgs(ALL_SNL_KEYS)
+    mtgs = get_mtgs(['photometry_habituation_tre-GCaMP-contrasts'])
     trials = get_pre_test_and_high_contrast_trials(mtgs)
     for t in trials:
         fig = plt.figure()
@@ -318,7 +318,7 @@ def main():
     #get_snl_pre_test_and_high_contrast_trials()
     plot_all_theoretical_escape_thresholds()
     #plot_all_theoretical_escape_thresholds()
-    #plot_snl_signal_escape_latency()
+    plot_snl_signal_escape_latency()
     #get_df_non_escape_relative_to_estimated_threshold()
     #replot_lsie()
     #plot_all_integrals()
