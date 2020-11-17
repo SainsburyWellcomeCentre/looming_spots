@@ -137,7 +137,8 @@ def calculate_theoretical_escape_threshold(mtg, fig=None, axes=None):
 
         plt.plot(t.integral_downsampled()/normalisation_factor, color=color)
         plt.xlim([180, 370])
-
+        plt.hlines(0.5, 250, 280)
+        plt.vlines(250, 0.5, 0.6)
         #plot_optional_metrics(latency, pre_test_latency, t)
         #plt.axhspan(theoretical_escape_threshold_minimum, theoretical_escape_threshold_maximum, color='r', alpha=0.2)
         #t.plot_stimulus()
