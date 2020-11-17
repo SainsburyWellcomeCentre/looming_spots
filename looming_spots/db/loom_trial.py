@@ -887,7 +887,7 @@ class LoomTrial(object):
         plt.xlim([0, 600])
         plt.ylim([0, 1])
         plt.hlines(0.5, 250, 280)
-        plt.vlines(250, 0.5, 0.51)
+        plt.vlines(250, 0.5, 0.6)
 
         plt.vlines(300, 0.5, 0.6, color='r')
 
