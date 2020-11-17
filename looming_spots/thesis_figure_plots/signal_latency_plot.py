@@ -109,7 +109,7 @@ def calculate_theoretical_escape_threshold(mtg, fig=None, axes=None):
     theoretical_escape_threshold_minimum = np.min(pre_test_trial_integral_metric_values) / normalisation_factor
     theoretical_escape_threshold_maximum = np.max(pre_test_trial_integral_metric_values) / normalisation_factor
 
-    for t in post_test_trials:
+    for t in pre_test_trials:
         #if not (t.is_flee() or mtg.mouse_id == '898990'):
 
         latency = t.latency_peak_detect()
@@ -117,7 +117,7 @@ def calculate_theoretical_escape_threshold(mtg, fig=None, axes=None):
         #if fig is None:
 
         #else:
-        fname = f'theoretical_threshold_all_{mtg.mouse_id}'
+        fname = f'theoretical_threshold_all_{mtg.mouse_id}_pre'
 
         #fig, axes = plt.subplots(2, 1)
         #fname = f'theoretical_threshold_{mtg.mouse_id}__loom_number_{t.loom_trial_idx}_avg_latency_metric_{t.is_flee()}_2'
