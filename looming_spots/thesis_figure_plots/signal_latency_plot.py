@@ -109,7 +109,7 @@ def calculate_theoretical_escape_threshold(mtg, fig=None, axes=None):
     theoretical_escape_threshold_minimum = np.min(pre_test_trial_integral_metric_values) / normalisation_factor
     theoretical_escape_threshold_maximum = np.max(pre_test_trial_integral_metric_values) / normalisation_factor
 
-    for t in post_test_trials:
+    for t in pre_test_trials:
         #if (t.is_flee() or mtg.mouse_id == '898990'):
 
         latency = t.latency_peak_detect()
@@ -117,12 +117,12 @@ def calculate_theoretical_escape_threshold(mtg, fig=None, axes=None):
         #if fig is None:
 
         #else:
-        #    fname = f'theoretical_threshold_all'
+        fname = f'theoretical_threshold_all'
 
-        fig, axes = plt.subplots(2, 1)
-        fname = f'theoretical_threshold_{mtg.mouse_id}__loom_number_{t.loom_trial_idx}_avg_latency_metric_{t.is_flee()}_2'
-        title = f'{mtg.mouse_id}__loom_number_{t.loom_trial_idx}'
-        plt.title(title)
+        #fig, axes = plt.subplots(2, 1)
+        #fname = f'theoretical_threshold_{mtg.mouse_id}__loom_number_{t.loom_trial_idx}_avg_latency_metric_{t.is_flee()}_2'
+        #title = f'{mtg.mouse_id}__loom_number_{t.loom_trial_idx}'
+        #plt.title(title)
 
 
         plt.sca(axes[0])
@@ -215,8 +215,10 @@ def escape_on(latency):
 
 def plot_all_theoretical_escape_thresholds():
     mtgs = get_mtgs(LSIE_SNL_KEYS)
+    fig,axes=plt.subplots(2,1)
+
     for mtg in mtgs:
-        calculate_theoretical_escape_threshold(mtg)
+        calculate_theoretical_escape_threshold(mtg, fig=fig, axes=axes)
 
 
 def get_df_non_escape_relative_to_estimated_threshold_mtg(mtg):
@@ -313,7 +315,6 @@ def main():
     import seaborn as sns
     sns.set_style("white")
     #get_snl_pre_test_and_high_contrast_trials()
-
     plot_all_theoretical_escape_thresholds()
     #plot_all_theoretical_escape_thresholds()
     #plot_snl_signal_escape_latency()
