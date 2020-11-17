@@ -876,8 +876,7 @@ class LoomTrial(object):
         else:
             color_df = color
             color_track = color
-        if scale_factor is None:
-            scale_factor = max(self.delta_f()[:600]) * norm_factor
+        scale_factor = max(self.delta_f()[:600]) * norm_factor
         plt.plot(
             self.delta_f() / scale_factor, #delta_f_with_pre_stimulus_events_removed
             color=color_df,
@@ -888,7 +887,7 @@ class LoomTrial(object):
         plt.xlim([0, 600])
         plt.ylim([0, 1])
         plt.hlines(0.5, 500, 530)
-        plt.vlines(500, 0.5, 0.5+(0.01/scale_factor))
+        plt.vlines(500, 0.5, 0.51)
 
         plt.vlines(550, 0.5, 0.6, color='r')
 
