@@ -878,7 +878,7 @@ class LoomTrial(object):
             color_track = color
         scale_factor = max(self.delta_f()[:600]) * norm_factor
         plt.plot(
-            self.delta_f() / scale_factor, #delta_f_with_pre_stimulus_events_removed
+            self.delta_f() / norm_factor, #scale_factor, #delta_f_with_pre_stimulus_events_removed
             color=color_df,
         )
         plt.plot(self.normalised_x_track, color=color_track)
@@ -886,10 +886,10 @@ class LoomTrial(object):
         [plt.axvline(x, color='k', ls='--') for x in LOOM_ONSETS]
         plt.xlim([0, 600])
         plt.ylim([0, 1])
-        plt.hlines(0.5, 500, 530)
-        plt.vlines(500, 0.5, 0.51)
+        plt.hlines(0.5, 250, 280)
+        plt.vlines(250, 0.5, 0.51)
 
-        plt.vlines(550, 0.5, 0.6, color='r')
+        plt.vlines(300, 0.5, 0.6, color='r')
 
     def plot_stimulus(self):  # FIXME: duplicated elsewhere
         ax = plt.gca()
