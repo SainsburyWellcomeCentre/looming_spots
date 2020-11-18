@@ -109,55 +109,52 @@ def calculate_theoretical_escape_threshold(mtg, fig=None, axes=None):
     theoretical_escape_threshold_minimum = np.min(pre_test_trial_integral_metric_values) / normalisation_factor
     theoretical_escape_threshold_maximum = np.max(pre_test_trial_integral_metric_values) / normalisation_factor
 
+    fname = f'theoretical_threshold_all_post_24'
     for t in post_test_trials:
-        #if not (t.is_flee() or mtg.mouse_id == '898990'):
-
-        latency = t.latency_peak_detect()
+        #
 
         #if fig is None:
 
         #else:
-        fname = f'theoretical_threshold_all_post_24'
 
         #fig, axes = plt.subplots(2, 1)
         #fname = f'theoretical_threshold_{mtg.mouse_id}__loom_number_{t.loom_trial_idx}_avg_latency_metric_{t.is_flee()}_2'
         #title = f'{mtg.mouse_id}__loom_number_{t.loom_trial_idx}'
         #plt.title(title)
 
-
-        plt.sca(axes[0])
-        max_val_reached = np.nanmax((t.integral_downsampled()/normalisation_factor)[:335])
-        if max_val_reached > theoretical_escape_threshold:
-            color = 'r'
+        if not (t.is_flee() or mtg.mouse_id == '898990'):
+            plot_threshold_and_sub_threshold_trialwise(axes[:2], mtg, normalisation_factor,
+                                                       normalisation_factor_trace, t, theoretical_escape_threshold)
         else:
-            color = 'k'
-
-        if (t.is_flee() or mtg.mouse_id == '898990'):
-            color='r'
-        else:
-            color='k'
-
-        plt.axhline(theoretical_escape_threshold, color=color, linewidth=2)
-        [plt.axvline(x, color='k', ls='--') for x in LOOM_ONSETS]
-
-        plt.plot(t.integral_downsampled()/normalisation_factor, color=color)
-        plt.xlim([180, 370])
-        plt.hlines(0.5, 250, 280)
-        plt.vlines(250, 0.5, 0.6)
-        #plot_optional_metrics(latency, pre_test_latency, t)
-        #plt.axhspan(theoretical_escape_threshold_minimum, theoretical_escape_threshold_maximum, color='r', alpha=0.2)
-        #t.plot_stimulus()
-        plt.axis('off')
-
-        plt.sca(axes[1])
-        #plot_latency(latency)
-        t.plot_delta_f_with_track(norm_factor=normalisation_factor_trace)
-        plt.ylim([0, 1])
-        [plt.axvline(x, color='k', ls='--') for x in LOOM_ONSETS]
-        plt.xlim([180, 370])
-
-        plt.axis('off')
+            plot_threshold_and_sub_threshold_trialwise(axes[-2:], mtg, normalisation_factor,
+                                                       normalisation_factor_trace, t, theoretical_escape_threshold)
         fig.savefig(f'/home/slenzi/thesis_latency_plots/{fname}.eps', format='eps')
+
+
+def plot_threshold_and_sub_threshold_trialwise(axes, mtg, normalisation_factor, normalisation_factor_trace,
+                                               t, theoretical_escape_threshold):
+    plt.sca(axes[0])
+
+    if (t.is_flee() or mtg.mouse_id == '898990'):
+        color = 'r'
+    else:
+        color = 'k'
+
+    plt.axhline(theoretical_escape_threshold, color=color, linewidth=2)
+    [plt.axvline(x, color='k', ls='--') for x in LOOM_ONSETS]
+    plt.plot(t.integral_downsampled() / normalisation_factor, color=color)
+    plt.xlim([180, 370])
+    plt.hlines(0.5, 250, 280)
+    plt.vlines(250, 0.5, 0.6)
+
+    plt.axis('off')
+    plt.sca(axes[1])
+    t.plot_delta_f_with_track(norm_factor=normalisation_factor_trace)
+    plt.ylim([0, 1])
+    [plt.axvline(x, color='k', ls='--') for x in LOOM_ONSETS]
+    plt.xlim([180, 370])
+    plt.axis('off')
+
 
 
 def plot_latency(latency):
@@ -222,7 +219,7 @@ def escape_on(latency):
 def plot_all_theoretical_escape_thresholds():
     mtgs = get_mtgs(LSIE_SNL_KEYS[0:1])
 
-    fig, axes = plt.subplots(2, 1)
+    fig, axes = plt.subplots(4, 1)
     for mtg in mtgs:
         calculate_theoretical_escape_threshold(mtg, fig=fig, axes=axes)
 
