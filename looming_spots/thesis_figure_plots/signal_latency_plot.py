@@ -113,7 +113,7 @@ def calculate_theoretical_escape_threshold(mtg, fig=None, axes=None, label=None)
 
     plot_mouse_trials_separate_scaled(label, mtg, normalisation_factor,
                                       normalisation_factor_trace, pre_test_trials,
-                                      theoretical_escape_threshold)
+                                      theoretical_escape_threshold, pre_test_latency)
     for t in post_test_trials:
         #
 
@@ -137,7 +137,7 @@ def calculate_theoretical_escape_threshold(mtg, fig=None, axes=None, label=None)
 
 
 def plot_mouse_trials_separate_scaled(label, mtg, normalisation_factor, normalisation_factor_trace,
-                                      post_test_trials, theoretical_escape_threshold):
+                                      post_test_trials, theoretical_escape_threshold, pre_test_latency):
     fig2, axes = plt.subplots(2, len(post_test_trials))
     fname = f'theoretical_threshold_all_trials_{label}_{mtg.mouse_id}_to_scale_pre_test'
     row_1_axes = axes[0]
@@ -150,7 +150,7 @@ def plot_mouse_trials_separate_scaled(label, mtg, normalisation_factor, normalis
             color = 'r'
         else:
             color = 'k'
-
+        plot_optional_metrics(pre_test_latency, t)
         plt.axhline(theoretical_escape_threshold, color=color, linewidth=2)
         [plt.axvline(x, color='k', ls='--') for x in LOOM_ONSETS]
         plt.plot(t.integral_downsampled() / normalisation_factor, color=color)
@@ -201,14 +201,16 @@ def plot_latency(latency):
             plt.axvline(latency, color='r', ls='--')
 
 
-def plot_optional_metrics(latency, pre_test_latency, t, max_val_reached):
+def plot_optional_metrics(pre_test_latency, t, max_val_reached=None):
+    latency = t.latency_peak_detect()
     if latency is not None:
         print(f'latency: {latency}')
         if latency < 600:
             plt.axhline(t.integral_downsampled()[int(latency)], color='b', ls='--')
             plt.axvline(latency, color='b', ls='--')
     plt.axvline(pre_test_latency, color='r', ls='--')
-    plt.axhline(max_val_reached, color='b')
+    if max_val_reached is not None:
+        plt.axhline(max_val_reached, color='b')
 
 
 
