@@ -219,10 +219,9 @@ def escape_on(latency):
 def plot_all_theoretical_escape_thresholds():
     for k in LSIE_SNL_KEYS:
         mtgs = get_mtgs([k])
-
-    fig, axes = plt.subplots(4, 1)
-    for mtg in mtgs:
-        calculate_theoretical_escape_threshold(mtg, fig=fig, axes=axes, label=k)
+        fig, axes = plt.subplots(4, 1)
+        for mtg in mtgs:
+            calculate_theoretical_escape_threshold(mtg, fig=fig, axes=axes, label=k)
 
 
 def get_df_non_escape_relative_to_estimated_threshold_mtg(mtg):
