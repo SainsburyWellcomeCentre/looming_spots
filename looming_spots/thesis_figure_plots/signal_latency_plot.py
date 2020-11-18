@@ -96,6 +96,10 @@ def get_mtgs(keys):
     return mtgs
 
 
+def plot_all_post_test_trials(axes):
+    for
+
+
 def calculate_theoretical_escape_threshold(mtg, fig=None, axes=None, label=None):
     pre_test_trials = mtg.pre_test_trials()[:3]
     post_test_trials = mtg.post_test_trials()[:3]
@@ -110,6 +114,10 @@ def calculate_theoretical_escape_threshold(mtg, fig=None, axes=None, label=None)
     theoretical_escape_threshold_maximum = np.max(pre_test_trial_integral_metric_values) / normalisation_factor
 
     fname = f'theoretical_threshold_all_post_{label}_split_by_exceed'
+
+    plot_mouse_trials_separate_scaled(label, mtg, normalisation_factor,
+                                      normalisation_factor_trace, post_test_trials,
+                                      theoretical_escape_threshold)
     for t in post_test_trials:
         #
 
@@ -130,6 +138,36 @@ def calculate_theoretical_escape_threshold(mtg, fig=None, axes=None, label=None)
             plot_threshold_and_sub_threshold_trialwise(axes[-2:], mtg, normalisation_factor,
                                                        normalisation_factor_trace, t, theoretical_escape_threshold)
         fig.savefig(f'/home/slenzi/thesis_latency_plots/{fname}.eps', format='eps')
+
+
+def plot_mouse_trials_separate_scaled(label, mtg, normalisation_factor, normalisation_factor_trace,
+                                      post_test_trials, theoretical_escape_threshold):
+    fig2, axes = plt.subplots(len(post_test_trials), 2)
+    fname = f'theoretical_threshold_all_trials_{label}_to_scale'
+    row_1_axes = axes[0]
+    row_2_axes = axes[1]
+    for i, t in enumerate(post_test_trials):
+        plt.sca(row_1_axes[i])
+        if (t.is_flee() or mtg.mouse_id == '898990'):
+            color = 'r'
+        else:
+            color = 'k'
+
+        plt.axhline(theoretical_escape_threshold, color=color, linewidth=2)
+        [plt.axvline(x, color='k', ls='--') for x in LOOM_ONSETS]
+        plt.plot(t.integral_downsampled() / normalisation_factor, color=color)
+        plt.xlim([180, 370])
+        plt.hlines(0.5, 250, 280)
+        plt.vlines(250, 0.5, 0.6)
+
+        plt.axis('off')
+        plt.sca(row_2_axes[i])
+        t.plot_delta_f_with_track(norm_factor=normalisation_factor_trace, color=color)
+        plt.ylim([0, 1])
+        [plt.axvline(x, color='k', ls='--') for x in LOOM_ONSETS]
+        plt.xlim([180, 370])
+        plt.axis('off')
+    fig2.savefig(f'/home/slenzi/thesis_latency_plots/{fname}.eps', format='eps')
 
 
 def plot_threshold_and_sub_threshold_trialwise(axes, mtg, normalisation_factor, normalisation_factor_trace,
