@@ -150,7 +150,7 @@ def plot_threshold_and_sub_threshold_trialwise(axes, mtg, normalisation_factor, 
 
     plt.axis('off')
     plt.sca(axes[1])
-    t.plot_delta_f_with_track(norm_factor=normalisation_factor_trace)
+    t.plot_delta_f_with_track(norm_factor=normalisation_factor_trace, color=color)
     plt.ylim([0, 1])
     [plt.axvline(x, color='k', ls='--') for x in LOOM_ONSETS]
     plt.xlim([180, 370])
