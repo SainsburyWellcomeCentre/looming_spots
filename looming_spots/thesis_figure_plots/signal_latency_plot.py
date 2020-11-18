@@ -109,7 +109,7 @@ def calculate_theoretical_escape_threshold(mtg, fig=None, axes=None):
     theoretical_escape_threshold_minimum = np.min(pre_test_trial_integral_metric_values) / normalisation_factor
     theoretical_escape_threshold_maximum = np.max(pre_test_trial_integral_metric_values) / normalisation_factor
 
-    fname = f'theoretical_threshold_all_post_24'
+    fname = f'theoretical_threshold_all_post_sameday'
     for t in post_test_trials:
         #
 
@@ -217,7 +217,7 @@ def escape_on(latency):
 
 
 def plot_all_theoretical_escape_thresholds():
-    mtgs = get_mtgs(LSIE_SNL_KEYS[0:1])
+    mtgs = get_mtgs(LSIE_SNL_KEYS[1:])
 
     fig, axes = plt.subplots(4, 1)
     for mtg in mtgs:
