@@ -109,7 +109,7 @@ def calculate_theoretical_escape_threshold(mtg, fig=None, axes=None):
     theoretical_escape_threshold_minimum = np.min(pre_test_trial_integral_metric_values) / normalisation_factor
     theoretical_escape_threshold_maximum = np.max(pre_test_trial_integral_metric_values) / normalisation_factor
 
-    fname = f'theoretical_threshold_all_post_sameday'
+    fname = f'theoretical_threshold_all_post_sameday_split_by_exceed'
     for t in post_test_trials:
         #
 
@@ -122,7 +122,8 @@ def calculate_theoretical_escape_threshold(mtg, fig=None, axes=None):
         #title = f'{mtg.mouse_id}__loom_number_{t.loom_trial_idx}'
         #plt.title(title)
 
-        if not (t.is_flee() or mtg.mouse_id == '898990'):
+        max_val_reached = np.nanmax((t.integral_downsampled() / normalisation_factor)[:335])
+        if max_val_reached > theoretical_escape_threshold:
             plot_threshold_and_sub_threshold_trialwise(axes[:2], mtg, normalisation_factor,
                                                        normalisation_factor_trace, t, theoretical_escape_threshold)
         else:
