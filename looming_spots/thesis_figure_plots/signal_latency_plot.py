@@ -96,10 +96,6 @@ def get_mtgs(keys):
     return mtgs
 
 
-def plot_all_post_test_trials(axes):
-    for
-
-
 def calculate_theoretical_escape_threshold(mtg, fig=None, axes=None, label=None):
     pre_test_trials = mtg.pre_test_trials()[:3]
     post_test_trials = mtg.post_test_trials()[:3]
