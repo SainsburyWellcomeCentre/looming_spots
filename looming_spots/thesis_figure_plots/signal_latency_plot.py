@@ -117,7 +117,7 @@ def calculate_theoretical_escape_threshold(mtg, fig=None, axes=None):
         #if fig is None:
 
         #else:
-        fname = f'theoretical_threshold_all_{mtg.mouse_id}_pre'
+        fname = f'theoretical_threshold_all_post_24'
 
         #fig, axes = plt.subplots(2, 1)
         #fname = f'theoretical_threshold_{mtg.mouse_id}__loom_number_{t.loom_trial_idx}_avg_latency_metric_{t.is_flee()}_2'
@@ -222,8 +222,8 @@ def escape_on(latency):
 def plot_all_theoretical_escape_thresholds():
     mtgs = get_mtgs(LSIE_SNL_KEYS[0:1])
 
+    fig, axes = plt.subplots(2, 1)
     for mtg in mtgs:
-        fig, axes = plt.subplots(2, 1)
         calculate_theoretical_escape_threshold(mtg, fig=fig, axes=axes)
 
 
