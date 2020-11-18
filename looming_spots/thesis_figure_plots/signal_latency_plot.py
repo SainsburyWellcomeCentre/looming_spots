@@ -138,7 +138,7 @@ def calculate_theoretical_escape_threshold(mtg, fig=None, axes=None, label=None)
 
 def plot_mouse_trials_separate_scaled(label, mtg, normalisation_factor, normalisation_factor_trace,
                                       post_test_trials, theoretical_escape_threshold):
-    fig2, axes = plt.subplots(len(post_test_trials), 2)
+    fig2, axes = plt.subplots(2, len(post_test_trials))
     fname = f'theoretical_threshold_all_trials_{label}_to_scale'
     row_1_axes = axes[0]
     row_2_axes = axes[1]
