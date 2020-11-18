@@ -150,7 +150,7 @@ def plot_mouse_trials_separate_scaled(label, mtg, normalisation_factor, normalis
             color = 'r'
         else:
             color = 'k'
-        plot_optional_metrics(pre_test_latency, t)
+        plot_optional_metrics(pre_test_latency, t, normalisation_factor)
         plt.axhline(theoretical_escape_threshold, color=color, linewidth=2)
         [plt.axvline(x, color='k', ls='--') for x in LOOM_ONSETS]
         plt.plot(t.integral_downsampled() / normalisation_factor, color=color)
@@ -201,12 +201,12 @@ def plot_latency(latency):
             plt.axvline(latency, color='r', ls='--')
 
 
-def plot_optional_metrics(pre_test_latency, t, max_val_reached=None):
+def plot_optional_metrics(pre_test_latency, t, normalisation_factor, max_val_reached=None):
     latency = t.latency_peak_detect()
     if latency is not None:
         print(f'latency: {latency}')
         if latency < 600:
-            plt.axhline(t.integral_downsampled()[int(latency)], color='b', ls='--')
+            plt.axhline(t.integral_downsampled()[int(latency)]/ normalisation_factor, color='b', ls='--')
             plt.axvline(latency, color='b', ls='--')
     plt.axvline(pre_test_latency, color='r', ls='--')
     if max_val_reached is not None:
