@@ -220,7 +220,7 @@ def escape_on(latency):
 
 
 def plot_all_theoretical_escape_thresholds():
-    mtgs = get_mtgs(LSIE_SNL_KEYS[0])
+    mtgs = get_mtgs(LSIE_SNL_KEYS[0:1])
 
     for mtg in mtgs:
         fig, axes = plt.subplots(2, 1)
