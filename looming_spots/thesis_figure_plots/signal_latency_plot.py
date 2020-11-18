@@ -112,7 +112,7 @@ def calculate_theoretical_escape_threshold(mtg, fig=None, axes=None, label=None)
     fname = f'theoretical_threshold_all_post_{label}_split_by_exceed'
 
     plot_mouse_trials_separate_scaled(label, mtg, normalisation_factor,
-                                      normalisation_factor_trace, post_test_trials,
+                                      normalisation_factor_trace, pre_test_trials,
                                       theoretical_escape_threshold)
     for t in post_test_trials:
         #
@@ -142,8 +142,10 @@ def plot_mouse_trials_separate_scaled(label, mtg, normalisation_factor, normalis
     fname = f'theoretical_threshold_all_trials_{label}_to_scale'
     row_1_axes = axes[0]
     row_2_axes = axes[1]
+
     for i, t in enumerate(post_test_trials):
         plt.sca(row_1_axes[i])
+
         if (t.is_flee() or mtg.mouse_id == '898990'):
             color = 'r'
         else:
@@ -153,6 +155,7 @@ def plot_mouse_trials_separate_scaled(label, mtg, normalisation_factor, normalis
         [plt.axvline(x, color='k', ls='--') for x in LOOM_ONSETS]
         plt.plot(t.integral_downsampled() / normalisation_factor, color=color)
         plt.xlim([180, 370])
+        plt.ylim([0, 3*theoretical_escape_threshold])
         plt.hlines(0.5, 250, 280)
         plt.vlines(250, 0.5, 0.6)
 
