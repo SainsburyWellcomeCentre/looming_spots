@@ -98,9 +98,9 @@ def get_mtgs(keys):
 
 def plot_mouse_post_tests(mtg, normalisation_factor,
                           normalisation_factor_trace, post_test_trials,
-                          theoretical_escape_threshold, pre_test_latency):
+                          theoretical_escape_threshold, pre_test_latency, label):
     fig, axes = plt.subplots(2,1)
-    fname = f'theoretical_threshold_pre_post_{mtg.mouse_id}'
+    fname = f'theoretical_threshold_pre_post_{mtg.mouse_id}_{label}'
     for t in post_test_trials:
         plt.sca(axes[0])
         if (t.is_flee() or mtg.mouse_id == '898990'):
@@ -144,8 +144,9 @@ def calculate_theoretical_escape_threshold(mtg, fig=None, axes=None, label=None)
                                       normalisation_factor_trace, pre_test_trials,
                                       theoretical_escape_threshold, pre_test_latency)
     plot_mouse_post_tests(mtg, normalisation_factor, normalisation_factor_trace,
-                          post_test_trials, theoretical_escape_threshold, pre_test_latency)
-
+                          post_test_trials, theoretical_escape_threshold, pre_test_latency, label='post')
+    plot_mouse_post_tests(mtg, normalisation_factor, normalisation_factor_trace,
+                          pre_test_trials, theoretical_escape_threshold, pre_test_latency, label='pre')
 
     for t in post_test_trials:
         #
