@@ -251,14 +251,14 @@ def plot_threshold_and_sub_threshold_trialwise(axes, mtg, normalisation_factor, 
 
 
 def plot_all_integrals_normalised_to_threshold(mtgs, label):
-    fname = f'all_post_tests_integrals_normalised_to_escape_threshold_{label}'
+    fname = f'all_post_tests_integrals_normalised_to_escape_threshold_{label}_pre'
     fig = plt.figure()
     for mtg in mtgs:
         normalisation_factor, normalisation_factor_trace, \
         post_test_trials, pre_test_latency, pre_test_trials, \
         theoretical_escape_threshold = get_all_variables(mtg)
 
-        for t in post_test_trials:
+        for t in pre_test_trials:
             if (t.is_flee() or mtg.mouse_id == '898990'):
                 color = 'r'
             else:
