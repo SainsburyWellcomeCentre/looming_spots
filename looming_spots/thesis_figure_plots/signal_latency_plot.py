@@ -96,17 +96,14 @@ def get_mtgs(keys):
     return mtgs
 
 
-def plot_mouse_post_tests(mtg, normalisation_factor,
-                          normalisation_factor_trace, post_test_trials,
-                          theoretical_escape_threshold, pre_test_latency, label):
-    fig, axes = plt.subplots(2,1)
+def plot_mouse_pre_post_tests(mtg, normalisation_factor,
+                              normalisation_factor_trace, post_test_trials, pre_test_trials,
+                              theoretical_escape_threshold, pre_test_latency, label='pre_post'):
+    fig, axes = plt.subplots(2, 2)
     fname = f'theoretical_threshold_pre_post_{mtg.mouse_id}_{label}'
-    for t in post_test_trials:
-        plt.sca(axes[0])
-        if (t.is_flee() or mtg.mouse_id == '898990'):
-            color = 'r'
-        else:
-            color = 'k'
+    for t in pre_test_trials:
+        plt.sca(axes[0][0])
+        color = 'r' if t.is_flee() else 'k'
         plt.axhline(theoretical_escape_threshold, color=color, linewidth=2)
         [plt.axvline(x, color='k', ls='--') for x in LOOM_ONSETS]
         plt.plot(t.integral_downsampled() / normalisation_factor, color=color)
@@ -116,7 +113,29 @@ def plot_mouse_post_tests(mtg, normalisation_factor,
         plt.vlines(250, 0.5, 0.6)
 
         plt.axis('off')
-        plt.sca(axes[1])
+        plt.sca(axes[0][1])
+        t.plot_delta_f_with_track(norm_factor=normalisation_factor_trace, color=color)
+        plt.ylim([0, 1])
+        [plt.axvline(x, color='k', ls='--') for x in LOOM_ONSETS]
+        plt.xlim([180, 370])
+        plt.axis('off')
+
+    for t in post_test_trials:
+        plt.sca(axes[1][0])
+        if (t.is_flee() or mtg.mouse_id == '898990'):
+            color = 'r'
+        else:
+            color = 'k'
+        plt.axhline(theoretical_escape_threshold, color=color, linewidth=2)
+        [plt.axvline(x, color='k', ls='--') for x in LOOM_ONSETS]
+        plt.plot(t.integral_downsampled() / normalisation_factor, color=color)
+        plt.xlim([180, 370])
+        plt.ylim([0, 3 * theoretical_escape_threshold])
+        plt.hlines(0.5, 250, 280)
+        plt.vlines(250, 0.5, 0.6)
+
+        plt.axis('off')
+        plt.sca(axes[1][1])
         t.plot_delta_f_with_track(norm_factor=normalisation_factor_trace, color=color)
         plt.ylim([0, 1])
         [plt.axvline(x, color='k', ls='--') for x in LOOM_ONSETS]
@@ -143,10 +162,8 @@ def calculate_theoretical_escape_threshold(mtg, fig=None, axes=None, label=None)
     plot_mouse_trials_separate_scaled(label, mtg, normalisation_factor,
                                       normalisation_factor_trace, pre_test_trials,
                                       theoretical_escape_threshold, pre_test_latency)
-    plot_mouse_post_tests(mtg, normalisation_factor, normalisation_factor_trace,
-                          post_test_trials, theoretical_escape_threshold, pre_test_latency, label='post')
-    plot_mouse_post_tests(mtg, normalisation_factor, normalisation_factor_trace,
-                          pre_test_trials, theoretical_escape_threshold, pre_test_latency, label='pre')
+    plot_mouse_pre_post_tests(mtg, normalisation_factor, normalisation_factor_trace,
+                              post_test_trials, pre_test_trials, theoretical_escape_threshold, pre_test_latency)
 
     for t in post_test_trials:
         #
