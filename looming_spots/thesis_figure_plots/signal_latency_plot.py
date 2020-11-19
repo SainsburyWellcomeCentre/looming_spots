@@ -250,8 +250,8 @@ def plot_threshold_and_sub_threshold_trialwise(axes, mtg, normalisation_factor, 
     plt.axis('off')
 
 
-def plot_all_integrals_normalised_to_threshold(mtgs):
-    fname = f'all_post_tests_integrals_normalised_to_escape_threshold'
+def plot_all_integrals_normalised_to_threshold(mtgs, label):
+    fname = f'all_post_tests_integrals_normalised_to_escape_threshold_{label}'
     fig = plt.figure()
     for mtg in mtgs:
         normalisation_factor, normalisation_factor_trace, \
@@ -340,6 +340,8 @@ def escape_on(latency):
 def plot_all_theoretical_escape_thresholds():
     for k in LSIE_SNL_KEYS:
         mtgs = get_mtgs([k])
+        plot_all_integrals_normalised_to_threshold(mtgs, k)
+
         fig, axes = plt.subplots(4, 1)
         for mtg in mtgs:
             calculate_theoretical_escape_threshold(mtg, fig=fig, axes=axes, label=k)
