@@ -145,17 +145,9 @@ def plot_mouse_pre_post_tests(mtg, normalisation_factor,
 
 
 def calculate_theoretical_escape_threshold(mtg, fig=None, axes=None, label=None):
-    pre_test_trials = mtg.pre_test_trials()[:3]
-    post_test_trials = mtg.post_test_trials()[:3]
-    pre_test_latency = np.nanmean([t.latency_peak_detect() for t in pre_test_trials])
-
-    pre_test_trial_integral_metric_values = [t.integral_escape_metric(int(pre_test_latency)) for t in pre_test_trials]
-
-    normalisation_factor = np.nanmax([t.integral_escape_metric(int(pre_test_latency)) for t in mtg.loom_trials()])
-    normalisation_factor_trace = np.nanmax([np.nanmax(t.delta_f()[200:350]) for t in mtg.loom_trials()])
-    theoretical_escape_threshold = np.mean(pre_test_trial_integral_metric_values) / normalisation_factor
-    theoretical_escape_threshold_minimum = np.min(pre_test_trial_integral_metric_values) / normalisation_factor
-    theoretical_escape_threshold_maximum = np.max(pre_test_trial_integral_metric_values) / normalisation_factor
+    normalisation_factor, normalisation_factor_trace, \
+    post_test_trials, pre_test_latency, pre_test_trials, \
+    theoretical_escape_threshold = get_all_variables(mtg)
 
     fname = f'theoretical_threshold_all_post_{label}_split_by_exceed'
 
@@ -185,6 +177,19 @@ def calculate_theoretical_escape_threshold(mtg, fig=None, axes=None, label=None)
             plot_threshold_and_sub_threshold_trialwise(axes[-2:], mtg, normalisation_factor,
                                                        normalisation_factor_trace, t, theoretical_escape_threshold)
         fig.savefig(f'/home/slenzi/thesis_latency_plots/{fname}.eps', format='eps')
+
+
+def get_all_variables(mtg):
+    pre_test_trials = mtg.pre_test_trials()[:3]
+    post_test_trials = mtg.post_test_trials()[:3]
+    pre_test_latency = np.nanmean([t.latency_peak_detect() for t in pre_test_trials])
+    pre_test_trial_integral_metric_values = [t.integral_escape_metric(int(pre_test_latency)) for t in pre_test_trials]
+    normalisation_factor = np.nanmax([t.integral_escape_metric(int(pre_test_latency)) for t in mtg.loom_trials()])
+    normalisation_factor_trace = np.nanmax([np.nanmax(t.delta_f()[200:350]) for t in mtg.loom_trials()])
+    theoretical_escape_threshold = np.mean(pre_test_trial_integral_metric_values) / normalisation_factor
+    theoretical_escape_threshold_minimum = np.min(pre_test_trial_integral_metric_values) / normalisation_factor
+    theoretical_escape_threshold_maximum = np.max(pre_test_trial_integral_metric_values) / normalisation_factor
+    return normalisation_factor, normalisation_factor_trace, post_test_trials, pre_test_latency, pre_test_trials, theoretical_escape_threshold
 
 
 def plot_mouse_trials_separate_scaled(label, mtg, normalisation_factor, normalisation_factor_trace,
@@ -243,6 +248,32 @@ def plot_threshold_and_sub_threshold_trialwise(axes, mtg, normalisation_factor, 
     [plt.axvline(x, color='k', ls='--') for x in LOOM_ONSETS]
     plt.xlim([180, 370])
     plt.axis('off')
+
+
+def plot_all_integrals_normalised_to_threshold(mtgs):
+    fname = f'all_post_tests_integrals_normalised_to_escape_threshold'
+    fig = plt.figure()
+    for mtg in mtgs:
+        normalisation_factor, normalisation_factor_trace, \
+        post_test_trials, pre_test_latency, pre_test_trials, \
+        theoretical_escape_threshold = get_all_variables(mtg)
+
+        for t in post_test_trials:
+            if (t.is_flee() or mtg.mouse_id == '898990'):
+                color = 'r'
+            else:
+                color = 'k'
+
+            plt.axhline(theoretical_escape_threshold / theoretical_escape_threshold, color=color, linewidth=2)
+            [plt.axvline(x, color='k', ls='--') for x in LOOM_ONSETS]
+            plt.plot(t.integral_downsampled() / theoretical_escape_threshold / normalisation_factor, color=color) # normalisation_factor
+            plt.xlim([180, 370])
+            plt.hlines(0.5, 250, 280)
+            plt.vlines(250, 0.5, 0.6)
+
+            plt.axis('off')
+
+    fig.savefig(f'/home/slenzi/thesis_latency_plots/{fname}.eps', format='eps')
 
 
 def plot_latency(latency):
@@ -309,6 +340,7 @@ def escape_on(latency):
 def plot_all_theoretical_escape_thresholds():
     for k in LSIE_SNL_KEYS:
         mtgs = get_mtgs([k])
+        plot_all_integrals_normalised_to_threshold(mtgs)
         fig, axes = plt.subplots(4, 1)
         for mtg in mtgs:
             calculate_theoretical_escape_threshold(mtg, fig=fig, axes=axes, label=k)
