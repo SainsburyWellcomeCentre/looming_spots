@@ -113,7 +113,7 @@ def plot_mouse_pre_post_tests(mtg, normalisation_factor,
         plt.vlines(250, 0.5, 0.6)
 
         plt.axis('off')
-        plt.sca(axes[0][1])
+        plt.sca(axes[1][0])
         t.plot_delta_f_with_track(norm_factor=normalisation_factor_trace, color=color)
         plt.ylim([0, 1])
         [plt.axvline(x, color='k', ls='--') for x in LOOM_ONSETS]
@@ -121,7 +121,7 @@ def plot_mouse_pre_post_tests(mtg, normalisation_factor,
         plt.axis('off')
 
     for t in post_test_trials:
-        plt.sca(axes[1][0])
+        plt.sca(axes[0][1])
         if (t.is_flee() or mtg.mouse_id == '898990'):
             color = 'r'
         else:
