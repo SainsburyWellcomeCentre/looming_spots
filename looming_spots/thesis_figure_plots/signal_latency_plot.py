@@ -229,7 +229,7 @@ def plot_threshold_and_sub_threshold_trialwise(axes, mtg, normalisation_factor, 
     else:
         color = 'k'
 
-    plt.axhline(theoretical_escape_threshold, color=color, linewidth=2)
+    plt.axhline(theoretical_escape_threshold / theoretical_escape_threshold, color=color, linewidth=2)
     [plt.axvline(x, color='k', ls='--') for x in LOOM_ONSETS]
     plt.plot(t.integral_downsampled() / theoretical_escape_threshold, color=color) # normalisation_factor
     plt.xlim([180, 370])
