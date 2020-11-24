@@ -347,7 +347,7 @@ def plot_all_theoretical_escape_thresholds():
             calculate_theoretical_escape_threshold(mtg, fig=fig, axes=axes, label=k)
 
     mtgs = get_mtgs(LSIE_SNL_KEYS)
-    plot_all_integrals_normalised_to_threshold(mtgs)
+    plot_all_integrals_normalised_to_threshold(mtgs, 'all')
 
 
 def get_df_non_escape_relative_to_estimated_threshold_mtg(mtg):
