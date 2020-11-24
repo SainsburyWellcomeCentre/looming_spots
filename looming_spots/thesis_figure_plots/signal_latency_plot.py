@@ -158,16 +158,6 @@ def calculate_theoretical_escape_threshold(mtg, fig=None, axes=None, label=None)
                               post_test_trials, pre_test_trials, theoretical_escape_threshold, pre_test_latency)
 
     for t in post_test_trials:
-        #
-
-        #if fig is None:
-
-        #else:
-
-        #fig, axes = plt.subplots(2, 1)
-        #fname = f'theoretical_threshold_{mtg.mouse_id}__loom_number_{t.loom_trial_idx}_avg_latency_metric_{t.is_flee()}_2'
-        #title = f'{mtg.mouse_id}__loom_number_{t.loom_trial_idx}'
-        #plt.title(title)
 
         max_val_reached = np.nanmax((t.integral_downsampled() / normalisation_factor)[:335])
         if max_val_reached > theoretical_escape_threshold:
@@ -189,6 +179,8 @@ def get_all_variables(mtg):
     theoretical_escape_threshold = np.mean(pre_test_trial_integral_metric_values) / normalisation_factor
     theoretical_escape_threshold_minimum = np.min(pre_test_trial_integral_metric_values) / normalisation_factor
     theoretical_escape_threshold_maximum = np.max(pre_test_trial_integral_metric_values) / normalisation_factor
+
+
     return normalisation_factor, normalisation_factor_trace, post_test_trials, pre_test_latency, pre_test_trials, theoretical_escape_threshold
 
 
@@ -258,7 +250,10 @@ def plot_all_integrals_normalised_to_threshold(mtgs, label):
         normalisation_factor, normalisation_factor_trace, \
         post_test_trials, pre_test_latency, pre_test_trials, \
         theoretical_escape_threshold = get_all_variables(mtg)
+
         ax=plt.sca(axes[0])
+
+
         for t in pre_test_trials:
             if (t.is_flee() or mtg.mouse_id == '898990'):
                 color = 'r'
@@ -435,18 +430,26 @@ def plot_pre_post_integral(mtg):
     pre_test_latency = np.nanmean([t.latency_peak_detect() for t in pre_test_trials])
 
     fig = plt.figure()
+    normalisation_factor, normalisation_factor_trace, \
+    post_test_trials, pre_test_latency, pre_test_trials, \
+    theoretical_escape_threshold = get_all_variables(mtg)
+
     colors = ['b', 'g', 'orange']
     for t, c in zip(pre_test_trials, colors):
         latency = t.latency_peak_detect()
         if latency is None:
             latency = 600
-        plt.plot(t.integral_downsampled()[:int(latency)], color=c)
+        delta_f_normalised = t.delta_f()[:600]/normalisation_factor_trace
+        plt.plot(t.get_integral(delta_f_normalised)[:int(latency)], color=c)
 
     for t in post_test_trials:
         latency = t.latency_peak_detect()
         if latency is None:
             latency = 600
-        plt.plot(t.integral_downsampled()[:int(latency)], color='k')
+
+        delta_f_normalised = t.delta_f()[:600] / normalisation_factor_trace
+        plt.plot(t.get_integral(delta_f_normalised)[:int(latency)], color='k')
+        #plt.plot(t.integral_downsampled()[:int(latency)], color='k')
 
     plt.axvline(int(pre_test_latency), color='r')
     #t.plot_stimulus()

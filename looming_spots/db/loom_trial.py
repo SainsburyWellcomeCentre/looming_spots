@@ -852,6 +852,25 @@ class LoomTrial(object):
         ] = integral
         return mask
 
+    def get_integral(self, df):
+        SAMPLING = 30
+        end_sample = 150
+
+        mask = np.full(len(df), np.nan)
+        integral = [
+            np.trapz(
+                df[LOOMING_STIMULUS_ONSET: LOOMING_STIMULUS_ONSET + x],
+                dx=1 / SAMPLING,
+            )
+            for x in range(end_sample)
+        ]
+
+        mask[
+        LOOMING_STIMULUS_ONSET: (LOOMING_STIMULUS_ONSET + end_sample)
+        ] = integral
+        return mask
+
+
     def get_delta_f_integral(self, s, e):
         SAMPLING = 30
         end_sample = 150
