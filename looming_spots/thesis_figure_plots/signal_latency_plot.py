@@ -265,12 +265,12 @@ def plot_all_integrals_normalised_to_threshold(mtgs, label):
             else:
                 color = 'k'
 
-            plt.axhline(theoretical_escape_threshold / theoretical_escape_threshold, color=color, linewidth=2)
+            #plt.axhline(theoretical_escape_threshold / theoretical_escape_threshold, color=color, linewidth=2)
             [plt.axvline(x, color='k', ls='--') for x in LOOM_ONSETS]
             latency = t.latency_peak_detect()
             if latency is None:
                 latency = 600
-            plt.plot(t.integral_downsampled()[:int(latency)] / theoretical_escape_threshold / normalisation_factor, color=color) # normalisation_factor
+            plt.plot(t.integral_downsampled()[:int(latency)] / normalisation_factor, color=color) # normalisation_factor
             plt.xlim([180, 370])
             plt.hlines(0.5, 250, 280)
             plt.vlines(250, 0.5, 0.6)
@@ -284,14 +284,14 @@ def plot_all_integrals_normalised_to_threshold(mtgs, label):
             else:
                 color = 'k'
 
-            plt.axhline(theoretical_escape_threshold / theoretical_escape_threshold, color=color, linewidth=2)
+            #plt.axhline(theoretical_escape_threshold / theoretical_escape_threshold, color=color, linewidth=2)
             [plt.axvline(x, color='k', ls='--') for x in LOOM_ONSETS]
 
             latency = t.latency_peak_detect()
             if latency is None:
                 latency = 600
 
-            plt.plot(t.integral_downsampled()[:int(latency)] / theoretical_escape_threshold / normalisation_factor, color=color) # normalisation_factor
+            plt.plot(t.integral_downsampled()[:int(latency)] / normalisation_factor, color=color) # normalisation_factor
             plt.xlim([180, 370])
             plt.hlines(0.5, 250, 280)
             plt.vlines(250, 0.5, 0.6)
