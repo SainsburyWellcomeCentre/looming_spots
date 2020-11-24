@@ -410,11 +410,12 @@ def plot_pre_post_integral(mtg):
     pre_test_latency = np.nanmean([t.latency_peak_detect() for t in pre_test_trials])
 
     fig = plt.figure()
-    for t in pre_test_trials:
-        plt.plot(t.integral_downsampled(), color='r')
+    colors = ['b', 'g', 'orange']
+    for t, c in zip(pre_test_trials, colors):
+        plt.plot(t.integral_downsampled()[int(t.latency_peak_detect())], color=c)
 
     for t in post_test_trials:
-        plt.plot(t.integral_downsampled(), color='k')
+        plt.plot(t.integral_downsampled()[int(t.latency_peak_detect())], color='k')
 
     plt.axvline(int(pre_test_latency), color='r')
     #t.plot_stimulus()
