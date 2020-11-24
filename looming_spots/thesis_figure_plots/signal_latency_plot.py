@@ -244,7 +244,7 @@ def plot_threshold_and_sub_threshold_trialwise(axes, mtg, normalisation_factor, 
 
 
 def plot_all_integrals_normalised_to_threshold(mtgs, label):
-    fname = f'all_post_tests_integrals_normalised_to_escape_threshold_{label}2'
+    fname = f'all_post_tests_integrals_normalised_to_escape_threshold_{label}_3'
     fig, axes = plt.subplots(2,1)
     for mtg in mtgs:
         normalisation_factor, normalisation_factor_trace, \
@@ -265,8 +265,13 @@ def plot_all_integrals_normalised_to_threshold(mtgs, label):
             latency = t.latency_peak_detect()
             if latency is None:
                 latency = 600
-            plt.plot(t.integral_downsampled()[:int(latency)] / normalisation_factor, color=color) # normalisation_factor
+
+            delta_f_normalised = t.delta_f()[:600] / normalisation_factor_trace
+            plt.plot(t.get_integral(delta_f_normalised)[:int(latency)], color=color)
+
+            #plt.plot(t.integral_downsampled()[:int(latency)] / normalisation_factor, color=color) # normalisation_factor
             plt.xlim([180, 370])
+            plt.ylim([0, normalisation_factor_trace*20])
             plt.hlines(0.5, 250, 280)
             plt.vlines(250, 0.5, 0.6)
 
@@ -286,7 +291,10 @@ def plot_all_integrals_normalised_to_threshold(mtgs, label):
             if latency is None:
                 latency = 600
 
-            plt.plot(t.integral_downsampled()[:int(latency)] / normalisation_factor, color=color) # normalisation_factor
+            #plt.plot(t.integral_downsampled()[:int(latency)] / normalisation_factor, color=color) # normalisation_factor
+            delta_f_normalised = t.delta_f()[:600] / normalisation_factor_trace
+            plt.plot(t.get_integral(delta_f_normalised)[:int(latency)], color=color)
+            plt.ylim([0, normalisation_factor_trace*20])
             plt.xlim([180, 370])
             plt.hlines(0.5, 250, 280)
             plt.vlines(250, 0.5, 0.6)
