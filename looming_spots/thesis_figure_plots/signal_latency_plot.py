@@ -279,6 +279,8 @@ def plot_all_integrals_normalised_to_threshold(mtgs, label):
 
         fig.savefig(f'/home/slenzi/thesis_latency_plots/{fname}_pre.eps', format='eps')
 
+        fig = plt.figure()
+
         for t in post_test_trials:
             if (t.is_flee() or mtg.mouse_id == '898990'):
                 color = 'r'
@@ -438,10 +440,16 @@ def plot_pre_post_integral(mtg):
     fig = plt.figure()
     colors = ['b', 'g', 'orange']
     for t, c in zip(pre_test_trials, colors):
-        plt.plot(t.integral_downsampled()[:int(t.latency_peak_detect())], color=c)
+        latency = t.latency_peak_detect()
+        if latency is None:
+            latency = 600
+        plt.plot(t.integral_downsampled()[:int(latency)], color=c)
 
     for t in post_test_trials:
-        plt.plot(t.integral_downsampled()[:int(t.latency_peak_detect())], color='k')
+        latency = t.latency_peak_detect()
+        if latency is None:
+            latency = 600
+        plt.plot(t.integral_downsampled()[:int(latency)], color='k')
 
     plt.axvline(int(pre_test_latency), color='r')
     #t.plot_stimulus()
@@ -452,6 +460,8 @@ def plot_pre_post_integral(mtg):
     plt.xlim([0, 600])
     title = f'integral_pre_post__{mtg.mouse_id}'
     fig.savefig(f'/home/slenzi/thesis_latency_plots/{title}.eps', format='eps')
+
+
 
 
 def replot_lsie():
@@ -472,6 +482,7 @@ def main():
     sns.set_style("white")
     #get_snl_pre_test_and_high_contrast_trials()
     plot_all_theoretical_escape_thresholds()
+    plot_all_integrals()
     #plot_all_theoretical_escape_thresholds()
     #plot_snl_signal_escape_latency()
     #get_df_non_escape_relative_to_estimated_threshold()
