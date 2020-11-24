@@ -252,7 +252,7 @@ def plot_threshold_and_sub_threshold_trialwise(axes, mtg, normalisation_factor, 
 
 
 def plot_all_integrals_normalised_to_threshold(mtgs, label):
-    fname = f'all_post_tests_integrals_normalised_to_escape_threshold_{label}'
+    fname = f'all_post_tests_integrals_normalised_to_escape_threshold_{label}2'
     fig = plt.figure()
     for mtg in mtgs:
         normalisation_factor, normalisation_factor_trace, \
