@@ -446,7 +446,7 @@ def plot_pre_post_integral(mtg):
         latency = t.latency_peak_detect()
         if latency is None:
             latency = 600
-        latency = 600
+        #latency = 600
         delta_f_normalised = t.delta_f()[:600]/normalisation_factor_trace
         plt.plot(t.get_integral(delta_f_normalised)[:int(latency)], color=c)
 
@@ -454,7 +454,7 @@ def plot_pre_post_integral(mtg):
         latency = t.latency_peak_detect()
         if latency is None:
             latency = 600
-        latency = 600
+        #latency = 600
         delta_f_normalised = t.delta_f()[:600] / normalisation_factor_trace
         plt.plot(t.get_integral(delta_f_normalised)[:int(latency)], color='k')
         #plt.plot(t.integral_downsampled()[:int(latency)], color='k')
@@ -466,7 +466,7 @@ def plot_pre_post_integral(mtg):
     plt.hlines(0.0, 500, 530)
     plt.vlines(500, 0.0, 0.01)
     plt.xlim([0, 600])
-    title = f'integral_pre_post__{mtg.mouse_id}'
+    title = f'integral_pre_post__{mtg.mouse_id}_to_escape_onset'
     fig.savefig(f'/home/slenzi/thesis_latency_plots/{title}.eps', format='eps')
 
 
