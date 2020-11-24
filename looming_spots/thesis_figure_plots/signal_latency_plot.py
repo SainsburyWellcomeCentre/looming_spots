@@ -244,7 +244,7 @@ def plot_threshold_and_sub_threshold_trialwise(axes, mtg, normalisation_factor, 
 
 
 def plot_all_integrals_normalised_to_threshold(mtgs, label):
-    fname = f'all_post_tests_integrals_normalised_to_escape_threshold_{label}_3'
+    fname = f'all_post_tests_integrals_normalised_to_escape_threshold_{label}__full'
     fig, axes = plt.subplots(2,1)
     for mtg in mtgs:
         normalisation_factor, normalisation_factor_trace, \
@@ -252,7 +252,6 @@ def plot_all_integrals_normalised_to_threshold(mtgs, label):
         theoretical_escape_threshold = get_all_variables(mtg)
 
         ax=plt.sca(axes[0])
-
 
         for t in pre_test_trials:
             if (t.is_flee() or mtg.mouse_id == '898990'):
@@ -265,7 +264,7 @@ def plot_all_integrals_normalised_to_threshold(mtgs, label):
             latency = t.latency_peak_detect()
             if latency is None:
                 latency = 600
-
+            latency=600
             delta_f_normalised = t.delta_f()[:600] / normalisation_factor_trace
             plt.plot(t.get_integral(delta_f_normalised)[:int(latency)], color=color)
 
@@ -290,7 +289,7 @@ def plot_all_integrals_normalised_to_threshold(mtgs, label):
             latency = t.latency_peak_detect()
             if latency is None:
                 latency = 600
-
+            latency = 600
             #plt.plot(t.integral_downsampled()[:int(latency)] / normalisation_factor, color=color) # normalisation_factor
             delta_f_normalised = t.delta_f()[:600] / normalisation_factor_trace
             plt.plot(t.get_integral(delta_f_normalised)[:int(latency)], color=color)
