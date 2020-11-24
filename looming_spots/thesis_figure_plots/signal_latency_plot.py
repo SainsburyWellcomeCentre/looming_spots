@@ -210,6 +210,7 @@ def plot_mouse_trials_separate_scaled(label, mtg, normalisation_factor, normalis
         plt.axhline(theoretical_escape_threshold, color=color, linewidth=2)
         [plt.axvline(x, color='k', ls='--') for x in LOOM_ONSETS]
         plt.plot(t.integral_downsampled()[:int(t.latency_peak_detect())] / normalisation_factor, color=color)
+        plt.plot(t.integral_downsampled()[:int(t.latency_peak_detect())] / normalisation_factor, color=color)
         plt.xlim([180, 370])
         plt.ylim([0, 3*theoretical_escape_threshold])
         plt.hlines(0.5, 250, 280)
@@ -266,7 +267,7 @@ def plot_all_integrals_normalised_to_threshold(mtgs, label):
 
             plt.axhline(theoretical_escape_threshold / theoretical_escape_threshold, color=color, linewidth=2)
             [plt.axvline(x, color='k', ls='--') for x in LOOM_ONSETS]
-            plt.plot(t.integral_downsampled() / theoretical_escape_threshold / normalisation_factor, color=color) # normalisation_factor
+            plt.plot(t.integral_downsampled()[:int(t.latency_peak_detect())] / theoretical_escape_threshold / normalisation_factor, color=color) # normalisation_factor
             plt.xlim([180, 370])
             plt.hlines(0.5, 250, 280)
             plt.vlines(250, 0.5, 0.6)
@@ -412,10 +413,10 @@ def plot_pre_post_integral(mtg):
     fig = plt.figure()
     colors = ['b', 'g', 'orange']
     for t, c in zip(pre_test_trials, colors):
-        plt.plot(t.integral_downsampled()[int(t.latency_peak_detect())], color=c)
+        plt.plot(t.integral_downsampled()[:int(t.latency_peak_detect())], color=c)
 
     for t in post_test_trials:
-        plt.plot(t.integral_downsampled()[int(t.latency_peak_detect())], color='k')
+        plt.plot(t.integral_downsampled()[:int(t.latency_peak_detect())], color='k')
 
     plt.axvline(int(pre_test_latency), color='r')
     #t.plot_stimulus()
