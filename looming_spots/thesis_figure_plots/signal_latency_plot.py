@@ -277,9 +277,8 @@ def plot_all_integrals_normalised_to_threshold(mtgs, label):
 
             plt.axis('off')
 
-        fig.savefig(f'/home/slenzi/thesis_latency_plots/{fname}_pre.eps', format='eps')
 
-        fig = plt.figure()
+        fig2 = plt.figure()
 
         for t in post_test_trials:
             if (t.is_flee() or mtg.mouse_id == '898990'):
@@ -300,8 +299,9 @@ def plot_all_integrals_normalised_to_threshold(mtgs, label):
             plt.vlines(250, 0.5, 0.6)
 
             plt.axis('off')
+    fig.savefig(f'/home/slenzi/thesis_latency_plots/{fname}_pre.eps', format='eps')
 
-        fig.savefig(f'/home/slenzi/thesis_latency_plots/{fname}_post.eps', format='eps')
+    fig2.savefig(f'/home/slenzi/thesis_latency_plots/{fname}_post.eps', format='eps')
 
 
 def plot_latency(latency):
