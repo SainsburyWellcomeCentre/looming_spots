@@ -209,7 +209,7 @@ def plot_mouse_trials_separate_scaled(label, mtg, normalisation_factor, normalis
         plot_optional_metrics(pre_test_latency, t, normalisation_factor)
         plt.axhline(theoretical_escape_threshold, color=color, linewidth=2)
         [plt.axvline(x, color='k', ls='--') for x in LOOM_ONSETS]
-        plt.plot(t.integral_downsampled() / normalisation_factor, color=color)
+        plt.plot(t.integral_downsampled()[:int(t.latency_peak_detect())] / normalisation_factor, color=color)
         plt.xlim([180, 370])
         plt.ylim([0, 3*theoretical_escape_threshold])
         plt.hlines(0.5, 250, 280)
