@@ -253,12 +253,12 @@ def plot_threshold_and_sub_threshold_trialwise(axes, mtg, normalisation_factor, 
 
 def plot_all_integrals_normalised_to_threshold(mtgs, label):
     fname = f'all_post_tests_integrals_normalised_to_escape_threshold_{label}2'
-    fig = plt.figure()
+    fig, axes = plt.subplots(2,1)
     for mtg in mtgs:
         normalisation_factor, normalisation_factor_trace, \
         post_test_trials, pre_test_latency, pre_test_trials, \
         theoretical_escape_threshold = get_all_variables(mtg)
-
+        ax=plt.sca(axes[0])
         for t in pre_test_trials:
             if (t.is_flee() or mtg.mouse_id == '898990'):
                 color = 'r'
@@ -277,9 +277,7 @@ def plot_all_integrals_normalised_to_threshold(mtgs, label):
 
             plt.axis('off')
 
-
-        fig2 = plt.figure()
-
+        plt.sca(axes[1])
         for t in post_test_trials:
             if (t.is_flee() or mtg.mouse_id == '898990'):
                 color = 'r'
@@ -299,9 +297,8 @@ def plot_all_integrals_normalised_to_threshold(mtgs, label):
             plt.vlines(250, 0.5, 0.6)
 
             plt.axis('off')
-    fig.savefig(f'/home/slenzi/thesis_latency_plots/{fname}_pre.eps', format='eps')
+    fig.savefig(f'/home/slenzi/thesis_latency_plots/{fname}_all.eps', format='eps')
 
-    fig2.savefig(f'/home/slenzi/thesis_latency_plots/{fname}_post.eps', format='eps')
 
 
 def plot_latency(latency):
