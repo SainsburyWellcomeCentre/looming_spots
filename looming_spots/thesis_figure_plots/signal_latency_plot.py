@@ -485,12 +485,28 @@ def plot_snl_signal_escape_latency():
     get_signal_df_mtgs(ALL_SNL_KEYS, 215)
 
 
+def plot_895773_latency_escapes():
+    mtg = loom_trial_group.MouseLoomTrialGroup('895773')
+    fig = plt.figure()
+    pre_test_trials = mtg.pre_test_trials()[:3]
+    pre_test_latency = np.nanmean([t.latency_peak_detect() for t in pre_test_trials])
+    for t in pre_test_trials:
+        t.plot_track()
+        plt.axvline(pre_test_latency)
+    t.plot_stimulus()
+    fig.savefig('/home/slenzi/thesis_latency_plots/example_avg_latency.eps', format='eps')
+
+
+
+
+
 def main():
     import seaborn as sns
     sns.set_style("white")
     #get_snl_pre_test_and_high_contrast_trials()
     plot_all_theoretical_escape_thresholds()
     plot_all_integrals()
+    plot_895773_latency_escapes()
     #plot_all_theoretical_escape_thresholds()
     #plot_snl_signal_escape_latency()
     #get_df_non_escape_relative_to_estimated_threshold()
