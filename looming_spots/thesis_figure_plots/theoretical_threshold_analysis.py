@@ -48,6 +48,8 @@ def get_df(mtg):
             integral_at_latency = t.integral_downsampled()[latency]
             integral_reached_by_latency.append(integral_at_latency)
             difference_from_expected.append(expected_integral_at_escape_onset - integral_at_latency)
+            print(
+                f'loomnumber:{t.loom_number}_{mtg.mouse_id}:::::_LATENCCCY:{latency}')
         else:
             print(f'loomnumber:{t.loom_number}_{mtg.mouse_id}:::::_{expected_integral_at_escape_onset - max_integral_reached_by_end_of_stimulus}')
             difference_from_expected.append(expected_integral_at_escape_onset - max_integral_reached_by_end_of_stimulus)
