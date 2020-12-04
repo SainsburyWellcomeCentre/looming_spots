@@ -15,8 +15,8 @@ def get_df(mtg):
     latencies = []
     speeds = []
     escapes = []
-    max_integral_reached_by_end_of_stimulus = []
-    max_integral_reached_by_5th_loom = []
+    max_integrals_by_end_of_stimulus = []
+    max_integrals_by_end_of_5th_loom = []
     trial_numbers = []
     integral_reached_by_latency = []
 
@@ -37,12 +37,16 @@ def get_df(mtg):
         latencies.append(latency)
         speeds.append(t.metric_functions['speed']())
         escapes.append(t.metric_functions['classified as flee']())
-        max_integral_reached_by_end_of_stimulus.append(np.nanmax(t.integral_downsampled()[:340]))
-        max_integral_reached_by_5th_loom.append(np.nanmax(t.integral_downsampled()[:312]))
+        integral_at_latency = t.integral_downsampled()[int(latency)]
+        max_integral_reached_by_end_of_stimulus = np.nanmax(t.integral_downsampled()[:340])
+        max_integral_reached_by_5th_loom = np.nanmax(t.integral_downsampled()[:312])
+
+        max_integrals_by_end_of_stimulus.append(max_integral_reached_by_end_of_stimulus)
+        max_integrals_by_end_of_5th_loom.append(max_integral_reached_by_5th_loom)
 
         if latency is not None:
             integral_reached_by_latency.append(t.integral_downsampled()[int(latency)])
-            difference_from_expected.append(expected_integral_at_escape_onset - integral_reached_by_latency)
+            difference_from_expected.append(expected_integral_at_escape_onset - integral_at_latency)
         else:
             difference_from_expected.append(expected_integral_at_escape_onset - max_integral_reached_by_end_of_stimulus)
             integral_reached_by_latency.append(np.nan)
@@ -57,8 +61,8 @@ def get_df(mtg):
     df_dict.setdefault('latency', latencies)
     df_dict.setdefault('speed', speeds)
     df_dict.setdefault('escape', escapes)
-    df_dict.setdefault('deltaf max in trial', max_integral_reached_by_end_of_stimulus)
-    df_dict.setdefault('deltaf max in trial up to 5th', max_integral_reached_by_5th_loom)
+    df_dict.setdefault('deltaf max in trial', max_integrals_by_end_of_stimulus)
+    df_dict.setdefault('deltaf max in trial up to 5th', max_integrals_by_end_of_5th_loom)
     df_dict.setdefault('integral at latency', integral_reached_by_latency)
     df_dict.setdefault('expected integral', [expected_integral_at_escape_onset]*len(pre_test_trials + post_test_trials))
     df_dict.setdefault('difference from expected', difference_from_expected)
