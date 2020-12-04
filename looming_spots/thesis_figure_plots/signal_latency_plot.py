@@ -91,9 +91,11 @@ def get_snl_pre_test_and_high_contrast_trials():
 
 def get_mtgs(keys):
     mtgs = []
+    groups=[]
     for key in keys:
         mtgs.extend(experimental_log.get_mtgs_in_experiment(key))
-    return mtgs
+        groups.extend(key)
+    return mtgs, groups
 
 
 def plot_mouse_pre_post_tests(mtg, normalisation_factor,
