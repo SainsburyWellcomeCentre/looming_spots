@@ -42,9 +42,9 @@ def get_df(mtg):
             integral_reached_by_latency.append(np.nan)
 
     if mtg.mouse_id == '898990':
-        escapes = [True] * 3
+        escapes = [True] * len(pre_test_trials + post_test_trials)
 
-    theoretical_escape_thresholds = [theoretical_escape_threshold] * len(post_test_trials)
+    theoretical_escape_thresholds = [theoretical_escape_threshold] * len(pre_test_trials + post_test_trials)
 
     df_dict.setdefault('escape ∆F threshold', theoretical_escape_thresholds)
     df_dict.setdefault('mouse id', [mtg.mouse_id] * len(pre_test_trials + post_test_trials))
