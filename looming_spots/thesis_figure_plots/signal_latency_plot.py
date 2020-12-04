@@ -94,7 +94,7 @@ def get_mtgs(keys):
     groups=[]
     for key in keys:
         mtgs.extend(experimental_log.get_mtgs_in_experiment(key))
-        groups.extend(key)
+        groups.append(key)
     return mtgs, groups
 
 
