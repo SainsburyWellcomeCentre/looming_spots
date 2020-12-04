@@ -37,7 +37,8 @@ def get_df(mtg):
         latencies.append(latency)
         speeds.append(t.metric_functions['speed']())
         escapes.append(t.metric_functions['classified as flee']())
-        integral_at_latency = t.integral_downsampled()[int(latency)]
+
+
         max_integral_reached_by_end_of_stimulus = np.nanmax(t.integral_downsampled()[:340])
         max_integral_reached_by_5th_loom = np.nanmax(t.integral_downsampled()[:312])
 
@@ -45,7 +46,8 @@ def get_df(mtg):
         max_integrals_by_end_of_5th_loom.append(max_integral_reached_by_5th_loom)
 
         if latency is not None:
-            integral_reached_by_latency.append(t.integral_downsampled()[int(latency)])
+            integral_at_latency = t.integral_downsampled()[int(latency)]
+            integral_reached_by_latency.append(integral_at_latency)
             difference_from_expected.append(expected_integral_at_escape_onset - integral_at_latency)
         else:
             difference_from_expected.append(expected_integral_at_escape_onset - max_integral_reached_by_end_of_stimulus)
