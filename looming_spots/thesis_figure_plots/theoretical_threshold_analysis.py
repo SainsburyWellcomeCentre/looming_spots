@@ -61,6 +61,7 @@ def get_df(mtg):
     df_dict.setdefault('deltaf max in trial up to 5th', max_integral_reached_by_5th_loom)
     df_dict.setdefault('integral at latency', integral_reached_by_latency)
     df_dict.setdefault('expected integral', [expected_integral_at_escape_onset]*len(pre_test_trials + post_test_trials))
+    df_dict.setdefault('difference from expected', difference_from_expected)
 
     return pd.DataFrame.from_dict(df_dict)
 
@@ -71,7 +72,6 @@ def get_df_non_escape_relative_to_estimated_threshold():
     for mtg in mtgs:
         df = get_df(mtg)
         df_all = df_all.append(df, ignore_index=True)
-    df_all['difference between expected and actual'] = df_all['expected integral'] - df_all['integral at latency']
     df_all['exceeds theoretical threshold']  =  df_all['deltaf max in trial'] > df_all['escape ∆F threshold']
     df_all['exceeds theoretical threshold short']  =  df_all['deltaf max in trial up to 5th'] > df_all['escape ∆F threshold']
 
