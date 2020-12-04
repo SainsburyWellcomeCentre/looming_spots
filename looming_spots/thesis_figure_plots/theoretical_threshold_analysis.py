@@ -49,6 +49,7 @@ def get_df(mtg):
             integral_reached_by_latency.append(integral_at_latency)
             difference_from_expected.append(expected_integral_at_escape_onset - integral_at_latency)
         else:
+            difference = int(expected_integral_at_escape_onset - max_integral_reached_by_end_of_stimulus)
             difference_from_expected.append(expected_integral_at_escape_onset - max_integral_reached_by_end_of_stimulus)
             integral_reached_by_latency.append(np.nan)
 
