@@ -25,7 +25,7 @@ def get_df(mtg):
     difference_from_expected = []
 
     for t in (pre_test_trials + post_test_trials):
-        latency = t.metric_functions['latency peak detect samples']()
+        latency = int(t.metric_functions['latency peak detect samples']())
         trial_numbers.append(t.loom_number)
         latencies.append(latency)
         speeds.append(t.metric_functions['speed']())
