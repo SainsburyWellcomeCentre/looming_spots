@@ -180,8 +180,8 @@ def get_all_variables(mtg):
     theoretical_escape_threshold_minimum = np.min(pre_test_trial_integral_metric_values) / normalisation_factor
     theoretical_escape_threshold_maximum = np.max(pre_test_trial_integral_metric_values) / normalisation_factor
 
-
-    return normalisation_factor, normalisation_factor_trace, post_test_trials, pre_test_latency, pre_test_trials, theoretical_escape_threshold
+    return normalisation_factor, normalisation_factor_trace, post_test_trials, pre_test_latency, \
+           pre_test_trials, theoretical_escape_threshold
 
 
 def plot_mouse_trials_separate_scaled(label, mtg, normalisation_factor, normalisation_factor_trace,
@@ -497,7 +497,20 @@ def plot_895773_latency_escapes():
     fig.savefig('/home/slenzi/thesis_latency_plots/example_avg_latency.eps', format='eps')
 
 
+def ohda_nmda_first_trial():
+    pass
 
+
+def count_manually_tracked_videos():
+    pass
+
+
+def return_to_shelter_photometry_no_stimulus(mtg):
+    pass
+
+
+def difference_between_expected_threshold_and_actual_signal():
+    pass
 
 
 def main():
