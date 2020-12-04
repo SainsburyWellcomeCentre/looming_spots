@@ -39,6 +39,7 @@ def get_df(mtg):
             difference_from_expected.append(expected_integral_at_escape_onset - integral_reached_by_latency)
         else:
             difference_from_expected.append(expected_integral_at_escape_onset - max_integral_reached_by_end_of_stimulus)
+            integral_reached_by_latency.append(np.nan)
 
     if mtg.mouse_id == '898990':
         escapes = [True] * 3
