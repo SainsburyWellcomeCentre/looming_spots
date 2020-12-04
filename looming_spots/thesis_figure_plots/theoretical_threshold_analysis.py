@@ -27,6 +27,8 @@ def get_df(mtg):
 
     for t in (pre_test_trials + post_test_trials):
         latency = int(t.metric_functions['latency peak detect samples']())
+        if latency > 600:
+            latency = None
         trial_numbers.append(t.loom_number)
         latencies.append(latency)
         speeds.append(t.metric_functions['speed']())
