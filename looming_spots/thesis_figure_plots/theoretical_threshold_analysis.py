@@ -5,7 +5,7 @@ from looming_spots.thesis_figure_plots.signal_latency_plot import get_all_variab
 from signal_latency_plot import get_mtgs, LSIE_SNL_KEYS
 
 
-def get_df(mtg):
+def get_df(mtg, group):
     normalisation_factor, normalisation_factor_trace, \
     post_test_trials, pre_test_latency, pre_test_trials, \
     theoretical_escape_threshold = get_all_variables(mtg)
@@ -20,7 +20,7 @@ def get_df(mtg):
     trial_numbers = []
     integral_reached_by_latency = []
     percent_of_expected = []
-    
+
     first_trial = pre_test_trials[0]
     first_trial_latency = int(first_trial.metric_functions['latency peak detect samples']())
     expected_integral_at_escape_onset = first_trial.integral_downsampled()[first_trial_latency]
@@ -75,15 +75,17 @@ def get_df(mtg):
     df_dict.setdefault('difference from expected', difference_from_expected)
     df_dict.setdefault('percent of expected', percent_of_expected)
     df_dict.setdefault('trial number', trial_numbers)
+    df_dict.setdefault('group', [group]*len(pre_test_trials + post_test_trials))
+
 
     return pd.DataFrame.from_dict(df_dict)
 
 
 def get_df_non_escape_relative_to_estimated_threshold():
     df_all = pd.DataFrame()
-    mtgs = get_mtgs(LSIE_SNL_KEYS)
-    for mtg in mtgs:
-        df = get_df(mtg)
+    mtgs, groups = get_mtgs(LSIE_SNL_KEYS)
+    for mtg, group in zip(mtgs, groups):
+        df = get_df(mtg, group)
         df_all = df_all.append(df, ignore_index=True)
     df_all.to_csv('/home/slenzi/thesis_latency_plots/df_threshold_differences.csv')
 
