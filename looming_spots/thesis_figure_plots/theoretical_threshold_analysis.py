@@ -21,7 +21,8 @@ def get_df(mtg):
     integral_reached_by_latency = []
 
     first_trial = pre_test_trials[0]
-    expected_integral_at_escape_onset = first_trial.integral_downsampled()[first_trial.metric_functions['latency peak detect samples']()]
+    first_trial_latency = int(first_trial.metric_functions['latency peak detect samples']())
+    expected_integral_at_escape_onset = first_trial.integral_downsampled()[first_trial_latency]
     difference_from_expected = []
 
     for t in (pre_test_trials + post_test_trials):
