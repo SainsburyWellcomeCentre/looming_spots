@@ -19,7 +19,8 @@ def get_df(mtg):
     max_integrals_by_end_of_5th_loom = []
     trial_numbers = []
     integral_reached_by_latency = []
-
+    percent_of_expected = []
+    
     first_trial = pre_test_trials[0]
     first_trial_latency = int(first_trial.metric_functions['latency peak detect samples']())
     expected_integral_at_escape_onset = first_trial.integral_downsampled()[first_trial_latency]
@@ -48,11 +49,13 @@ def get_df(mtg):
             integral_at_latency = t.integral_downsampled()[latency]
             integral_reached_by_latency.append(integral_at_latency)
             difference_from_expected.append(expected_integral_at_escape_onset - integral_at_latency)
+            percent_of_expected.append(integral_at_latency/expected_integral_at_escape_onset)
             print(
                 f'loomnumber:{t.loom_number}_{mtg.mouse_id}:::::_LATENCCCY:{latency}: ')
         else:
             print(f'loomnumber:{t.loom_number}_{mtg.mouse_id}:::::_{expected_integral_at_escape_onset - max_integral_reached_by_end_of_stimulus}')
             difference_from_expected.append(expected_integral_at_escape_onset - max_integral_reached_by_end_of_stimulus)
+            percent_of_expected.append(max_integral_reached_by_end_of_stimulus/expected_integral_at_escape_onset)
             integral_reached_by_latency.append(np.nan)
 
     if mtg.mouse_id == '898990':
@@ -70,6 +73,7 @@ def get_df(mtg):
     df_dict.setdefault('integral at latency', integral_reached_by_latency)
     df_dict.setdefault('expected integral', [expected_integral_at_escape_onset]*len(pre_test_trials + post_test_trials))
     df_dict.setdefault('difference from expected', difference_from_expected)
+    df_dict.setdefault('percent of expected', percent_of_expected)
     df_dict.setdefault('trial number', trial_numbers)
 
     return pd.DataFrame.from_dict(df_dict)
@@ -81,7 +85,6 @@ def get_df_non_escape_relative_to_estimated_threshold():
     for mtg in mtgs:
         df = get_df(mtg)
         df_all = df_all.append(df, ignore_index=True)
-
     df_all.to_csv('/home/slenzi/thesis_latency_plots/df_threshold_differences.csv')
 
 
