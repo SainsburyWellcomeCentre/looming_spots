@@ -23,7 +23,7 @@ def get_df(mtg):
     first_trial = pre_test_trials[0]
     expected_integral_at_escape_onset = first_trial.integral_downsampled()[first_trial.metric_functions['latency peak detect samples']()]
     difference_from_expected = []
-    
+
     for t in (pre_test_trials + post_test_trials):
         latency = t.metric_functions['latency peak detect samples']()
         trial_numbers.append(t.loom_number)
@@ -38,7 +38,6 @@ def get_df(mtg):
             difference_from_expected.append(expected_integral_at_escape_onset - integral_reached_by_latency)
         else:
             difference_from_expected.append(expected_integral_at_escape_onset - max_integral_reached_by_end_of_stimulus)
-
 
     if mtg.mouse_id == '898990':
         escapes = [True] * 3
@@ -68,4 +67,8 @@ def get_df_non_escape_relative_to_estimated_threshold():
     df_all['exceeds theoretical threshold']  =  df_all['deltaf max in trial'] > df_all['escape ∆F threshold']
     df_all['exceeds theoretical threshold short']  =  df_all['deltaf max in trial up to 5th'] > df_all['escape ∆F threshold']
 
-    df_all.to_csv('/home/slenzi/thesis_latency_plots/df_2.csv')
+    df_all.to_csv('/home/slenzi/thesis_latency_plots/df_threshold_differences.csv')
+
+
+if __name__ == '__main__':
+    get_df_non_escape_relative_to_estimated_threshold()
