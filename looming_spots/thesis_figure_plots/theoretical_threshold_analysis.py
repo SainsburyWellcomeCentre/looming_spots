@@ -76,6 +76,7 @@ def get_df(mtg, group):
     df_dict.setdefault('percent of expected', percent_of_expected)
     df_dict.setdefault('trial number', trial_numbers)
     df_dict.setdefault('group', [group]*len(pre_test_trials + post_test_trials))
+    df_dict.setdefault('trial type', ['pretest']*len(pre_test_trials) +['posttest']*len(post_test_trials))
 
 
     return pd.DataFrame.from_dict(df_dict)
