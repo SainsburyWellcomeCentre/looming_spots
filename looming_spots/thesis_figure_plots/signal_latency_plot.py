@@ -530,6 +530,7 @@ def plot_pre_test_trials_with_predicted_values(mtg):
                 scale_factor = float(first_thresh) / float(val_at_latency)
                 plt.plot(t.integral_downsampled()[:int(latency)], color=color)
                 plt.plot(t.integral_downsampled()[:int(latency)]*scale_factor, linestyle='dotted', color=color)
+                print(f'FIRST: {first_thresh}, TRIAL: {val_at_latency}, SCALE_FACTOR: {scale_factor} NEW MAX: {t.integral_downsampled()[int(latency)]*scale_factor}')
     fname = f'integral_at_latency_with_prediction_{mtg.mouse_id}'
     fig.savefig(f'/home/slenzi/thesis_latency_plots/{fname}.eps', format='eps')
 
