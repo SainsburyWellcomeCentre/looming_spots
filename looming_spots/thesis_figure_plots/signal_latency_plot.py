@@ -522,14 +522,14 @@ def plot_pre_test_trials_with_predicted_values(mtg):
     first_trial = pre_test_trials[0]
     first_latency = first_trial.latency_peak_detect()
     if first_latency is not None:
-        first_thresh = first_trial.integral_downsampled[int(first_latency)]
+        first_thresh = first_trial.integral_downsampled()[int(first_latency)]
         for t in pre_test_trials:
             latency = t.latency_peak_detect()
             if latency is not None:
-                val_at_latency = t.integral_downsampled[int(latency)]
-                plt.plot(t.integral_downsampled[:int(latency)])
+                val_at_latency = t.integral_downsampled()[int(latency)]
+                plt.plot(t.integral_downsampled()[:int(latency)])
                 scale_factor = first_thresh/val_at_latency
-                plt.plot(t.integral_downsampled[:int(latency)]/scale_factor, linestyle='dashed')
+                plt.plot(t.integral_downsampled()[:int(latency)]/scale_factor, linestyle='dashed')
     fname = f'integral_at_latency_with_prediction_{mtg.mouse_id}'
     fig.savefig(f'/home/slenzi/thesis_latency_plots/{fname}.eps', format='eps')
 
