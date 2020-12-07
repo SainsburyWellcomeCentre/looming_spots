@@ -528,7 +528,7 @@ def plot_pre_test_trials_with_predicted_values(mtg):
             if latency is not None:
                 val_at_latency = t.integral_downsampled()[int(latency)]
                 plt.plot(t.integral_downsampled()[:int(latency)])
-                scale_factor = first_thresh/val_at_latency
+                scale_factor = float(first_thresh) / float(val_at_latency)
                 plt.plot(t.integral_downsampled()[:int(latency)]*scale_factor, linestyle='dashed')
     fname = f'integral_at_latency_with_prediction_{mtg.mouse_id}'
     fig.savefig(f'/home/slenzi/thesis_latency_plots/{fname}.eps', format='eps')
