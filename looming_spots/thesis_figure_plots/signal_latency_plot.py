@@ -531,7 +531,7 @@ def plot_pre_test_trials_with_predicted_values(mtg):
                 plt.plot(t.integral_downsampled()[:int(latency)], color=color)
                 plt.plot(t.integral_downsampled()[:int(latency)+1]*scale_factor, linestyle='dotted', color=color)
                 print(f'FIRST: {first_thresh}, TRIAL: {val_at_latency}, SCALE_FACTOR: {scale_factor} NEW MAX: {t.integral_downsampled()[int(latency)]*scale_factor}')
-    t.plot_stimulus()
+    [plt.axvline(x, color='k', ls='--') for x in LOOM_ONSETS]
     plt.vlines(200, 0.01, 0.02)
     plt.hlines(0.01, 200, 230)
     fname = f'integral_at_latency_with_prediction_{mtg.mouse_id}'
