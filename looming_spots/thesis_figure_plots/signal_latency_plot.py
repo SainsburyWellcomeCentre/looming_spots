@@ -529,7 +529,7 @@ def plot_pre_test_trials_with_predicted_values(mtg):
                 val_at_latency = t.integral_downsampled()[int(latency)]
                 scale_factor = float(first_thresh) / float(val_at_latency)
                 plt.plot(t.integral_downsampled()[:int(latency)], color=color)
-                plt.plot(t.integral_downsampled()[:int(latency)+1]*scale_factor, linestyle='dotted', color=color)
+                plt.plot(t.integral_downsampled()[:int(latency)]*scale_factor, linestyle='dotted', color=color)
                 print(f'FIRST: {first_thresh}, TRIAL: {val_at_latency}, SCALE_FACTOR: {scale_factor} NEW MAX: {t.integral_downsampled()[int(latency)]*scale_factor}')
     [plt.axvline(x, color='k', ls='--') for x in LOOM_ONSETS]
     plt.vlines(200, 0.01, 0.02)
