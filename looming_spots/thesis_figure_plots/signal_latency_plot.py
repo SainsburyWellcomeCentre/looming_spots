@@ -561,6 +561,7 @@ def plot_integrals_post_test_scaled_to_smallest_pretest(mtg):
 
     plt.vlines(200, 0, 0.5)
     plt.hlines(1, 200, 230)
+    plt.ylim([0, 2])
 
 
 def main():
