@@ -305,7 +305,6 @@ def plot_all_integrals_normalised_to_threshold(mtgs, label):
     fig.savefig(f'/home/slenzi/thesis_latency_plots/{fname}_all.eps', format='eps')
 
 
-
 def plot_latency(latency):
     if latency is not None:
         print(f'latency: {latency}')
@@ -540,8 +539,28 @@ def plot_pre_test_trials_with_predicted_values(mtg):
 
 def plot_all_integrals_to_latency_with_predictions():
     mtgs, labels = get_mtgs(LSIE_SNL_KEYS)
+    fig = plt.figure()
     for mtg in mtgs:
-        plot_pre_test_trials_with_predicted_values(mtg)
+        #plot_pre_test_trials_with_predicted_values(mtg)
+        plot_integrals_post_test_scaled_to_smallest_pretest(mtg)
+        [plt.axvline(x, color='k', ls='--') for x in LOOM_ONSETS]
+    fname = f'integral_post_test_all'
+    fig.savefig(f'/home/slenzi/thesis_latency_plots/{fname}.eps', format='eps')
+
+
+def plot_integrals_post_test_scaled_to_smallest_pretest(mtg):
+    pre_test_trials = mtg.pre_test_trials()[:3]
+    post_test_trials = mtg.post_test_trials()[:3]
+    min_thresh = min([t.integral_downsampled()[int(t.latency_peak_detect())] for t in pre_test_trials])
+    for t in post_test_trials:
+        color='r' if t.is_flee() else 'k'
+        latency = t.latency_peak_detect()
+        if latency is not None:
+            plt.plot(t.integral_downsampled()[:int(latency) + 1]/min_thresh, color=color)
+            plt.plot(t.integral_downsampled()[:int(latency) + 1]/min_thresh, linestyle='dotted', color=color)
+
+    plt.vlines(200, 0, 0.5)
+    plt.hlines(1, 200, 230)
 
 
 def main():
