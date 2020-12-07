@@ -538,15 +538,16 @@ def plot_all_integrals_to_latency_with_predictions():
     mtgs, labels = get_mtgs(LSIE_SNL_KEYS)
     for mtg in mtgs:
         plot_pre_test_trials_with_predicted_values(mtg)
-        
+
 
 def main():
     import seaborn as sns
     sns.set_style("white")
+    plot_all_integrals_to_latency_with_predictions()
     #get_snl_pre_test_and_high_contrast_trials()
-    plot_all_theoretical_escape_thresholds()
-    plot_all_integrals()
-    plot_895773_latency_escapes()
+    #plot_all_theoretical_escape_thresholds()
+    #plot_all_integrals()
+    #plot_895773_latency_escapes()
     #plot_all_theoretical_escape_thresholds()
     #plot_snl_signal_escape_latency()
     #get_df_non_escape_relative_to_estimated_threshold()
