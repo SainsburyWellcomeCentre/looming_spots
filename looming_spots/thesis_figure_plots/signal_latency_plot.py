@@ -556,8 +556,8 @@ def plot_integrals_post_test_scaled_to_smallest_pretest(mtg):
         color='r' if t.is_flee() else 'k'
         latency = t.latency_peak_detect()
         if latency is not None:
-            plt.plot(t.integral_downsampled()[:int(latency) + 1]/min_thresh, color=color)
-            plt.plot(t.integral_downsampled()[:int(latency) + 1]/min_thresh, linestyle='dotted', color=color)
+            plt.plot(t.integral_downsampled()/min_thresh, color=color)
+            #plt.plot(t.integral_downsampled()[:int(latency) + 1]/min_thresh, linestyle='dotted', color=color)
 
     plt.vlines(200, 0, 0.5)
     plt.hlines(1, 200, 230)
