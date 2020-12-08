@@ -544,14 +544,14 @@ def plot_all_integrals_to_latency_with_predictions():
         #plot_pre_test_trials_with_predicted_values(mtg)
         plot_integrals_post_test_scaled_to_smallest_pretest(mtg)
         [plt.axvline(x, color='k', ls='--') for x in LOOM_ONSETS]
-    fname = f'integral_post_test_all'
+    fname = f'integral_post_test_all_scaled_to_max'
     fig.savefig(f'/home/slenzi/thesis_latency_plots/{fname}.eps', format='eps')
 
 
 def plot_integrals_post_test_scaled_to_smallest_pretest(mtg):
     pre_test_trials = mtg.pre_test_trials()[:3]
     post_test_trials = mtg.post_test_trials()[:3]
-    min_thresh = min([t.integral_downsampled()[int(t.latency_peak_detect())] for t in pre_test_trials])
+    min_thresh = max([t.integral_downsampled()[int(t.latency_peak_detect())] for t in pre_test_trials])
     for t in post_test_trials:
         color='r' if t.is_flee() else 'k'
         latency = t.latency_peak_detect()
