@@ -1,4 +1,5 @@
 import os
+import pathlib
 import warnings
 from pathlib import Path
 from shutil import copyfile
@@ -6,6 +7,7 @@ from shutil import copyfile
 import numpy as np
 from datetime import datetime
 
+import pims
 import scipy
 from cached_property import cached_property
 
@@ -225,10 +227,13 @@ class Session(object):
     def n_looms(self):
         return len(self.loom_idx)
 
-    def get_reference_frame(self, trial_type):
-        fpath = os.path.join(self.path, f"{trial_type}_ref.npy")
-        if os.path.isfile(fpath):
-            return np.load(fpath)
+    def get_reference_frame(self, idx=0):
+        import skvideo.io
+        vid = skvideo.io.vreader(self.video_path)
+        for i, frame in enumerate(vid):
+            if i == idx:
+                return frame
+
 
     @property
     def photodiode_trace(self, raw=False):
@@ -488,9 +493,7 @@ def load_sessions(mouse_id):
                     print("not datetime, skipping")
                     continue
 
-                if not contains_video(file_names) and not contains_tracks(
-                    file_names
-                ):
+                if not contains_video(file_names) and not contains_tracks(session_directory):
                     print("no video or tracks")
                     if not get_tracks_from_raw(
                         mouse_directory.replace("processed_data", "raw_data")
@@ -524,8 +527,12 @@ def contains_video(file_names):
     )
 
 
-def contains_tracks(file_names):
-    return any("dlc_x_tracks.npy" in fname for fname in file_names)
+def contains_tracks(session_directory):
+    p=pathlib.Path(session_directory)
+    if len(list(p.rglob("dlc_x_tracks.npy"))) ==0:
+        return False
+    else:
+        return True
 
 
 def get_tracks_from_raw(directory):
