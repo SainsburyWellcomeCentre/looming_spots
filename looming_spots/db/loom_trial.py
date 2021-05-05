@@ -987,7 +987,7 @@ class LoomTrial(object):
 
     def track_overlay(self, duration_in_samples=200, track_heatmap=None):
         if track_heatmap is None:
-            track_heatmap = np.zeros((480, 640))  # TODO: get shape from raw
+            track_heatmap = np.zeros((240, 600))  # TODO: get shape from raw
 
         x, y = (
             np.array(
