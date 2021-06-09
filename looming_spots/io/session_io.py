@@ -10,6 +10,7 @@ from datetime import datetime
 import pims
 import scipy
 from cached_property import cached_property
+from nptdms import TdmsFile
 
 import looming_spots.io.io
 import looming_spots.util
@@ -125,6 +126,10 @@ class Session(object):
         )
 
         return sorted(visual_trials + auditory_trials)
+
+    @cached_property
+    def frame_rate(self):
+        return get_frame_rate(self.directory())
 
     def initialise_trials(self, idx, stimulus_type):
         if idx is not None:
@@ -549,3 +554,21 @@ def get_tracks_from_raw(directory):
         print(f"copying {raw_path} to {processed_path}")
         copyfile(raw_path, processed_path)
     return True
+
+
+def get_frame_rate(directory):
+
+    tdms_path = os.path.join(directory, 'AI.tdms')
+    if not os.path.exists(tdms_path):
+        frame_rate = 30
+    else:
+        tdms_file = TdmsFile(tdms_path)
+        tdms_groups = tdms_file.groups()
+        all_channels = tdms_groups[0].channels()
+        clock = all_channels[1].data
+        clock_on = (clock > 2.5).astype(int)
+        ni_sample_rate = 1/all_channels[1].properties['wf_increment']
+        clock_ups = np.where(np.diff(clock_on) == 1)[0]
+        frame_rate = round(np.mean(ni_sample_rate/np.diff(clock_ups)))
+
+    return frame_rate

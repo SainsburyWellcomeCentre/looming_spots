@@ -13,6 +13,7 @@ from datetime import timedelta
 import seaborn as sns
 import pandas as pd
 import photometry
+from scipy.signal import resample
 
 import looming_spots.track_analysis.escape_classification
 import looming_spots.preprocess.normalisation
@@ -76,6 +77,7 @@ class LoomTrial(object):
         self.folder = os.path.join(
             self.directory, f"{self.stimulus_type}{self.stimulus_number()}"
         )
+        self.frame_rate = self.session.frame_rate
 
         #self.end = self.sample_number + N_SAMPLES_AFTER
 
@@ -87,7 +89,8 @@ class LoomTrial(object):
         self.next_trial = None
         self.previous_trial = None
 
-        self.start = max(self.sample_number - N_SAMPLES_BEFORE, 0)
+        n_samples_before_fr_corrected = round(N_SAMPLES_BEFORE * (self.frame_rate / FRAME_RATE))
+        self.start = max(self.sample_number - n_samples_before_fr_corrected, 0)
         self.end = self.get_end()
 
     def get_end(self):
@@ -411,13 +414,25 @@ class LoomTrial(object):
 
     @property
     def normalised_x_track(self):
-        return 1 - (self.x_track / 600)
+        if self.frame_rate != 30:
+            n_points_ori = len(self.x_track)
+            n_points_new = n_points_ori * (30/self.frame_rate)
+            x_track = resample(self.x_track, n_points_new)
+        else:
+            x_track = self.x_track
+        return 1 - (x_track / 600)
         #return looming_spots.preprocess.normalisation.normalise_x_track(
         #    self.x_track, self.context
         #)
 
     @property
     def normalised_y_track(self):
+        if self.frame_rate != 30:
+            n_points_ori = len(self.y_track)
+            n_points_new = n_points_ori * (30/self.frame_rate)
+            y_track = resample(self.y_track, n_points_new)
+        else:
+            y_track = self.y_track
         return (self.y_track / 240) * 0.4
 
     @property
