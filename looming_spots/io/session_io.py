@@ -7,7 +7,6 @@ from shutil import copyfile
 import numpy as np
 from datetime import datetime
 
-import pims
 import scipy
 from cached_property import cached_property
 
@@ -23,6 +22,8 @@ from looming_spots.db import loom_trial
 from looming_spots.exceptions import LoomsNotTrackedError, MouseNotFoundError
 
 from looming_spots.preprocess import photodiode, normalisation
+from looming_spots.track_analysis import arena_region_crossings
+from looming_spots.tracking_dlc import process_DLC_output
 from looming_spots.util import generic_functions
 from photometry import demodulation, load
 
@@ -35,6 +36,7 @@ class Session(object):
         n_looms_to_view=0,
         n_habituation_looms=120,
         n_trials_to_consider=3,
+
     ):
         self.dt = dt
         self.mouse_id = mouse_id
@@ -43,6 +45,17 @@ class Session(object):
         self.n_trials_to_include = n_trials_to_consider
         self.next_session = None
         self.previous_session = None
+
+    @property
+    def frame_rate(self):
+        clock = self.get_clock_raw()
+        clock_ups = looming_spots.io.io.get_clock_ups(clock)
+        if np.nanmedian(np.diff(clock_ups)) == 333:
+            return 30
+        elif np.nanmedian(np.diff(clock_ups)) == 200:
+            return 50
+        elif np.nanmedian(np.diff(clock_ups)) == 100:
+            return 100
 
     def __len__(self):
         return len(self.data["photodiode"])
@@ -119,12 +132,14 @@ class Session(object):
     def trials(self):
         visual_trials_idx = self.get_visual_trials_idx()
         auditory_trials_idx = self.get_auditory_trials_idx()
-        visual_trials = self.initialise_trials(visual_trials_idx, "visual")
+        cricket_trials_idx = self.get_cricket_trials_idx()
+        visual_trials = self.initialise_trials(visual_trials_idx, "visual",)
         auditory_trials = self.initialise_trials(
-            auditory_trials_idx, "auditory"
+            auditory_trials_idx, "auditory",
         )
+        cricket_trials = self.initialise_trials(cricket_trials_idx, 'cricket')
 
-        return sorted(visual_trials + auditory_trials)
+        return sorted(visual_trials + auditory_trials + cricket_trials)
 
     def initialise_trials(self, idx, stimulus_type):
         if idx is not None:
@@ -137,7 +152,7 @@ class Session(object):
                             directory=self.path,
                             sample_number=onset_in_samples,
                             trial_type=self.get_trial_type(onset_in_samples),
-                            stimulus_type="loom",
+                            stimulus_type="loom", frame_rate=self.frame_rate
                         )
                     elif stimulus_type == "auditory":
                         t = loom_trial.AuditoryStimulusTrial(
@@ -146,7 +161,19 @@ class Session(object):
                             sample_number=onset_in_samples,
                             trial_type=self.get_trial_type(onset_in_samples),
                             stimulus_type="auditory",
+                            frame_rate=self.frame_rate,
                         )
+
+                    elif stimulus_type == "cricket":
+                        t = loom_trial.CricketStimulusTrial(
+                            self,
+                            directory=self.path,
+                            sample_number=onset_in_samples,
+                            trial_type=self.get_trial_type(onset_in_samples),
+                            stimulus_type="cricket",
+                            frame_rate=self.frame_rate,
+                        )
+
                     else:
                         raise NotImplementedError
 
@@ -243,6 +270,10 @@ class Session(object):
             pd = self.data["photodiode"]
         return pd
 
+    def get_clock_raw(self):
+        _, clock, _ = looming_spots.io.io.load_pd_and_clock_raw(self.path)
+        return clock
+
     @property
     def auditory_trace(self, raw=False):
         if raw:
@@ -304,6 +335,8 @@ class Session(object):
 
     @cached_property
     def loom_idx(self):
+        if self.path == '/home/slenzi/winstor/margrie/glusterfs/imaging/l/loomer/processed_data/1114179/20210415_12_41_00/':
+            return []
         loom_idx_path = os.path.join(self.path, "loom_starts.npy")
         if not os.path.isfile(loom_idx_path):
             _ = photodiode.get_loom_idx_from_raw(self.path, save=True)[0]
@@ -386,9 +419,10 @@ class Session(object):
         return self.photodiode_trace - np.median(self.photodiode_trace)
 
     def track(self):
-        if "dlc_x_tracks.npy" in os.listdir(self.path):
-            x_path = os.path.join(self.path, "dlc_x_tracks.npy")
-            y_path = os.path.join(self.path, "dlc_y_tracks.npy")
+        p = pathlib.Path(self.path)
+        if len(list(p.rglob('dlc_x_tracks.npy'))) > 0:
+            x_path = str(list(p.rglob("dlc_x_tracks.npy"))[0])
+            y_path = str(list(p.rglob("dlc_y_tracks.npy"))[0])
             x = np.load(x_path)
             y = np.load(y_path)
             if len(x) - len(self) > 5:
@@ -447,6 +481,49 @@ class Session(object):
 
     def get_normalised_x_pos(self):
         return normalisation.normalise_x_track(self.x_pos(), self.context)
+
+    def get_cricket_trials_idx(self):
+        mouse_x, _ = self.get_all_bodyparts()
+        if mouse_x is None:
+            return []
+        entries = arena_region_crossings.get_all_entries(mouse_x)
+        return entries
+
+    def get_all_bodyparts(self):
+        import pandas as pd
+        p = list(pathlib.Path(self.path).rglob('cameraDLC_resnet50_cricketsApr7shuffle1_1030000filtered.h5'))
+        if len(p) > 0:
+            p=p[0]
+        if os.path.isfile((str(p))):
+            df = pd.read_hdf(p)
+
+            df = df[df.keys()[0][0]]
+            if np.count_nonzero(df['cricket']['likelihood'] == 1) < 2000:
+                return None, None
+        else:
+            return None,None
+
+        start = process_DLC_output.get_first_and_last_likely_frame(df, 'cricket')
+        print(f'start: {start}')
+        df = process_DLC_output.replace_low_likelihood_as_nan(df)
+
+        body_part_labels = ['body', 'cricket']
+        body_parts = {body_part_label: df[body_part_label] for body_part_label in body_part_labels}
+
+        df_y = pd.DataFrame({body_part_label: body_part["y"] for body_part_label, body_part in body_parts.items()})
+        df_x = pd.DataFrame({body_part_label: body_part["x"] for body_part_label, body_part in body_parts.items()})
+        body_x = 1 - (df_x['body'] / 600)
+        body_y = 1 - (df_y['body'] / 200)
+
+        cricket_x = 1 - (df_x['cricket'] / 600)
+        cricket_y = 1 - (df_y['cricket'] / 200)
+
+        body_x[:start] = 0
+        body_y[:start] = 0
+
+        cricket_x[:start] = 0
+        cricket_y[:start] = 0
+        return body_x, cricket_x
 
 
 def get_context_from_stimulus_mat(directory):

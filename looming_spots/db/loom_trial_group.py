@@ -1,7 +1,9 @@
 import os
+import pathlib
 
 import numpy as np
 import pandas as pd
+import pims
 import scipy.io
 from cached_property import cached_property
 from tqdm import tqdm
@@ -34,6 +36,11 @@ class MouseLoomTrialGroup(object):
     def set_auditory_trial_idx(self):
         for i, t in enumerate(self.auditory_trials()):
             t.set_auditory_trial_idx(i)
+
+    def mixed_post_test(self):
+        all_escape = all(t.is_flee() for t in self.post_test_trials()[:3])
+        none_escape = all(not t.is_flee() for t in self.post_test_trials()[:3])
+        return not (all_escape or none_escape)
 
     def contrasts(self):
         for t in self.all_trials:
@@ -75,12 +82,13 @@ class MouseLoomTrialGroup(object):
         self
     ):  # TODO: this can probably be achieved more elegantly  #TODO: weakref
         print(self.mouse_id)
+
         unlinked_trials = sorted(
             flatten_list(
                 [
                     s.trials
                     for s in looming_spots.io.session_io.load_sessions(
-                        self.mouse_id
+                        self.mouse_id,
                     )
                 ]
             )
@@ -110,8 +118,7 @@ class MouseLoomTrialGroup(object):
     @cached_property
     def sessions(self):  # TODO: weakref
         unlinked_sessions = looming_spots.io.session_io.load_sessions(
-            self.mouse_id
-        )
+            self.mouse_id)
         singly_linked_trials, doubly_linked_sessions = [], []
 
         for i, (s_current, s_next) in enumerate(
@@ -131,6 +138,9 @@ class MouseLoomTrialGroup(object):
 
     def loom_trials(self):
         return [t for t in self.all_trials if t.stimulus_type == "loom"]
+
+    def cricket_trials(self):
+        return [t for t in self.all_trials if t.stimulus_type == "cricket"]
 
     def auditory_trials(self):
         return [t for t in self.all_trials if t.stimulus_type == "auditory"]
@@ -178,17 +188,15 @@ class MouseLoomTrialGroup(object):
             len(self.n_non_flees(trial_type)) + self.n_flees(trial_type)
         )
 
-    def get_reference_frame(self, key):
-        if key == "pre_test":
-            return self.pre_test_trials()[0].get_reference_frame()
-        elif key == "post_test":
-            return self.post_test_trials()[0].get_reference_frame()
-        elif key == "habituation":
-            return [
-                t
-                for t in self.all_trials
-                if t.get_trial_type() == "habituation"
-            ][0].get_reference_frame()
+    def get_reference_frame(self):
+        video_path = pathlib.Path(self.sessions[0].video_path)
+        image_path = video_path.parent / 'background_frame.npy'
+        if os.path.isfile(str(video_path)):
+            img = np.load(str(video_path))
+        else:
+            img = pims.Video(video_path)[0]
+            np.save(str(image_path), img)
+        return img
 
     def habituation_heatmap(self, n_trials_to_show):
         if n_trials_to_show is None:

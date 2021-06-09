@@ -66,10 +66,9 @@ def auto_fix_ai(
     auto_fix_ai(directory, n_samples_to_replace=n_samples_to_replace)
 
 
-def load_pd_and_clock_raw(
-    directory
-):  # TODO: raw loading should be entirely extracted to load module
+def load_pd_and_clock_raw(directory):  # TODO: raw loading should be entirely extracted to load module
     if "AI.tdms" in os.listdir(directory):
+
         path = os.path.join(directory, "AI.tdms")
         tdms_file = TdmsFile(path)
         all_channels = tdms_file.group_channels("acq_task")

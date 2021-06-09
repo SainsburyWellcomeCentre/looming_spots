@@ -12,7 +12,6 @@ from scipy import signal
 from datetime import timedelta
 import seaborn as sns
 import pandas as pd
-import photometry
 
 import looming_spots.track_analysis.escape_classification
 import looming_spots.preprocess.normalisation
@@ -56,12 +55,16 @@ class LoomTrial(object):
         sample_number,
         trial_type,
         stimulus_type,
+        frame_rate,
         trial_video_fname="{}{}.mp4",
         contrast=None,
         loom_trial_idx=None,
         auditory_trial_idx=None,
+
     ):
         self.session = session
+        self.frame_rate = frame_rate
+        self.n_samples_before = int(N_SAMPLES_BEFORE/30*self.frame_rate)
         self.sample_number = int(sample_number)
         self.mouse_id = self.session.mouse_id
         self.stimulus_type = stimulus_type
@@ -87,7 +90,7 @@ class LoomTrial(object):
         self.next_trial = None
         self.previous_trial = None
 
-        self.start = max(self.sample_number - N_SAMPLES_BEFORE, 0)
+        self.start = max(self.sample_number - self.n_samples_before, 0)
         self.end = self.get_end()
 
     def get_end(self):
@@ -191,7 +194,7 @@ class LoomTrial(object):
             return "pre_test"
 
     def absolute_acceleration(self):
-        return abs(self.peak_x_acc()) * FRAME_RATE * 50
+        return abs(self.peak_x_acc()) * self.frame_rate * 50
 
     @property
     def metric_functions(self):
@@ -323,14 +326,14 @@ class LoomTrial(object):
     @cached_property
     def fully_sampled_delta_f(self):
         start = self.raw_start() - int(
-            200 * 10000 / FRAME_RATE
+            self.n_samples_before * 10000 / self.frame_rate
         )  # TODO: derive from raw data instead for precision
-        end = start + int(400 * 10000 / FRAME_RATE)
+        end = start + int(400 * 10000 / self.frame_rate)
         df = self.session.fully_sampled_delta_f[0][start:end]
 
         med_range = [
-            int(100 * 10000 / FRAME_RATE),
-            int(190 * 10000 / FRAME_RATE),
+            int(100 * 10000 / self.frame_rate),
+            int(190 * 10000 / self.frame_rate),
         ]  # 150, 200
         df -= np.median(df[med_range[0] : med_range[1]])
         return df
@@ -360,7 +363,7 @@ class LoomTrial(object):
     @property
     def time(self):
         return self.session.dt + timedelta(
-            0, int(self.sample_number / FRAME_RATE)
+            0, int(self.sample_number / self.frame_rate)
         )
 
     def get_time(self):
@@ -369,37 +372,39 @@ class LoomTrial(object):
     def time_in_safety_zone(self):
         samples_to_leave_shelter = self.samples_to_leave_shelter()
         if samples_to_leave_shelter is not None:
-            return samples_to_leave_shelter / FRAME_RATE
+            return samples_to_leave_shelter / self.frame_rate
         else:
             return np.nan
 
     @property
     def raw_track(self):
-        if 'x_manual.npy' in os.listdir(self.session.path):
-            print('WARNING this was manually tracked')
-            x_path = os.path.join(
-                self.session.path, "x_manual.npy"
-            )  # TODO: extract to sessionio
-            y_path = os.path.join(self.session.path, "y_manual.npy")
+        p = pathlib.Path(self.session.path)
+        lab5 = p / '5_label'
 
-            x = np.load(x_path)[self.start:self.end]
-            y = np.load(y_path)[self.start:self.end]
-            return x, y
+        if 'x_manual.npy' in os.listdir(str(p)):
+            print("loading manually tracked")
+            x, y =self.load_tracks(p, '{}_manual.npy')
 
-        elif "dlc_x_tracks.npy" in os.listdir(self.session.path):
-            x_path = os.path.join(
-                self.session.path, "dlc_x_tracks.npy"
-            )  # TODO: extract to sessionio
-            y_path = os.path.join(self.session.path, "dlc_y_tracks.npy")
+        elif "dlc_x_tracks.npy" in os.listdir(str(p)):
+            print("loading tracking results")
+            x, y = self.load_tracks(p, 'dlc_{}_tracks.npy')
 
-            x = np.load(x_path)[self.start:self.end]
-            y = np.load(y_path)[self.start:self.end]
-            return x, y
+        elif lab5.glob("dlc_x_tracks.npy"):
+            print("loading 5 label tracking results")
+            x, y = self.load_tracks(lab5, 'dlc_{}_tracks.npy')
+
         else:
-            print('loading from folders')
-            return looming_spots.preprocess.normalisation.load_raw_track(
-                self.folder
-            )
+            print(f'loading from folders {self.mouse_id}')
+            x, y= looming_spots.preprocess.normalisation.load_raw_track(self.folder)
+
+        return x, y
+
+    def load_tracks(self, p, name):
+        x_path = p / name.format('x')
+        y_path = p / name.format('y')
+        x = np.load(str(x_path))[self.start:self.end]
+        y = np.load(str(y_path))[self.start:self.end]
+        return x, y
 
     @property
     def x_track(self):
@@ -411,7 +416,11 @@ class LoomTrial(object):
 
     @property
     def normalised_x_track(self):
-        return 1 - (self.x_track / 600)
+        normalised_track = 1 - (self.x_track / 600)
+        if self.frame_rate != 30:
+            print('downsampling the track to 30hz')
+            normalised_track = downsample_x_track(normalised_track, downsampling_factor)
+        return normalised_track
         #return looming_spots.preprocess.normalisation.normalise_x_track(
         #    self.x_track, self.context
         #)
@@ -470,7 +479,7 @@ class LoomTrial(object):
 
     def reaction_time(self):
         n_stds = 1.2
-        acc = -self.smoothed_x_acceleration[200:]
+        acc = -self.smoothed_x_acceleration[self.n_samples_before:]
         std = np.nanstd(acc)
         start = signal.find_peaks(acc, std * n_stds)[0][0]
         if start > 350:
@@ -478,7 +487,7 @@ class LoomTrial(object):
         return start #signal.find_peaks(acc, height=0.0002)[0][0]
 
     def reaction_time_s(self):
-        return self.reaction_time() / FRAME_RATE
+        return self.reaction_time() / self.frame_rate
 
     @property
     def smoothed_x_acceleration(
@@ -534,17 +543,18 @@ class LoomTrial(object):
 
     def plot_track_on_image(self, start=0, end=-1):
         x_track, y_track = self.raw_track
-        plt.imshow(self.get_reference_frame())
+        #plt.imshow(self.get_reference_frame())
         track_color = "r" if self.is_flee() else "k"
         if self.trial_type == "habituation":
             track_color = "b"
         plt.plot(x_track[start:end], y_track[start:end], color=track_color)
+        plt.plot(x_track[self.n_samples_before], y_track[self.n_samples_before], 'o')
 
     def peak_speed(self, return_loc=False):
         peak_speed, arg_peak_speed = looming_spots.track_analysis.escape_classification.get_peak_speed_and_latency(
             self.normalised_x_track
         )
-        peak_speed = peak_speed * FRAME_RATE * ARENA_SIZE_CM
+        peak_speed = peak_speed * self.frame_rate * ARENA_SIZE_CM
         if return_loc:
             return peak_speed, arg_peak_speed
         return peak_speed
@@ -552,11 +562,11 @@ class LoomTrial(object):
     def latency(self):
         return (
             self.estimate_latency(False) - LOOMING_STIMULUS_ONSET
-        ) / FRAME_RATE
+        ) / self.frame_rate
 
     def latency_peak_detect(self):
         n_stds = 2.5
-        speed = -self.smoothed_x_speed[200:]
+        speed = -self.smoothed_x_speed[self.n_samples_before:]
         std = np.nanstd(speed[:600])
         all_peak_starts = signal.find_peaks(speed, std * n_stds, width=1)[1]['left_ips']
         if len(all_peak_starts) > 0:
@@ -580,14 +590,22 @@ class LoomTrial(object):
                 return 240
             elif self.mouse_id == '977659' and self.loom_trial_idx == 28:
                 return 242
+
+            elif self.mouse_id == '898990' and self.loom_trial_idx == 27:
+                return 273
+            elif self.mouse_id == '898990' and self.loom_trial_idx == 28:
+                return 212
+            elif self.mouse_id == '898990' and self.loom_trial_idx == 29:
+                return 238
+
             return all_peak_starts[0] + 200  # signal.find_peaks(acc, height=0.0002)[0][0]
 
     def latency_peak_detect_s(self):
 
         latency_pd = self.latency_peak_detect()
         if latency_pd is not None:
-            latency_pd -= 200
-            return latency_pd / FRAME_RATE
+            latency_pd -= self.n_samples_before
+            return latency_pd / self.frame_rate
 
     def latency_p(self):
         return self.peak_x_acc_idx() - LOOMING_STIMULUS_ONSET
@@ -628,13 +646,14 @@ class LoomTrial(object):
         n_samples_to_reach_shelter = self.n_samples_to_reach_shelter()
         if n_samples_to_reach_shelter is None:
             return n_samples_to_reach_shelter
-        return (n_samples_to_reach_shelter-200) / FRAME_RATE
+
+        return (n_samples_to_reach_shelter-self.n_samples_before) / self.frame_rate
 
     def time_to_reach_shelter_from_detection(self):
         n_samples_to_reach_shelter = self.n_samples_to_reach_shelter()
         if n_samples_to_reach_shelter is None:
             return n_samples_to_reach_shelter
-        return (n_samples_to_reach_shelter-200-self.reaction_time()) / FRAME_RATE
+        return (n_samples_to_reach_shelter-self.n_samples_before-self.reaction_time()) / self.frame_rate
 
     @property
     def mouse_location_at_stimulus_onset(self):
@@ -645,13 +664,15 @@ class LoomTrial(object):
         return np.nanmax(np.abs(self.normalised_x_speed))
 
     def plot_mouse_location_at_stimulus_onset(self):
-        plt.imshow(self.session.get_reference_frame)
+        ref_frame = self.session.get_reference_frame(idx=self.sample_number)
+        plt.imshow(ref_frame)
         x, y = self.mouse_location_at_stimulus_onset
         plt.plot(x, y, "o", color="k", markersize=20)
 
     def plot_track(
-        self, ax=None, color=None, n_samples_to_show=N_SAMPLES_TO_SHOW
+        self, ax=None, color=None, n_samples_to_show=N_SAMPLES_TO_SHOW, frame_rate=30
     ):
+        n_samples_to_show = int(n_samples_to_show/30*frame_rate)
         if ax is None:
             ax = plt.gca()
         else:
@@ -669,6 +690,37 @@ class LoomTrial(object):
         self.convert_x_axis(track_length, n_steps=11)
         plt.xlim([0, n_samples_to_show])
         sns.despine(ax=ax, top=True, right=True, left=False, bottom=False)
+
+    def get_all_bodyparts(self):
+        p = pathlib.Path(self.session.path) / '5_label'
+        tracks_path = self.get_tracks_path(p)
+        if tracks_path is not None:
+            df = pd.read_hdf(tracks_path)
+            df = df[df.keys()[0][0]]
+            body_part_labels = ['nose', 'L_ear', 'R_ear', 'body', 'tail_base', 'tail_tip']
+            body_parts = {body_part_label: df[body_part_label] for body_part_label in body_part_labels}
+            df_y = pd.DataFrame({body_part_label: body_part["y"] for body_part_label, body_part in body_parts.items()})
+            df_x = pd.DataFrame({body_part_label: body_part["x"] for body_part_label, body_part in body_parts.items()})
+            return df_x[self.start:self.end].reset_index(), df_y[self.start:self.end].reset_index()
+        else:
+            return None, None
+
+    def get_roughly_normalised_bodyparts(self):
+        x,y = self.get_all_bodyparts()
+        return 1 - (x/ 600), 1-(y/200)
+
+
+    def get_tracks_path(self, directory):
+        fname = '*.h5'
+        h5_files = list(directory.glob(f'{fname}'))
+
+        if h5_files:
+            for f in h5_files:
+                if 'filtered' in str(f):
+                    return f
+            return h5_files[0]
+
+        return None
 
     @staticmethod
     def get_x_length(ax=None):
@@ -834,8 +886,8 @@ class LoomTrial(object):
 
     def integral_downsampled(self):
 
-        SAMPLING = 30
-        end_sample = 150
+        SAMPLING = self.frame_rate
+        end_sample = self.frame_rate*5
         df = self.delta_f()
 
         mask = np.full(len(df), np.nan)
@@ -853,8 +905,8 @@ class LoomTrial(object):
         return mask
 
     def get_integral(self, df):
-        SAMPLING = 30
-        end_sample = 150
+        SAMPLING = self.frame_rate
+        end_sample = self.frame_rate*5
 
         mask = np.full(len(df), np.nan)
         integral = [
@@ -872,8 +924,8 @@ class LoomTrial(object):
 
 
     def get_delta_f_integral(self, s, e):
-        SAMPLING = 30
-        end_sample = 150
+        SAMPLING = self.frame_rate
+        end_sample = self.frame_rate*5
         df = self.delta_f()
 
         integral = [
@@ -903,7 +955,7 @@ class LoomTrial(object):
         plt.plot(self.normalised_x_track, color=color_track)
         #self.plot_stimulus()
         [plt.axvline(x, color='k', ls='--') for x in LOOM_ONSETS]
-        plt.xlim([0, 600])
+        plt.xlim([0, self.frame_rate*20])
         plt.ylim([0, 1])
         plt.hlines(0.5, 250, 280)
         plt.vlines(250, 0.5, 0.6)
@@ -914,7 +966,7 @@ class LoomTrial(object):
         ax = plt.gca()
         if self.stimulus_type == "auditory":
             patch = patches.Rectangle(
-                (200, -0.2), 190, 1.3, alpha=0.1, color="r"
+                (self.n_samples_before, -0.2), 190, 1.3, alpha=0.1, color="r"
             )
             ax.add_patch(patch)
         else:
@@ -1041,6 +1093,17 @@ class LoomTrial(object):
                 self.smoothed_x_speed
             )
 
+    def get_heading(self):
+        df_x, df_y = self.get_roughly_normalised_bodyparts()
+        left_ear = np.array([df_x['L_ear'], df_y['L_ear']]).T
+        right_ear = np.array([df_x['R_ear'], df_y['R_ear']]).T
+        body = np.array([df_x['body'], df_y['body']]).T
+        head_middle = (left_ear + right_ear) / 2
+        delta_point = np.array(head_middle - body)
+        theta_deg = np.rad2deg(np.arccos(
+            (delta_point[:, 1]) / (np.sqrt(np.nansum(np.square(delta_point), 1)) * np.linalg.norm([1, 0]))))
+        return theta_deg
+
 
 class VisualStimulusTrial(LoomTrial):
     def __init__(
@@ -1049,6 +1112,7 @@ class VisualStimulusTrial(LoomTrial):
         directory,
         sample_number,
         trial_type,
+        frame_rate,
         stimulus_type="loom",
     ):
         super().__init__(
@@ -1057,7 +1121,9 @@ class VisualStimulusTrial(LoomTrial):
             sample_number,
             trial_type,
             stimulus_type,
+            frame_rate,
             trial_video_fname="{}{}.mp4",
+
         )
 
     def make_loom_superimposed_video(
@@ -1087,12 +1153,49 @@ class AuditoryStimulusTrial(LoomTrial):
         sample_number,
         trial_type,
         stimulus_type="auditory",
+        frame_rate=30,
     ):
         super().__init__(
-            session, directory, sample_number, trial_type, stimulus_type
+            session, directory, sample_number, trial_type, stimulus_type, frame_rate
         )
 
     def make_stimulus_superimposed_video(
         self, width=640, height=250, origin=(0, 40)
     ):
         raise NotImplementedError
+
+
+class CricketStimulusTrial(LoomTrial):
+    def __init__(
+        self,
+        session,
+        directory,
+        sample_number,
+        trial_type,
+        stimulus_type="cricket",
+        frame_rate=50,
+    ):
+        super().__init__(
+            session, directory, sample_number, trial_type, stimulus_type, frame_rate
+        )
+
+    def get_all_bodyparts(self):
+        p = pathlib.Path(self.session.path) / '5_label'
+        tracks_path = self.get_tracks_path(p)
+        if tracks_path is not None:
+            df = pd.read_hdf(tracks_path)
+            df = df[df.keys()[0][0]]
+            body_part_labels = ['nose', 'L_ear', 'R_ear', 'body', 'tail_base', 'tail_tip', 'cricket']
+            body_parts = {body_part_label: df[body_part_label] for body_part_label in body_part_labels}
+            df_y = pd.DataFrame({body_part_label: body_part["y"] for body_part_label, body_part in body_parts.items()})
+            df_x = pd.DataFrame({body_part_label: body_part["x"] for body_part_label, body_part in body_parts.items()})
+            return df_x[self.start:self.end].reset_index(), df_y[self.start:self.end].reset_index()
+        else:
+            return None, None
+
+    # def plot_track(
+    #     self, ax=None, color=None, n_samples_to_show=N_SAMPLES_TO_SHOW, frame_rate=30
+    # ):
+    #     bodyparts = 1-(self.get_all_bodyparts()[0]/600)
+    #     bodyparts['body'][:N_SAMPLES_TO_SHOW].plot(color='k')
+    #     bodyparts['cricket'][:N_SAMPLES_TO_SHOW].plot(color='b')
