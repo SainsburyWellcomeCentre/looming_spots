@@ -5,7 +5,7 @@ import numpy as np
 
 from looming_spots.db import loom_trial_group
 
-FILE_PATH = "/home/slenzi/Downloads/updated_loom_sheet_format.csv"
+FILE_PATH = r'C:\Users\Lee\Documents\slenzi\lsie\data\updated_loom_sheet_format.csv'
 
 
 def load_df(file_path=FILE_PATH):

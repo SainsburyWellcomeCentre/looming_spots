@@ -3,7 +3,7 @@ import scipy
 from scipy import stats
 from matplotlib import pyplot as plt
 
-from looming_spots.deprecated.analysis import plot_trials
+# from looming_spots.deprecated.analysis import plot_trials
 from looming_spots.db import loom_trial_group, experimental_log
 
 
@@ -128,4 +128,4 @@ def plot_all_contrasts(trials):
     fig, axes = plt.subplots(len(grouped_trials), 1)
     for gt, ax in zip(grouped_trials, axes):
         plt.sca(ax)
-        plot_trials(gt)
+        # plot_trials(gt)

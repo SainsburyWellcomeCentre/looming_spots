@@ -242,7 +242,7 @@ def compare_groups_lsie_exploration(
             ax = plt.subplot(2, 7, i + 1)
             ax.title.set_text(f"{group} {mid}")
             plt.imshow(
-                hm, aspect="auto", vmax=2, vmin=0, interpolation="bilinear"
+                hm, aspect="auto", vmax=0.3, vmin=0, interpolation="bilinear"
             )
             ax.axis("off")
             plt.ylim(0, 300)
@@ -255,7 +255,7 @@ def compare_groups_lsie_exploration(
         plt.imshow(
             np.mean(group_hm, axis=0),
             aspect="auto",
-            vmax=2,
+            vmax=0.3,
             vmin=0,
             interpolation="bilinear",
         )

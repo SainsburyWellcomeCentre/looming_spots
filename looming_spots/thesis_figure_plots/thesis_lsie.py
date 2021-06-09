@@ -18,7 +18,7 @@ HEADBAR_REMOVED_DATE = datetime(2018, 2, 23)
 flatui = ["#34495e", "#9b59b6", "#3498db", "#95a5a6", "#e74c3c", "#2ecc71"]
 
 
-def get_all_directories(mid, root='/home/slenzi/winstor/margrie/glusterfs/imaging/l/loomer/processed_data/'):
+def get_all_directories(mid, root=r'Z:\margrie\glusterfs\imaging\l\loomer\processed_data'):
     p = pathlib.Path(root) / mid
     directories = p.glob('*201*')
     return [str(d) for d in directories if os.path.isdir(str(d))]
@@ -226,3 +226,6 @@ def which_loom_triggered_escape():
                     loom_numbers.append(min(arg))
     return loom_numbers
 
+
+if __name__ == '__main__':
+    lsie_control_escape_plots()

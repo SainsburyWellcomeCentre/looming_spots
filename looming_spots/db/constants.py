@@ -60,10 +60,10 @@ def get_raw_path(mouse_id):
     return os.path.join(RAW_DATA_DIRECTORY, mouse_id)
 
 
-HEAD_DIRECTORY = "/home/slenzi/winstor/margrie/glusterfs/imaging/l/loomer/"
+HEAD_DIRECTORY = r'Z:\margrie\glusterfs\imaging\l\loomer'
 RAW_DATA_DIRECTORY = os.path.join(HEAD_DIRECTORY, "raw_data")
 PROCESSED_DATA_DIRECTORY = os.path.join(HEAD_DIRECTORY, "processed_data")
-FIGURE_DIRECTORY = "/home/slenzi/figures/"
+FIGURE_DIRECTORY = r'C:\Users\Lee\Documents\slenzi\lsie\docs\figures'
 OLD_RAW_DIRECTORY = (
     "/home/slenzi/spine_shares/loomer/srv/glusterfs/imaging/l/loomer/raw_data/"
 )
