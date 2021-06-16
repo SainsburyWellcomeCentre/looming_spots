@@ -49,14 +49,41 @@ class Session(object):
 
     @property
     def frame_rate(self):
-        clock = self.get_clock_raw()
-        clock_ups = looming_spots.io.io.get_clock_ups(clock)
-        if np.nanmedian(np.diff(clock_ups)) == 333:
-            return 30
-        elif np.nanmedian(np.diff(clock_ups)) == 200:
-            return 50
-        elif np.nanmedian(np.diff(clock_ups)) == 100:
-            return 100
+
+        p = pathlib.Path(self.path)
+        frame_rate_file_exists = len(list(p.glob('frame_rate.npy'))) == 1
+
+        if frame_rate_file_exists:
+            frame_rate = np.load(str(p / 'frame_rate.npy'))
+        else:
+            if "AI.tdms" in os.listdir(self.path):
+                clock = self.get_clock_raw()
+                clock_ups = looming_spots.io.io.get_clock_ups(clock)
+                if np.nanmedian(np.diff(clock_ups)) == 333:
+                    frame_rate = 30
+                elif np.nanmedian(np.diff(clock_ups)) == 200:
+                    frame_rate = 50
+                elif np.nanmedian(np.diff(clock_ups)) == 100:
+                    frame_rate = 100
+            else:
+                frame_rate = 30
+            np.save(str(p / 'frame_rate.npy'), frame_rate)
+
+        return frame_rate
+
+    # @property
+    # def frame_rate(self):
+    #     if "AI.tdms" in os.listdir(self.path):
+    #         clock = self.get_clock_raw()
+    #         clock_ups = looming_spots.io.io.get_clock_ups(clock)
+    #         if np.nanmedian(np.diff(clock_ups)) == 333:
+    #             return 30
+    #         elif np.nanmedian(np.diff(clock_ups)) == 200:
+    #             return 50
+    #         elif np.nanmedian(np.diff(clock_ups)) == 100:
+    #             return 100
+    #     else:
+    #         return 30
 
     def __len__(self):
         return len(self.data["photodiode"])
@@ -133,18 +160,18 @@ class Session(object):
     def trials(self):
         visual_trials_idx = self.get_visual_trials_idx()
         auditory_trials_idx = self.get_auditory_trials_idx()
-        cricket_trials_idx = self.get_cricket_trials_idx()
+        #cricket_trials_idx = self.get_cricket_trials_idx()
         visual_trials = self.initialise_trials(visual_trials_idx, "visual",)
         auditory_trials = self.initialise_trials(
             auditory_trials_idx, "auditory",
         )
-        cricket_trials = self.initialise_trials(cricket_trials_idx, 'cricket')
+        #cricket_trials = self.initialise_trials(cricket_trials_idx, 'cricket')
 
-        return sorted(visual_trials + auditory_trials + cricket_trials)
+        return sorted(visual_trials + auditory_trials) # + cricket_trials)
 
-    @cached_property
-    def frame_rate(self):
-        return get_frame_rate(self.directory())
+    # @cached_property
+    # def frame_rate(self):
+    #     return get_frame_rate(self.directory())
 
     def initialise_trials(self, idx, stimulus_type):
         if idx is not None:
@@ -633,19 +660,19 @@ def get_tracks_from_raw(directory):
     return True
 
 
-def get_frame_rate(directory):
-
-    tdms_path = os.path.join(directory, 'AI.tdms')
-    if not os.path.exists(tdms_path):
-        frame_rate = 30
-    else:
-        tdms_file = TdmsFile(tdms_path)
-        tdms_groups = tdms_file.groups()
-        all_channels = tdms_groups[0].channels()
-        clock = all_channels[1].data
-        clock_on = (clock > 2.5).astype(int)
-        ni_sample_rate = 1/all_channels[1].properties['wf_increment']
-        clock_ups = np.where(np.diff(clock_on) == 1)[0]
-        frame_rate = round(np.mean(ni_sample_rate/np.diff(clock_ups)))
-
-    return frame_rate
+# def get_frame_rate(directory):
+#
+#     tdms_path = os.path.join(directory, 'AI.tdms')
+#     if not os.path.exists(tdms_path):
+#         frame_rate = 30
+#     else:
+#         tdms_file = TdmsFile(tdms_path)
+#         tdms_groups = tdms_file.groups()
+#         all_channels = tdms_groups[0].channels()
+#         clock = all_channels[1].data
+#         clock_on = (clock > 2.5).astype(int)
+#         ni_sample_rate = 1/all_channels[1].properties['wf_increment']
+#         clock_ups = np.where(np.diff(clock_on) == 1)[0]
+#         frame_rate = round(np.mean(ni_sample_rate/np.diff(clock_ups)))
+#
+#     return frame_rate

@@ -392,7 +392,7 @@ class LoomTrial(object):
             print("loading tracking results")
             x, y = self.load_tracks(p, 'dlc_{}_tracks.npy')
 
-        elif lab5.glob("dlc_x_tracks.npy"):
+        elif len(list(lab5.glob("dlc_x_tracks.npy"))) > 0:
             print("loading 5 label tracking results")
             x, y = self.load_tracks(lab5, 'dlc_{}_tracks.npy')
 
@@ -422,9 +422,9 @@ class LoomTrial(object):
         normalised_track = 1 - (self.x_track / 600)
         if self.frame_rate != 30:
             print('downsampling the track to 30hz')
-            n_points_ori = len(self.x_track)
-            n_points_new = n_points_ori * (30 / self.frame_rate)
-            normalised_track = resample(self.x_track, n_points_new)
+            n_points_ori = len(normalised_track)
+            n_points_new = int(n_points_ori * (30 / self.frame_rate))
+            normalised_track = resample(normalised_track, n_points_new)
             # normalised_track = downsample_x_track(normalised_track, downsampling_factor)
         return normalised_track
         #return looming_spots.preprocess.normalisation.normalise_x_track(
@@ -566,7 +566,7 @@ class LoomTrial(object):
         peak_speed, arg_peak_speed = looming_spots.track_analysis.escape_classification.get_peak_speed_and_latency(
             self.normalised_x_track
         )
-        peak_speed = peak_speed * self.frame_rate * ARENA_SIZE_CM
+        peak_speed = peak_speed * FRAME_RATE * ARENA_SIZE_CM
         if return_loc:
             return peak_speed, arg_peak_speed
         return peak_speed
@@ -578,7 +578,7 @@ class LoomTrial(object):
 
     def latency_peak_detect(self):
         n_stds = 2.5
-        speed = -self.smoothed_x_speed[self.n_samples_before:]
+        speed = -self.smoothed_x_speed[N_SAMPLES_BEFORE:]  # self.n_samples_before
         std = np.nanstd(speed[:600])
         all_peak_starts = signal.find_peaks(speed, std * n_stds, width=1)[1]['left_ips']
         if len(all_peak_starts) > 0:
@@ -616,8 +616,8 @@ class LoomTrial(object):
 
         latency_pd = self.latency_peak_detect()
         if latency_pd is not None:
-            latency_pd -= self.n_samples_before
-            return latency_pd / self.frame_rate
+            latency_pd -= N_SAMPLES_BEFORE  # self.n_samples_before
+            return latency_pd / FRAME_RATE  # self.frame_rate
 
     def latency_p(self):
         return self.peak_x_acc_idx() - LOOMING_STIMULUS_ONSET
@@ -659,7 +659,7 @@ class LoomTrial(object):
         if n_samples_to_reach_shelter is None:
             return n_samples_to_reach_shelter
 
-        return (n_samples_to_reach_shelter-self.n_samples_before) / self.frame_rate
+        return (n_samples_to_reach_shelter-N_SAMPLES_BEFORE) / FRAME_RATE  # self.n_samples_before) / self.frame_rate
 
     def time_to_reach_shelter_from_detection(self):
         n_samples_to_reach_shelter = self.n_samples_to_reach_shelter()
