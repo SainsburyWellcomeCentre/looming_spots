@@ -398,9 +398,13 @@ class LoomTrial(object):
 
         else:
             print(f'loading from folders {self.mouse_id}')
-            x, y= looming_spots.preprocess.normalisation.load_raw_track(self.folder)
+            x, y = looming_spots.preprocess.normalisation.load_raw_track(self.folder)
 
         return x, y
+
+    def check_is_tracks_csv(self):
+        p = pathlib.Path(self.session.path)
+        return not any([x in os.listdir(str(p)) for x in ['x_manual.npy', "dlc_x_tracks.npy"]])
 
     def load_tracks(self, p, name):
         x_path = p / name.format('x')
@@ -411,10 +415,17 @@ class LoomTrial(object):
 
     @property
     def x_track(self):
+        if self.check_is_tracks_csv():
+            print('adjusting tracks post hoc using projective transform')
+            return np.array(self.projective_transform_tracks()[0])
+
         return self.raw_track[0]
 
     @property
     def y_track(self):
+        if self.check_is_tracks_csv():
+            print('adjusting tracks post hoc using projective transform')
+            return np.array(self.projective_transform_tracks()[1])
         return self.raw_track[1]
 
     @property
@@ -422,11 +433,7 @@ class LoomTrial(object):
         normalised_track = 1 - (self.x_track / 600)
         if self.frame_rate != 30:
             print('downsampling the track to 30hz')
-            #normalised_track = downsample_x_track(normalised_track, downsampling_factor)
         return normalised_track
-        #return looming_spots.preprocess.normalisation.normalise_x_track(
-        #    self.x_track, self.context
-        #)
 
     @property
     def normalised_y_track(self):
@@ -434,9 +441,6 @@ class LoomTrial(object):
 
     @property
     def smoothed_x_track(self):  # TODO: extract implementation to tracks
-        #b, a = signal.butter(2, 0.125)
-
-        #y = signal.filtfilt(b, a, self.normalised_x_track, padlen=150) returns nan for some reason
         y = gaussian_filter(self.normalised_x_track, 2)
         return y
 
