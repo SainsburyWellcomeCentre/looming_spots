@@ -30,26 +30,26 @@ naive_fpaths = ['1114171/20210410_12_52_20/4_label_and_cricket/cameraDLC_resnet5
                 '1114303/20210429_16_04_42/cameraDLC_resnet50_crickets_small_videosJun2shuffle1_1030000.h5',
                 ]
 
-new_paths = ['/home/slenzi/winstor/margrie/glusterfs/imaging/l/loomer/raw_data/1114309/20210423_14_28_47/camera.avi',
-             '/home/slenzi/winstor/margrie/glusterfs/imaging/l/loomer/raw_data/1114306/20210427_14_22_57/camera.avi',
-             '/home/slenzi/winstor/margrie/glusterfs/imaging/l/loomer/raw_data/1114302/20210429_10_41_59/camera.avi',
-             '/home/slenzi/winstor/margrie/glusterfs/imaging/l/loomer/raw_data/1114303/20210429_16_04_42/camera.avi',
-             ]
-
-vpaths= ['/home/slenzi/winstor/margrie/glusterfs/imaging/l/loomer/raw_data/1114178/20210417_14_41_09/camera.avi',
-'/home/slenzi/winstor/margrie/glusterfs/imaging/l/loomer/raw_data/1114170/20210408_15_49_13/camera.avi',
-'/home/slenzi/winstor/margrie/glusterfs/imaging/l/loomer/raw_data/1114177/20210421_11_48_27/camera.avi',
-'/home/slenzi/winstor/margrie/glusterfs/imaging/l/loomer/raw_data/1114179/20210415_13_08_19/camera.avi',
-'/home/slenzi/winstor/margrie/glusterfs/imaging/l/loomer/raw_data/1114171/20210410_12_52_20/camera.avi',
-'/home/slenzi/winstor/margrie/glusterfs/imaging/l/loomer/raw_data/1114174/20210408_11_25_40/camera.avi',
-'/home/slenzi/winstor/margrie/glusterfs/imaging/l/loomer/raw_data/1114176/20210416_13_18_24/camera.avi',
-'/home/slenzi/winstor/margrie/glusterfs/imaging/l/loomer/raw_data/1114175/20210421_15_34_16/camera.avi',]
+# new_paths = ['/home/slenzi/winstor/margrie/glusterfs/imaging/l/loomer/raw_data/1114309/20210423_14_28_47/camera.avi',
+#              '/home/slenzi/winstor/margrie/glusterfs/imaging/l/loomer/raw_data/1114306/20210427_14_22_57/camera.avi',
+#              '/home/slenzi/winstor/margrie/glusterfs/imaging/l/loomer/raw_data/1114302/20210429_10_41_59/camera.avi',
+#              '/home/slenzi/winstor/margrie/glusterfs/imaging/l/loomer/raw_data/1114303/20210429_16_04_42/camera.avi',
+#              ]
+#
+# vpaths= ['/home/slenzi/winstor/margrie/glusterfs/imaging/l/loomer/raw_data/1114178/20210417_14_41_09/camera.avi',
+# '/home/slenzi/winstor/margrie/glusterfs/imaging/l/loomer/raw_data/1114170/20210408_15_49_13/camera.avi',
+# '/home/slenzi/winstor/margrie/glusterfs/imaging/l/loomer/raw_data/1114177/20210421_11_48_27/camera.avi',
+# '/home/slenzi/winstor/margrie/glusterfs/imaging/l/loomer/raw_data/1114179/20210415_13_08_19/camera.avi',
+# '/home/slenzi/winstor/margrie/glusterfs/imaging/l/loomer/raw_data/1114171/20210410_12_52_20/camera.avi',
+# '/home/slenzi/winstor/margrie/glusterfs/imaging/l/loomer/raw_data/1114174/20210408_11_25_40/camera.avi',
+# '/home/slenzi/winstor/margrie/glusterfs/imaging/l/loomer/raw_data/1114176/20210416_13_18_24/camera.avi',
+# '/home/slenzi/winstor/margrie/glusterfs/imaging/l/loomer/raw_data/1114175/20210421_15_34_16/camera.avi',]
 
 from scipy.ndimage import gaussian_filter1d
 
 
 def plot_crickets(pathlist, max_n_samples, group_label, house_start=0.3,n_examples=5, subset='to_shelter'):
-    n_frames_to_show = 250
+    n_frames_to_show = 100
     eventlist = []
     events_pooled = []
     speeds = []
@@ -259,7 +259,7 @@ def plot_percentage_to_shelter(eventlist_to_shelter, eventlist_all_interactions)
 
 for i, (paths, c, group_label) in enumerate(zip([naive_fpaths, LSIE_fpaths], ['k', 'b'], ['naive', 'LSIE'])):
     eventlist, events_pooled, speeds, mouse_bouts_x, df_group, approach_distances, mouse_bouts_y, trials, \
-    cricket_bouts_x, cricket_bouts_y = plot_crickets(paths, max_n_samples=30000, group_label=group_label, n_examples=int(30/len(paths)), subset='not_to_shelter')
+    cricket_bouts_x, cricket_bouts_y = plot_crickets(paths, max_n_samples=30000, group_label=group_label, n_examples=int(30/len(paths)), subset='to_shelter')
 
     eventlist_all_bouts, events_pooled_all_bouts, _, _, _, _, _, _, \
     _, _ = plot_crickets(paths, max_n_samples=30000, group_label=group_label,

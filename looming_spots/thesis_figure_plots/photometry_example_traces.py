@@ -977,14 +977,14 @@ def get_signal_df_pre_post(groups, timepoint = 300, trial_type='variable', escap
                     trials = [t for t in trials if t.is_flee()]
                 trial_types = ['variable']*len(trials)
             else:
-                trials = mtg.pre_test_trials()[:3] + mtg.post_test_trials()[:3] + mtg.auditory_trials()
+                trials = mtg.pre_test_trials()[:3] + mtg.post_test_trials()[:3] + mtg.auditory_lsie_trials()
 
                 latency = np.nanmean([t.latency_peak_detect() for t in mtg.pre_test_trials()[:3]])
                 #timepoint = 230
                 if np.isnan(latency):
                     continue
                 timepoint=latency
-                trial_types = ['pre_test'] * len(mtg.pre_test_trials()[:3]) + ['post_test']*len(mtg.post_test_trials()[:3]) + ['auditory']*len(mtg.auditory_trials())
+                trial_types = ['pre_test'] * len(mtg.pre_test_trials()[:3]) + ['post_test']*len(mtg.post_test_trials()[:3]) + ['auditory']*len(mtg.auditory_lsie_trials())
 
             print(timepoint)
             normalising_factor = get_normalisation_factor(mtg, timepoint)

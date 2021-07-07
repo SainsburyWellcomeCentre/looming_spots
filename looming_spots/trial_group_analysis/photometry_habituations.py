@@ -534,7 +534,7 @@ def get_trials_df(mtgs, metric):
         signals = []
         metric_values = []
 
-        trials = mtg.auditory_trials()[:3]
+        trials = mtg.auditory_lsie_trials()[:3]
         for t in trials:
             val = t.metric_functions[metric]()
             signal = t.integral_escape_metric() / norm_factor

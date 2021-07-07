@@ -380,6 +380,25 @@ class LoomTrial(object):
             return np.nan
 
     @property
+    def tracking_method(self):
+        p = pathlib.Path(self.session.path)
+        lab5 = p / '5_label'
+
+        if 'x_manual.npy' in os.listdir(str(p)):
+            method = 'manual'
+
+        elif "dlc_x_tracks.npy" in os.listdir(str(p)):
+            method = 'dlc_1_label'
+
+        elif len(list(lab5.glob("dlc_x_tracks.npy"))) > 0:
+            method = 'dlc_5_label'
+
+        else:
+            method = 'old_school'
+
+        return method
+
+    @property
     def raw_track(self):
         p = pathlib.Path(self.session.path)
         lab5 = p / '5_label'
