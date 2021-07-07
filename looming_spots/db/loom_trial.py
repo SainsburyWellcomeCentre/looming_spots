@@ -5,6 +5,7 @@ import warnings
 import numpy as np
 import matplotlib.pyplot as plt
 import pims
+import skvideo
 from cached_property import cached_property
 from matplotlib import patches
 from scipy.ndimage import gaussian_filter
@@ -42,6 +43,8 @@ from photometry.event_detect import (
 )
 from photometry import events
 from photometry.demodulation import apply_butterworth_lowpass_filter
+
+from looming_spots.util.transformations import get_inverse_projective_transform, get_box_coordinates_from_file
 
 
 def remove_pre_stimulus_events(df, event_times):
@@ -411,7 +414,7 @@ class LoomTrial(object):
             print("loading tracking results")
             x, y = self.load_tracks(p, 'dlc_{}_tracks.npy')
 
-        elif len(list(lab5.glob("dlc_x_tracks.npy"))) > 0:
+        elif len(list(lab5.glob("dlc_x_tracks.npy")))>0:
             print("loading 5 label tracking results")
             x, y = self.load_tracks(lab5, 'dlc_{}_tracks.npy')
 
@@ -739,7 +742,6 @@ class LoomTrial(object):
     def get_roughly_normalised_bodyparts(self):
         x,y = self.get_all_bodyparts()
         return 1 - (x/ 600), 1-(y/200)
-
 
     def get_tracks_path(self, directory):
         fname = '*.h5'
@@ -1134,6 +1136,27 @@ class LoomTrial(object):
         theta_deg = np.rad2deg(np.arccos(
             (delta_point[:, 1]) / (np.sqrt(np.nansum(np.square(delta_point), 1)) * np.linalg.norm([1, 0]))))
         return theta_deg
+
+    def get_box_corner_coordinates(self):
+        box_path = pathlib.Path(self.folder).parent.glob('box_corner_coordinates.npy')
+        if len(list(box_path)) == 0:
+            print('no box coordinates found...')
+
+        return get_box_coordinates_from_file(str(list(pathlib.Path(self.folder).parent.glob('box_corner_coordinates.npy'))[0]))
+
+    def projective_transform_tracks(self):
+        p = get_inverse_projective_transform(dest=self.get_box_corner_coordinates(), src=np.array([[0, 240],
+                                                                                                   [0, 0],
+                                                                                                   [600, 240],
+                                                                                                   [600, 0]]),
+                                             )
+        new_track_x = []
+        new_track_y = []
+        for x, y in zip(self.raw_track[0], self.raw_track[1]):
+            inverse_mapped = p.inverse([x, y])[0]
+            new_track_x.append(inverse_mapped[0])
+            new_track_y.append(inverse_mapped[1])
+        return new_track_x, new_track_y
 
 
 class VisualStimulusTrial(LoomTrial):
