@@ -421,6 +421,7 @@ class LoomTrial(object):
         else:
             print(f'loading from folders {self.mouse_id}')
             x, y= looming_spots.preprocess.normalisation.load_raw_track(self.folder)
+            x, y = self.projective_transform_tracks(x, y)
 
         return x, y
 
@@ -532,16 +533,16 @@ class LoomTrial(object):
     def is_flee(self):
         return self.classify_flee()
 
-    def classify_flee(self):
+    def classify_flee(self, speed_thresh=-SPEED_THRESHOLD):
         peak_speed, arg_peak_speed = self.peak_speed(True)
         latency = self.latency_peak_detect()
         time_to_shelter = self.n_samples_to_reach_shelter()
-        print(f'speed {peak_speed}, threshold {-SPEED_THRESHOLD}, latency {latency} limit: {CLASSIFICATION_WINDOW_END-20}, time to shelter {time_to_shelter}, limit: {CLASSIFICATION_WINDOW_END}')
+        print(f'speed {peak_speed}, threshold {speed_thresh}, latency {latency} limit: {CLASSIFICATION_WINDOW_END-20}, time to shelter {time_to_shelter}, limit: {CLASSIFICATION_WINDOW_END}')
 
         if time_to_shelter is None or latency is None:
             return False
 
-        return (peak_speed > -SPEED_THRESHOLD) and (time_to_shelter < CLASSIFICATION_WINDOW_END) #and (latency < (CLASSIFICATION_WINDOW_END-20))
+        return (peak_speed > speed_thresh) and (time_to_shelter < CLASSIFICATION_WINDOW_END) #and (latency < (CLASSIFICATION_WINDOW_END-20))
 
     def classify_flee_old(self):
         track = gaussian_filter(self.normalised_x_track, 3)
@@ -1144,7 +1145,7 @@ class LoomTrial(object):
 
         return get_box_coordinates_from_file(str(list(pathlib.Path(self.folder).parent.glob('box_corner_coordinates.npy'))[0]))
 
-    def projective_transform_tracks(self):
+    def projective_transform_tracks(self, Xin, Yin):
         p = get_inverse_projective_transform(dest=self.get_box_corner_coordinates(), src=np.array([[0, 240],
                                                                                                    [0, 0],
                                                                                                    [600, 240],
@@ -1152,7 +1153,7 @@ class LoomTrial(object):
                                              )
         new_track_x = []
         new_track_y = []
-        for x, y in zip(self.raw_track[0], self.raw_track[1]):
+        for x, y in zip(Xin, Yin):
             inverse_mapped = p.inverse([x, y])[0]
             new_track_x.append(inverse_mapped[0])
             new_track_y.append(inverse_mapped[1])
