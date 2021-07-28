@@ -423,7 +423,7 @@ class LoomTrial(object):
             x, y= looming_spots.preprocess.normalisation.load_raw_track(self.folder)
             x, y = self.projective_transform_tracks(x, y)
 
-        return x, y
+        return np.array(x), np.array(y)
 
     def load_tracks(self, p, name):
         x_path = p / name.format('x')
@@ -443,11 +443,19 @@ class LoomTrial(object):
     @property
     def normalised_x_track(self):
         normalised_track = 1 - (self.x_track / 600)
+        # normalised_track_old = normalised_track
         if self.frame_rate != 30:
+
             print('downsampling the track to 30hz')
+
             n_points_ori = len(normalised_track)
-            n_points_new = int(n_points_ori * (30 / self.frame_rate))
-            normalised_track = resample(normalised_track, n_points_new)
+            n_points_new = int(n_points_ori * (FRAME_RATE / self.frame_rate))
+            # normalised_track_old = resample(normalised_track, n_points_new)
+
+            track_timebase = (np.arange(len(normalised_track)) - self.n_samples_before) / self.frame_rate
+            new_timebase = (np.arange(n_points_new) - N_SAMPLES_BEFORE) / FRAME_RATE
+            normalised_track = np.interp(new_timebase, track_timebase, normalised_track)
+
             # normalised_track = downsample_x_track(normalised_track, downsampling_factor)
         return normalised_track
         #return looming_spots.preprocess.normalisation.normalise_x_track(
