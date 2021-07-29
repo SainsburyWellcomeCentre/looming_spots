@@ -141,9 +141,6 @@ class MouseLoomTrialGroup(object):
     def loom_trials(self):
         return [t for t in self.all_trials if t.stimulus_type == "loom"]
 
-    def cricket_trials(self):
-        return [t for t in self.all_trials if t.stimulus_type == "cricket"]
-
     def auditory_trials(self):
         return [t for t in self.all_trials if t.stimulus_type == "auditory"]
 

@@ -160,14 +160,12 @@ class Session(object):
     def trials(self):
         visual_trials_idx = self.get_visual_trials_idx()
         auditory_trials_idx = self.get_auditory_trials_idx()
-        #cricket_trials_idx = self.get_cricket_trials_idx()
         visual_trials = self.initialise_trials(visual_trials_idx, "visual",)
         auditory_trials = self.initialise_trials(
             auditory_trials_idx, "auditory",
         )
-        #cricket_trials = self.initialise_trials(cricket_trials_idx, 'cricket')
 
-        return sorted(visual_trials + auditory_trials) # + cricket_trials)
+        return sorted(visual_trials + auditory_trials)
 
     # @cached_property
     # def frame_rate(self):
@@ -193,16 +191,6 @@ class Session(object):
                             sample_number=onset_in_samples,
                             trial_type=self.get_trial_type(onset_in_samples),
                             stimulus_type="auditory",
-                            frame_rate=self.frame_rate,
-                        )
-
-                    elif stimulus_type == "cricket":
-                        t = loom_trial.CricketStimulusTrial(
-                            self,
-                            directory=self.path,
-                            sample_number=onset_in_samples,
-                            trial_type=self.get_trial_type(onset_in_samples),
-                            stimulus_type="cricket",
                             frame_rate=self.frame_rate,
                         )
 
@@ -513,49 +501,6 @@ class Session(object):
 
     def get_normalised_x_pos(self):
         return normalisation.normalise_x_track(self.x_pos(), self.context)
-
-    def get_cricket_trials_idx(self):
-        mouse_x, _ = self.get_all_bodyparts()
-        if mouse_x is None:
-            return []
-        entries = arena_region_crossings.get_all_entries(mouse_x)
-        return entries
-
-    def get_all_bodyparts(self):
-        import pandas as pd
-        p = list(pathlib.Path(self.path).rglob('cameraDLC_resnet50_cricketsApr7shuffle1_1030000filtered.h5'))
-        if len(p) > 0:
-            p=p[0]
-        if os.path.isfile((str(p))):
-            df = pd.read_hdf(p)
-
-            df = df[df.keys()[0][0]]
-            if np.count_nonzero(df['cricket']['likelihood'] == 1) < 2000:
-                return None, None
-        else:
-            return None,None
-
-        start = process_DLC_output.get_first_and_last_likely_frame(df, 'cricket')
-        print(f'start: {start}')
-        df = process_DLC_output.replace_low_likelihood_as_nan(df)
-
-        body_part_labels = ['body', 'cricket']
-        body_parts = {body_part_label: df[body_part_label] for body_part_label in body_part_labels}
-
-        df_y = pd.DataFrame({body_part_label: body_part["y"] for body_part_label, body_part in body_parts.items()})
-        df_x = pd.DataFrame({body_part_label: body_part["x"] for body_part_label, body_part in body_parts.items()})
-        body_x = 1 - (df_x['body'] / 600)
-        body_y = 1 - (df_y['body'] / 200)
-
-        cricket_x = 1 - (df_x['cricket'] / 600)
-        cricket_y = 1 - (df_y['cricket'] / 200)
-
-        body_x[:start] = 0
-        body_y[:start] = 0
-
-        cricket_x[:start] = 0
-        cricket_y[:start] = 0
-        return body_x, cricket_x
 
 
 def get_context_from_stimulus_mat(directory):

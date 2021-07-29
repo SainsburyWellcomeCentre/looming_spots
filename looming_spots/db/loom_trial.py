@@ -305,8 +305,6 @@ class LoomTrial(object):
 
     def delta_f(self):
         df = self.session.data["delta_f"][self.start : self.end][:600]
-        #df = remove_pre_stimulus_events(df)
-        #df -= np.median(df[185:200])  # 120 # 195
         df -= np.median(df[176:200])  # 120 # 195
         return df
 
@@ -314,19 +312,7 @@ class LoomTrial(object):
         sig = self.session.data["signal"][self.start : self.end]
         bg = self.session.data["bg_fit"][self.start : self.end]
         return sig, bg
-    #
-    # def raw_data(self):
-    #     return self.session.data['photodetector'][self.start:self.end]
-    #
-    # def ref211(self):
-    #     return self.session.data['led211'][self.start:self.end]
-    #
-    # def ref531(self):
-    #     return self.session.data['led531'][self.start:self.end]
-    #
-    # def demodulated_trial_delta_f(self):
-    #     signal, background, bg_fit, delta_f=photometry.demodulation.lerner_deisseroth_preprocess(self.raw_data(), self.ref211(), self.ref531())
-    #     return signal, background, bg_fit, delta_f
+
 
     @cached_property
     def fully_sampled_delta_f(self):
@@ -1229,39 +1215,3 @@ class AuditoryStimulusTrial(LoomTrial):
         self, width=640, height=250, origin=(0, 40)
     ):
         raise NotImplementedError
-
-
-class CricketStimulusTrial(LoomTrial):
-    def __init__(
-        self,
-        session,
-        directory,
-        sample_number,
-        trial_type,
-        stimulus_type="cricket",
-        frame_rate=50,
-    ):
-        super().__init__(
-            session, directory, sample_number, trial_type, stimulus_type, frame_rate
-        )
-
-    def get_all_bodyparts(self):
-        p = pathlib.Path(self.session.path) / '5_label'
-        tracks_path = self.get_tracks_path(p)
-        if tracks_path is not None:
-            df = pd.read_hdf(tracks_path)
-            df = df[df.keys()[0][0]]
-            body_part_labels = ['nose', 'L_ear', 'R_ear', 'body', 'tail_base', 'tail_tip', 'cricket']
-            body_parts = {body_part_label: df[body_part_label] for body_part_label in body_part_labels}
-            df_y = pd.DataFrame({body_part_label: body_part["y"] for body_part_label, body_part in body_parts.items()})
-            df_x = pd.DataFrame({body_part_label: body_part["x"] for body_part_label, body_part in body_parts.items()})
-            return df_x[self.start:self.end].reset_index(), df_y[self.start:self.end].reset_index()
-        else:
-            return None, None
-
-    # def plot_track(
-    #     self, ax=None, color=None, n_samples_to_show=N_SAMPLES_TO_SHOW, frame_rate=30
-    # ):
-    #     bodyparts = 1-(self.get_all_bodyparts()[0]/600)
-    #     bodyparts['body'][:N_SAMPLES_TO_SHOW].plot(color='k')
-    #     bodyparts['cricket'][:N_SAMPLES_TO_SHOW].plot(color='b')
