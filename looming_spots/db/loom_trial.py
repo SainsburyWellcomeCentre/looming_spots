@@ -13,6 +13,8 @@ from scipy import signal
 from datetime import timedelta
 import seaborn as sns
 import pandas as pd
+import photometry
+from scipy.signal import resample
 
 import looming_spots.track_analysis.escape_classification
 import looming_spots.preprocess.normalisation
@@ -58,7 +60,7 @@ class LoomTrial(object):
         sample_number,
         trial_type,
         stimulus_type,
-        frame_rate,
+        frame_rate,  # TODO: remove
         trial_video_fname="{}{}.mp4",
         contrast=None,
         loom_trial_idx=None,
@@ -66,7 +68,6 @@ class LoomTrial(object):
 
     ):
         self.session = session
-        self.frame_rate = frame_rate
         self.n_samples_before = int(N_SAMPLES_BEFORE/30*self.frame_rate)
         self.sample_number = int(sample_number)
         self.mouse_id = self.session.mouse_id
@@ -82,6 +83,7 @@ class LoomTrial(object):
         self.folder = os.path.join(
             self.directory, f"{self.stimulus_type}{self.stimulus_number()}"
         )
+        self.frame_rate = self.session.frame_rate
 
         #self.end = self.sample_number + N_SAMPLES_AFTER
 
@@ -380,13 +382,32 @@ class LoomTrial(object):
             return np.nan
 
     @property
+    def tracking_method(self):
+        p = pathlib.Path(self.session.path)
+        lab5 = p / '5_label'
+
+        if 'x_manual.npy' in os.listdir(str(p)):
+            method = 'manual'
+
+        elif "dlc_x_tracks.npy" in os.listdir(str(p)):
+            method = 'dlc_1_label'
+
+        elif len(list(lab5.glob("dlc_x_tracks.npy"))) > 0:
+            method = 'dlc_5_label'
+
+        else:
+            method = 'old_school'
+
+        return method
+
+    @property
     def raw_track(self):
         p = pathlib.Path(self.session.path)
         lab5 = p / '5_label'
 
         if 'x_manual.npy' in os.listdir(str(p)):
             print("loading manually tracked")
-            x, y =self.load_tracks(p, '{}_manual.npy')
+            x, y = self.load_tracks(p, '{}_manual.npy')
 
         elif "dlc_x_tracks.npy" in os.listdir(str(p)):
             print("loading tracking results")
@@ -399,8 +420,9 @@ class LoomTrial(object):
         else:
             print(f'loading from folders {self.mouse_id}')
             x, y = looming_spots.preprocess.normalisation.load_raw_track(self.folder)
+            x, y = self.projective_transform_tracks(x, y)
 
-        return x, y
+        return np.array(x), np.array(y)
 
     def check_is_tracks_csv(self):
         p = pathlib.Path(self.session.path)
@@ -432,11 +454,28 @@ class LoomTrial(object):
     def normalised_x_track(self):
         normalised_track = 1 - (self.x_track / 600)
         if self.frame_rate != 30:
+
             print('downsampling the track to 30hz')
+
+            n_points_ori = len(normalised_track)
+            n_points_new = int(n_points_ori * (FRAME_RATE / self.frame_rate))
+            # normalised_track_old = resample(normalised_track, n_points_new)
+
+            track_timebase = (np.arange(len(normalised_track)) - self.n_samples_before) / self.frame_rate
+            new_timebase = (np.arange(n_points_new) - N_SAMPLES_BEFORE) / FRAME_RATE
+            normalised_track = np.interp(new_timebase, track_timebase, normalised_track)
+
+            # normalised_track = downsample_x_track(normalised_track, downsampling_factor)
         return normalised_track
 
     @property
     def normalised_y_track(self):
+        if self.frame_rate != 30:
+            n_points_ori = len(self.y_track)
+            n_points_new = n_points_ori * (30/self.frame_rate)
+            y_track = resample(self.y_track, n_points_new)
+        else:
+            y_track = self.y_track
         return (self.y_track / 240) * 0.4
 
     @property
@@ -505,16 +544,16 @@ class LoomTrial(object):
     def is_flee(self):
         return self.classify_flee()
 
-    def classify_flee(self):
+    def classify_flee(self, speed_thresh=-SPEED_THRESHOLD):
         peak_speed, arg_peak_speed = self.peak_speed(True)
         latency = self.latency_peak_detect()
         time_to_shelter = self.n_samples_to_reach_shelter()
-        print(f'speed {peak_speed}, threshold {-SPEED_THRESHOLD}, latency {latency} limit: {CLASSIFICATION_WINDOW_END-20}, time to shelter {time_to_shelter}, limit: {CLASSIFICATION_WINDOW_END}')
+        print(f'speed {peak_speed}, threshold {speed_thresh}, latency {latency} limit: {CLASSIFICATION_WINDOW_END-20}, time to shelter {time_to_shelter}, limit: {CLASSIFICATION_WINDOW_END}')
 
         if time_to_shelter is None or latency is None:
             return False
 
-        return (peak_speed > -SPEED_THRESHOLD) and (time_to_shelter < CLASSIFICATION_WINDOW_END) #and (latency < (CLASSIFICATION_WINDOW_END-20))
+        return (peak_speed > speed_thresh) and (time_to_shelter < CLASSIFICATION_WINDOW_END) #and (latency < (CLASSIFICATION_WINDOW_END-20))
 
     def classify_flee_old(self):
         track = gaussian_filter(self.normalised_x_track, 3)
@@ -561,7 +600,7 @@ class LoomTrial(object):
         peak_speed, arg_peak_speed = looming_spots.track_analysis.escape_classification.get_peak_speed_and_latency(
             self.normalised_x_track
         )
-        peak_speed = peak_speed * self.frame_rate * ARENA_SIZE_CM
+        peak_speed = peak_speed * FRAME_RATE * ARENA_SIZE_CM
         if return_loc:
             return peak_speed, arg_peak_speed
         return peak_speed
@@ -573,7 +612,7 @@ class LoomTrial(object):
 
     def latency_peak_detect(self):
         n_stds = 2.5
-        speed = -self.smoothed_x_speed[self.n_samples_before:]
+        speed = -self.smoothed_x_speed[N_SAMPLES_BEFORE:]  # self.n_samples_before
         std = np.nanstd(speed[:600])
         all_peak_starts = signal.find_peaks(speed, std * n_stds, width=1)[1]['left_ips']
         if len(all_peak_starts) > 0:
@@ -611,8 +650,8 @@ class LoomTrial(object):
 
         latency_pd = self.latency_peak_detect()
         if latency_pd is not None:
-            latency_pd -= self.n_samples_before
-            return latency_pd / self.frame_rate
+            latency_pd -= N_SAMPLES_BEFORE  # self.n_samples_before
+            return latency_pd / FRAME_RATE  # self.frame_rate
 
     def latency_p(self):
         return self.peak_x_acc_idx() - LOOMING_STIMULUS_ONSET
@@ -654,7 +693,7 @@ class LoomTrial(object):
         if n_samples_to_reach_shelter is None:
             return n_samples_to_reach_shelter
 
-        return (n_samples_to_reach_shelter-self.n_samples_before) / self.frame_rate
+        return (n_samples_to_reach_shelter-N_SAMPLES_BEFORE) / FRAME_RATE  # self.n_samples_before) / self.frame_rate
 
     def time_to_reach_shelter_from_detection(self):
         n_samples_to_reach_shelter = self.n_samples_to_reach_shelter()
@@ -1045,7 +1084,7 @@ class LoomTrial(object):
 
     def track_overlay(self, duration_in_samples=200, track_heatmap=None):
         if track_heatmap is None:
-            track_heatmap = np.zeros((480, 640))  # TODO: get shape from raw
+            track_heatmap = np.zeros((240, 600))  # TODO: get shape from raw
 
         x, y = (
             np.array(
@@ -1117,7 +1156,7 @@ class LoomTrial(object):
 
         return get_box_coordinates_from_file(str(list(pathlib.Path(self.folder).parent.glob('box_corner_coordinates.npy'))[0]))
 
-    def projective_transform_tracks(self):
+    def projective_transform_tracks(self, Xin, Yin):
         p = get_inverse_projective_transform(dest=self.get_box_corner_coordinates(), src=np.array([[0, 240],
                                                                                                    [0, 0],
                                                                                                    [600, 240],
@@ -1125,7 +1164,7 @@ class LoomTrial(object):
                                              )
         new_track_x = []
         new_track_y = []
-        for x, y in zip(self.raw_track[0], self.raw_track[1]):
+        for x, y in zip(Xin, Yin):
             inverse_mapped = p.inverse([x, y])[0]
             new_track_x.append(inverse_mapped[0])
             new_track_y.append(inverse_mapped[1])

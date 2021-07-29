@@ -14,7 +14,9 @@ from looming_spots.db import experimental_log
 
 
 class MouseLoomTrialGroup(object):
+
     def __init__(self, mouse_id, exp_key=None):
+
         self.mouse_id = mouse_id
         if exp_key is not None:
             self.exp_key = exp_key

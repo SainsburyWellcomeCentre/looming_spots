@@ -80,8 +80,8 @@ def get_x_and_y_tracks(fname, n_frames_to_show, max_n_samples=30000):
 
 def get_dlc_tracks(fname):
     df_name = fname.split('/')[0] + '_' + fname.split('/')[1]
-    df_path = f'/home/slenzi/winstor/margrie/slenzi/cricket_dfs/{df_name}.h5'
-    p = pathlib.Path('/home/slenzi/winstor/margrie/glusterfs/imaging/l/loomer/processed_data/') / fname
+    df_path = f'Z:\\margrie\\slenzi\\cricket_dfs\\{df_name}.h5'
+    p = pathlib.Path('Z:\\margrie\\glusterfs\\imaging\\l\\loomer\\processed_data\\') / fname
     if not os.path.isfile(df_path):
 
         df = pd.read_hdf(str(p))

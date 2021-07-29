@@ -71,7 +71,7 @@ def load_pd_and_clock_raw(directory):  # TODO: raw loading should be entirely ex
 
         path = os.path.join(directory, "AI.tdms")
         tdms_file = TdmsFile(path)
-        all_channels = tdms_file.group_channels("acq_task")
+        all_channels = tdms_file.groups()[0].channels()
         pd, clock, auditory, pmt, led211, led531 = (
             c.data for c in all_channels
         )
