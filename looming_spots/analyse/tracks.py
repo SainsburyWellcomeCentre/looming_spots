@@ -29,7 +29,7 @@ def load_box_corner_coordinates(session_directory):
         print('no box coordinates found...')
 
     return get_box_coordinates_from_file(
-        str(list(pathlib.Path(session_directory).parent.glob('box_corner_coordinates.npy'))[0]))
+        str(list(pathlib.Path(session_directory).glob('box_corner_coordinates.npy'))[0]))
 
 
 def track_in_standard_space(session_directory, tracking_method, start, end, loom_folder=None):
@@ -49,8 +49,8 @@ def track_in_standard_space(session_directory, tracking_method, start, end, loom
         x, y = load_raw_track(lab5, 'dlc_{}_tracks.npy', start, end)
 
     elif tracking_method == 'old_school':
-        print(f'loading from folders {str(p)}')
-        x, y = load_raw_track(loom_folder, start, end, None)
+        print(f'loading from folders {str(loom_folder)}')
+        x, y = load_raw_track(session_directory, None, start, end, loom_folder=loom_folder)
         x, y = projective_transform_tracks(x,
                                            y,
                                            load_box_corner_coordinates(session_directory),
@@ -183,8 +183,8 @@ def peak_speed(normalised_x_track, return_loc=False):
     return peak_speed
 
 
-def load_track_csv(loom_folder, name="tracks.csv"):
-    track_path = os.path.join(loom_folder, name)
+def load_track_csv(loom_folder):
+    track_path = os.path.join(loom_folder, "tracks.csv")
     df = pd.read_csv(track_path, sep="\t")
     x_pos = np.array(df["x_position"])
     y_pos = np.array(df["y_position"])

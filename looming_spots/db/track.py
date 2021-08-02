@@ -41,7 +41,7 @@ class Track(object):
 
     @property
     def track_in_standard_space(self):
-        return track_in_standard_space(self.path, self.tracking_method,self.start, self.end)
+        return track_in_standard_space(self.path, self.tracking_method, self.start, self.end, loom_folder=self.folder)
 
     def load_box_corner_coordinates(self):
         load_box_corner_coordinates(self.path)
