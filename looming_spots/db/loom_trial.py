@@ -179,9 +179,6 @@ class LoomTrial(object):
         else:
             return "pre_test"
 
-    def absolute_acceleration(self):
-        return abs(self.peak_x_acc()) * self.frame_rate * 50
-
     @property
     def metric_functions(self):
         func_dict = {
@@ -305,38 +302,44 @@ class LoomTrial(object):
 
         return method
 
+    def load_tracks(self, p, name):
+
+        if self.tracking_method == 'old_school':
+            x, y = looming_spots.preprocess.normalisation.load_raw_track(p)
+        else:
+            x_path = p / name.format('x')
+            y_path = p / name.format('y')
+            x = np.load(str(x_path))[self.start:self.end]
+            y = np.load(str(y_path))[self.start:self.end]
+        return x, y
+
     @property
     def track_in_standard_space(self):
         p = pathlib.Path(self.session.path)
         lab5 = p / '5_label'
 
-        if 'x_manual.npy' in os.listdir(str(p)):
+        if self.tracking_method == 'manual':
             print("loading manually tracked")
             x, y = self.load_tracks(p, '{}_manual.npy')
 
-        elif "dlc_x_tracks.npy" in os.listdir(str(p)):
+        elif self.tracking_method == 'dlc_1_label':
             print("loading tracking results")
             x, y = self.load_tracks(p, 'dlc_{}_tracks.npy')
 
-        elif len(list(lab5.glob("dlc_x_tracks.npy")))>0:
+        elif self.tracking_method == 'dlc_5_label':
             print("loading 5 label tracking results")
             x, y = self.load_tracks(lab5, 'dlc_{}_tracks.npy')
 
-        else:
+        elif self.tracking_method == 'old_school':
             print(f'loading from folders {self.mouse_id}')
-            x, y = looming_spots.preprocess.normalisation.load_raw_track(self.folder)
+            x, y = self.load_tracks(self.folder, None)
             x, y = self.projective_transform_tracks(x, y)
+        else:
+            raise NotImplementedError()
 
         return np.array(x), np.array(y)
 
-    def load_tracks(self, p, name):
-        x_path = p / name.format('x')
-        y_path = p / name.format('y')
-        x = np.load(str(x_path))[self.start:self.end]
-        y = np.load(str(y_path))[self.start:self.end]
-        return x, y
-
-    def get_box_corner_coordinates(self):
+    def load_box_corner_coordinates(self):
         box_path = pathlib.Path(self.folder).parent.glob('box_corner_coordinates.npy')
         if len(list(box_path)) == 0:
             print('no box coordinates found...')
@@ -345,8 +348,7 @@ class LoomTrial(object):
             str(list(pathlib.Path(self.folder).parent.glob('box_corner_coordinates.npy'))[0]))
 
     def projective_transform_tracks(self, Xin, Yin):
-
-        new_track_x, new_track_y = projective_transform_tracks(Xin, Yin, self.get_box_corner_coordinates())
+        new_track_x, new_track_y = projective_transform_tracks(Xin, Yin, self.load_box_corner_coordinates())
         return new_track_x, new_track_y
 
     @property
@@ -365,9 +367,9 @@ class LoomTrial(object):
         return normalised_track
 
     @property
-    def normalised_y_track(self):
+    def normalised_y_track(self, target_frame_rate=30):
         normalised_track = (self.y_track / 240) * 0.4
-        if self.frame_rate != 30:
+        if self.frame_rate != target_frame_rate:
             normalised_track = downsample_track(normalised_track, self.frame_rate, self.n_samples_before)
         return normalised_track
 
@@ -394,6 +396,9 @@ class LoomTrial(object):
     @property
     def normalised_x_speed(self):
         return normalise_speed(self.normalised_x_track)
+
+    def absolute_acceleration(self):
+        return abs(self.peak_x_acc()) * FRAME_RATE * ARENA_SIZE_CM
 
     def peak_x_acc(self):  # TODO: extract implementation to tracks
         acc_window = self.get_accelerations_to_shelter()
@@ -511,7 +516,6 @@ class LoomTrial(object):
     def mouse_location_at_stimulus_onset(self):
         x_track, y_track = self.track_in_standard_space
         return x_track[LOOMING_STIMULUS_ONSET], y_track[LOOMING_STIMULUS_ONSET]
-
 
     @staticmethod
     def round_timedelta(td):
