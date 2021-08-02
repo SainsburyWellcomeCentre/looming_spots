@@ -21,7 +21,7 @@ LOOMING_STIMULUS_ONSET = LOOM_ONSETS[0]
 CLASSIFICATION_WINDOW_START = LOOM_ONSETS[0]
 N_LOOMS_PER_STIMULUS = len(LOOM_ONSETS)
 
-N_HABITUATION_LOOMS = 120
+N_LSIE_LOOMS = 120
 
 ContextParams = namedtuple(
     "ContextParams", ["left", "right", "house_front", "flip"]

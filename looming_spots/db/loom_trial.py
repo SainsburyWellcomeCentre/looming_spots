@@ -51,6 +51,7 @@ class LoomTrial(object):
 
     ):
         self.session = session
+        self.frame_rate = self.session.frame_rate
         self.n_samples_before = int(N_SAMPLES_BEFORE/30*self.frame_rate)
         self.sample_number = int(sample_number)
         self.mouse_id = self.session.mouse_id
@@ -66,7 +67,6 @@ class LoomTrial(object):
         self.folder = os.path.join(
             self.directory, f"{self.stimulus_type}{self.stimulus_number()}"
         )
-        self.frame_rate = self.session.frame_rate
 
         self.time_to_first_loom = None
 
@@ -119,21 +119,21 @@ class LoomTrial(object):
     def lsie_loom_after(self):
         current_trial = self
         while current_trial is not None:
-            if current_trial.trial_type == "habituation":
+            if current_trial.trial_type == "lsie":
                 return True
             current_trial = current_trial.next_trial
 
     def lsie_loom_before(self):
         current_trial = self
         while current_trial is not None:
-            if current_trial.trial_type == "habituation":
+            if current_trial.trial_type == "lsie":
                 return True
             current_trial = current_trial.previous_trial
 
     def get_last_lsie_trial(self):
         current_trial = self
         while current_trial is not None:
-            if current_trial.trial_type == "habituation":
+            if current_trial.trial_type == "lsie":
                 return current_trial
             current_trial = current_trial.previous_trial
 

@@ -33,14 +33,14 @@ class Session(object):
         dt,
         mouse_id=None,
         n_looms_to_view=0,
-        n_habituation_looms=120,
+        n_lsie_looms=120,
         n_trials_to_consider=3,
 
     ):
         self.dt = dt
         self.mouse_id = mouse_id
         self.n_looms_to_view = n_looms_to_view
-        self.n_habituation_looms = n_habituation_looms
+        self.n_lsie_looms = n_lsie_looms
         self.n_trials_to_include = n_trials_to_consider
         self.next_session = None
         self.previous_session = None
@@ -233,8 +233,8 @@ class Session(object):
         return len(self.get_trials("test"))
 
     @property
-    def n_habituation_trials(self):
-        return len(self.get_trials("habituation"))
+    def n_lsie_trials(self):
+        return len(self.get_trials("lsie"))
 
     def hours(self):
         return self.dt.hour + self.dt.minute / 60
@@ -317,8 +317,8 @@ class Session(object):
         return load.load_all_channels_on_clock_ups(self.path)
 
     @property
-    def contains_habituation(self):
-        return photodiode.contains_habituation(self.loom_idx)
+    def contains_lsie(self):
+        return photodiode.contains_lsie(self.loom_idx)
 
     @cached_property
     def loom_idx(self):
@@ -340,36 +340,36 @@ class Session(object):
             return np.load(aud_idx_path)
 
     def get_trial_type(self, onset_in_samples):
-        if self.habituation_idx is None:
+        if self.lsie_idx is None:
             return "test"
-        elif onset_in_samples in self.habituation_idx:
-            return "habituation"
+        elif onset_in_samples in self.lsie_idx:
+            return "lsie"
         else:
             return "test"
 
     @property
-    def habituation_idx(self):
+    def lsie_idx(self):
         if self.contains_auditory():
-            if photodiode.contains_habituation(self.auditory_idx, 1):
-                return photodiode.get_habituation_idx(self.auditory_idx, 1)
+            if photodiode.contains_lsie(self.auditory_idx, 1):
+                return photodiode.get_lsie_idx(self.auditory_idx, 1)
 
-        if photodiode.contains_habituation(self.loom_idx, 5):
-            return photodiode.get_habituation_idx(self.loom_idx, 5)
+        if photodiode.contains_lsie(self.loom_idx, 5):
+            return photodiode.get_lsie_idx(self.loom_idx, 5)
 
     @property
-    def habituation_loom_idx(self):
-        return photodiode.get_habituation_loom_idx(self.loom_idx)
+    def lsie_loom_idx(self):
+        return photodiode.get_lsie_loom_idx(self.loom_idx)
 
     @property
     def test_loom_idx(self):
         return photodiode.get_manual_looms(self.loom_idx)
 
     @property
-    def habituation_protocol_start(self):
-        return photodiode.get_habituation_start(self.loom_idx)
+    def lsie_protocol_start(self):
+        return photodiode.get_lsie_start(self.loom_idx)
 
     def test_loom_classification(self):  # TEST
-        assert len(self.habituation_loom_idx) + len(self.test_loom_idx) == int(
+        assert len(self.lsie_loom_idx) + len(self.test_loom_idx) == int(
             len(self.loom_idx) / 5
         )  # FIXME: hard code
 
@@ -542,14 +542,14 @@ class PhotometrySession(Session):
             dt,
             mouse_id=None,
             n_looms_to_view=0,
-            n_habituation_looms=120,
+            n_lsie_looms=120,
             n_trials_to_consider=3,
     ):
         super().__init__(
             dt,
             mouse_id,
             n_looms_to_view,
-            n_habituation_looms,
+            n_lsie_looms,
             n_trials_to_consider,
         )
 

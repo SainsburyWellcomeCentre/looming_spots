@@ -153,7 +153,7 @@ class MouseLoomTrialGroup(object):
 
     def lsie_trials(self):
         return [
-            t for t in self.all_trials if t.get_trial_type() == "habituation"
+            t for t in self.all_trials if t.get_trial_type() == "lsie"
         ]
 
     def get_trials_of_type(self, key, limit=3):
@@ -161,7 +161,7 @@ class MouseLoomTrialGroup(object):
             return self.pre_test_trials()[0:limit]
         elif key == "post_test":
             return self.post_test_trials()[0:limit]
-        elif key == "habituation":
+        elif key == "lsie":
             return self.lsie_trials()
         else:
             return self.all_trials

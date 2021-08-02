@@ -50,6 +50,6 @@ def plot_from_mid_dict(condition_mouse_id_dictionary):
             sessions = looming_spots.io.session_io.load_sessions(mid)
             for i, s in enumerate(sorted(sessions)):
                 plt.sca(axes[j][i])
-                title = f"{condition}_{s.contains_habituation}"
+                title = f"{condition}_{s.contains_lsie}"
                 axes[j][i].set_title(title)
                 s.plot_trials()

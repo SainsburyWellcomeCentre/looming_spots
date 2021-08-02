@@ -44,7 +44,7 @@ def get_loom_idx_from_raw(directory, save=True):  # TODO: save npy file instead
 def get_test_loom_idx(
     loom_idx, n_looms_per_stimulus=5
 ):  # WARNING: THIS DOES NOT DO WHAT THE USER EXPECTS
-    if contains_habituation(loom_idx):
+    if contains_lsie(loom_idx):
         loom_burst_onsets = np.diff(loom_idx[::n_looms_per_stimulus])
         min_ili = min(loom_burst_onsets)
         print("min_ili: {min_ili}")
@@ -52,37 +52,37 @@ def get_test_loom_idx(
         return test_loom_idx * n_looms_per_stimulus
 
 
-def get_habituation_loom_idx(loom_idx, n_looms_per_stimulus=5):
-    if contains_habituation(loom_idx):
+def get_lsie_loom_idx(loom_idx, n_looms_per_stimulus=5):
+    if contains_lsie(loom_idx):
         loom_burst_onsets = np.diff(loom_idx[::n_looms_per_stimulus])
         min_ili = min(loom_burst_onsets)
-        habituation_loom_idx = np.where(loom_burst_onsets < min_ili + 150)[
+        loom_idx_lsie = np.where(loom_burst_onsets < min_ili + 150)[
             0
         ]  # FIXME: this value is chosen for.. reasons 25
-        habituation_loom_idx = np.concatenate(
-            [habituation_loom_idx, [max(habituation_loom_idx) + 1]]
+        loom_idx_lsie = np.concatenate(
+            [loom_idx_lsie, [max(loom_idx_lsie) + 1]]
         )  # adds last loom as ILI will always be bigger
-        return loom_idx[habituation_loom_idx * n_looms_per_stimulus]
+        return loom_idx[loom_idx_lsie * n_looms_per_stimulus]
 
 
-def get_habituation_idx(idx, n_looms_per_stimulus=5):
-    if contains_habituation(idx, n_looms_per_stimulus):
+def get_lsie_idx(idx, n_looms_per_stimulus=5):
+    if contains_lsie(idx, n_looms_per_stimulus):
         onsets_diff = np.diff(idx[::n_looms_per_stimulus])
         min_ili = min(onsets_diff)
-        habituation_loom_idx = np.where(onsets_diff < min_ili + 150)[
+        loom_idx_lsie = np.where(onsets_diff < min_ili + 150)[
             0
         ]  # FIXME: this value is chosen for.. reasons
-        habituation_loom_idx = np.concatenate(
-            [habituation_loom_idx, [max(habituation_loom_idx) + 1]]
+        loom_idx_lsie = np.concatenate(
+            [loom_idx_lsie, [max(loom_idx_lsie) + 1]]
         )  # adds last loom as ILI will always be bigger
-        return idx[habituation_loom_idx * n_looms_per_stimulus]
+        return idx[loom_idx_lsie * n_looms_per_stimulus]
 
 
-def get_habituation_start(loom_idx, n_looms_per_stimulus=5):
-    return get_habituation_loom_idx(loom_idx, n_looms_per_stimulus)[0]
+def get_lsie_start(loom_idx, n_looms_per_stimulus=5):
+    return get_lsie_loom_idx(loom_idx, n_looms_per_stimulus)[0]
 
 
-def contains_habituation(loom_idx, n_looms_per_stimulus=5):
+def contains_lsie(loom_idx, n_looms_per_stimulus=5):
     if not loom_idx.shape:
         return False
     ili = np.diff(np.diff(loom_idx[::n_looms_per_stimulus]))
@@ -172,7 +172,7 @@ def get_visual_onsets_from_analog_input(directory):
 
 
 def get_manual_looms(loom_idx, n_looms_per_stimulus=5):
-    if not contains_habituation(loom_idx, n_looms_per_stimulus):
+    if not contains_lsie(loom_idx, n_looms_per_stimulus):
         return loom_idx[::n_looms_per_stimulus]
     else:
         test_loom_idx = get_test_loom_idx(loom_idx, n_looms_per_stimulus)

@@ -141,7 +141,7 @@ def get_mouse_ids_with_test_combination(
 ):
     """
     this is a function that is supposed to filter a database by the experimental sessions that have been carried out
-    (i.e. pre- post- and habituation sessions).
+    (i.e. pre- post- and lsie sessions).
     :param db:
     :param include_test_phases: records that have these session types will be included
     :param exclude_test_phases: records that do not have these session types will be excluded
@@ -186,12 +186,12 @@ def get_mouse_ids_from_query(db, filter_dict):
 
 
 def get_combination(
-    include=["post_test", "habituation"],
+    include=["post_test", "lsie"],
     exclude=["pre_test"],
     matching_dict_pre_test={"test_type": "== pre_test", "context": "== A9"},
     matching_dict_post_test={"test_type": "== post_test", "context": "== A9"},
-    matching_dict_habituation={
-        "test_type": "== habituation",
+    matching_dict_lsie={
+        "test_type": "== lsie",
         "context": "== A9r",
     },
 ):
@@ -209,13 +209,13 @@ def get_combination(
         if len(matching_dict_post_test) > 1
         else {}
     )
-    mouse_ids_habituation_combo = (
-        get_mouse_ids_from_query(filtered_db, matching_dict_habituation)
+    mouse_ids_lsie_combo = (
+        get_mouse_ids_from_query(filtered_db, matching_dict_lsie)
         if len(matching_dict_post_test) > 1
         else {}
     )
 
-    return mouse_ids_habituation_combo.intersection(
+    return mouse_ids_lsie_combo.intersection(
         mouse_ids_post_combo
     )  # make suitable for all 3
 
