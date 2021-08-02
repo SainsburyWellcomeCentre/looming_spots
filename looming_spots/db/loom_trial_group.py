@@ -40,8 +40,8 @@ class MouseLoomTrialGroup(object):
             t.set_auditory_trial_idx(i)
 
     def mixed_post_test(self):
-        all_escape = all(t.is_flee() for t in self.post_test_trials()[:3])
-        none_escape = all(not t.is_flee() for t in self.post_test_trials()[:3])
+        all_escape = all(t.classify_escape() for t in self.post_test_trials()[:3])
+        none_escape = all(not t.classify_escape() for t in self.post_test_trials()[:3])
         return not (all_escape or none_escape)
 
     def contrasts(self):
@@ -70,7 +70,6 @@ class MouseLoomTrialGroup(object):
             "time of loom",
             "loom number",
             "time to reach shelter stimulus onset",
-
         ]
         return metrics
 
@@ -152,7 +151,7 @@ class MouseLoomTrialGroup(object):
             t for t in self.all_trials if t.get_trial_type() == "post_test"
         ]
 
-    def habituation_trials(self):
+    def lsie_trials(self):
         return [
             t for t in self.all_trials if t.get_trial_type() == "habituation"
         ]
@@ -163,7 +162,7 @@ class MouseLoomTrialGroup(object):
         elif key == "post_test":
             return self.post_test_trials()[0:limit]
         elif key == "habituation":
-            return self.habituation_trials()
+            return self.lsie_trials()
         else:
             return self.all_trials
 
@@ -174,7 +173,7 @@ class MouseLoomTrialGroup(object):
 
     def n_flees(self, trial_type="pre_test"):
         return np.count_nonzero(
-            [t.is_flee() for t in self.get_trials_of_type(trial_type)]
+            [t.classify_escape() for t in self.get_trials_of_type(trial_type)]
         )
 
     def n_non_flees(self, trial_type="pre_test"):
@@ -196,14 +195,6 @@ class MouseLoomTrialGroup(object):
             img = pims.Video(video_path)[0]
             np.save(str(image_path), img)
         return img
-
-    def habituation_heatmap(self, n_trials_to_show):
-        if n_trials_to_show is None:
-            n_trials_to_show = -1
-        trials = self.get_trials_of_type("habituation")[0:n_trials_to_show]
-        return make_trial_heatmap_location_overlay(
-            trials, self.get_reference_frame("habituation")
-        )
 
     def get_metric_data(self, metric, trial_type="pre_test", limit=3):
         metric_values = []
@@ -294,7 +285,7 @@ class MouseLoomTrialGroup(object):
         return all_trials_df
 
     def percentage_time_in_tz_middle(self):
-        hm = make_trial_heatmap_location_overlay(self.habituation_trials())
+        hm = make_trial_heatmap_location_overlay(self.lsie_trials())
         return sum(sum(hm[115:190, 150:245]) / sum(sum(hm)))
 
     def sort_trials_by_contrast(self):

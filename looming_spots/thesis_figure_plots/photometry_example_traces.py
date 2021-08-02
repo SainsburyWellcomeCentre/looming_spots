@@ -238,7 +238,7 @@ def plot_delta_f_max_integral_against_contrast(mtgs):
         normalising_factor = max([np.nanmax(t.integral) for t in trials])
         for t in trials:
             ca_response = np.nanmax(t.integral) / normalising_factor
-            color = "r" if t.is_flee() else "k"
+            color = "r" if t.classify_escape() else "k"
             plt.plot(t.contrast, ca_response, "o", color=color)
 
 
@@ -268,7 +268,7 @@ def plot_delta_f_at_latency_against_contrast(mtgs):
                 np.nanmax(t.integral_escape_metric(int(pre_test_latency)))
                 / normalising_factor
             )
-            color = "r" if t.is_flee() else "k"
+            color = "r" if t.classify_escape() else "k"
             plt.plot(t.contrast, ca_response, "o", color=color)
 
 
@@ -779,11 +779,11 @@ def plot_d1_d2_gcamp_pre_post_normalised():
         for mtg in mtgs:
             norm_factor = get_trace_normalising_factor_during_stimulus(mtg.loom_trials())
             for t, ax in zip(mtg.all_trials[:3], axes_pre):
-                color = 'r' if t.is_flee() else 'k'
+                color = 'r' if t.classify_escape() else 'k'
                 ax.plot(t.delta_f()[:600] / norm_factor, color=color)
 
             for t, ax in zip(mtg.loom_trials()[-3:], axes_post):
-                color = 'r' if t.is_flee() else 'k'
+                color = 'r' if t.classify_escape() else 'k'
                 ax.plot(t.delta_f()[:600] / norm_factor, color=color)
 
         for i, ax in enumerate(axes_pre):
@@ -821,11 +821,11 @@ def plot_d1_d2_gcamp_pre_post_normalised_one_plot():
         for mtg in mtgs:
             norm_factor = get_trace_normalising_factor_during_stimulus(mtg.loom_trials())
             for t in mtg.all_trials[:3]:
-                color = 'r' if t.is_flee() else 'k'
+                color = 'r' if t.classify_escape() else 'k'
                 axes[0].plot(t.delta_f()[:600] / norm_factor, color=color)
                 avg_pre.append(t.delta_f()[:600]/norm_factor)
             for t in mtg.loom_trials()[-3:]:
-                color = 'r' if t.is_flee() else 'k'
+                color = 'r' if t.classify_escape() else 'k'
                 axes[1].plot(t.delta_f()[:600] / norm_factor, color=color)
                 avg_post.append(t.delta_f()[:600]/norm_factor)
         axes[0].plot(np.mean(avg_pre, axis=0), linewidth=3)
@@ -916,7 +916,7 @@ def get_signal_df(groups, timepoint=300):
                         / normalising_factor
                 )
                 vals.append(val)
-                escapes.append(t.is_flee())
+                escapes.append(t.classify_escape())
                 contrasts.append(t.contrast)
 
             for metric in mtg.analysed_metrics():
@@ -974,7 +974,7 @@ def get_signal_df_pre_post(groups, timepoint = 300, trial_type='variable', escap
             if trial_type == 'variable':
                 trials = mtg.loom_trials()[:19]
                 if escapes_only:
-                    trials = [t for t in trials if t.is_flee()]
+                    trials = [t for t in trials if t.classify_escape()]
                 trial_types = ['variable']*len(trials)
             else:
                 trials = mtg.pre_test_trials()[:3] + mtg.post_test_trials()[:3] + mtg.auditory_lsie_trials()
@@ -996,7 +996,7 @@ def get_signal_df_pre_post(groups, timepoint = 300, trial_type='variable', escap
                         / normalising_factor
                 )
                 vals.append(val)
-                escapes.append(t.is_flee())
+                escapes.append(t.classify_escape())
                 contrasts.append(t.contrast)
             for metric in mtg.analysed_metrics():
                 metric_vals = []
@@ -1023,12 +1023,12 @@ def get_normalised_signals_mtg(mtg, n_samples_before=10):
     contrasts = []
     trials_subset = []
     for t in trials:
-        if t.contrast ==0 and t.is_flee():
+        if t.contrast ==0 and t.classify_escape():
             escape_latency = int(t.latency_peak_detect())
             s, e = escape_latency-n_samples_before, escape_latency
             val = np.mean(t.delta_f()[s:e])
             vals.append(val)
-            escapes.append(t.is_flee())
+            escapes.append(t.classify_escape())
             contrasts.append(t.contrast)
             trials_subset.append(t)
     vals = np.array(vals) / np.nanmax(vals)

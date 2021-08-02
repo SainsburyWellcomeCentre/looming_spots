@@ -9,7 +9,6 @@ from datetime import datetime
 
 import scipy
 from cached_property import cached_property
-from nptdms import TdmsFile
 
 import looming_spots.io.io
 import looming_spots.util
@@ -23,8 +22,7 @@ from looming_spots.db import loom_trial
 from looming_spots.exceptions import LoomsNotTrackedError, MouseNotFoundError
 
 from looming_spots.preprocess import photodiode, normalisation
-from looming_spots.track_analysis import arena_region_crossings
-from looming_spots.tracking_dlc import process_DLC_output
+
 from looming_spots.util import generic_functions
 from photometry import demodulation, load
 
@@ -70,20 +68,6 @@ class Session(object):
             np.save(str(p / 'frame_rate.npy'), frame_rate)
 
         return frame_rate
-
-    # @property
-    # def frame_rate(self):
-    #     if "AI.tdms" in os.listdir(self.path):
-    #         clock = self.get_clock_raw()
-    #         clock_ups = looming_spots.io.io.get_clock_ups(clock)
-    #         if np.nanmedian(np.diff(clock_ups)) == 333:
-    #             return 30
-    #         elif np.nanmedian(np.diff(clock_ups)) == 200:
-    #             return 50
-    #         elif np.nanmedian(np.diff(clock_ups)) == 100:
-    #             return 100
-    #     else:
-    #         return 30
 
     def __len__(self):
         return len(self.data["photodiode"])
@@ -167,10 +151,6 @@ class Session(object):
 
         return sorted(visual_trials + auditory_trials)
 
-    # @cached_property
-    # def frame_rate(self):
-    #     return get_frame_rate(self.directory())
-
     def initialise_trials(self, idx, stimulus_type):
         if idx is not None:
             if len(idx) > 0:
@@ -182,7 +162,7 @@ class Session(object):
                             directory=self.path,
                             sample_number=onset_in_samples,
                             trial_type=self.get_trial_type(onset_in_samples),
-                            stimulus_type="loom", frame_rate=self.frame_rate
+                            stimulus_type="loom",
                         )
                     elif stimulus_type == "auditory":
                         t = loom_trial.AuditoryStimulusTrial(
@@ -191,13 +171,11 @@ class Session(object):
                             sample_number=onset_in_samples,
                             trial_type=self.get_trial_type(onset_in_samples),
                             stimulus_type="auditory",
-                            frame_rate=self.frame_rate,
                         )
 
                     else:
                         raise NotImplementedError
 
-                    # t.time_to_first_loom = self.time_to_first_loom()
                     trials.append(t)
                 return trials
             else:
@@ -243,7 +221,7 @@ class Session(object):
     def trials_results(self):
         test_trials = [t for t in self.trials if "test" in t.trial_type]
         return np.array(
-            [t.is_flee() for t in test_trials[: self.n_trials_to_include]]
+            [t.classify_escape() for t in test_trials[: self.n_trials_to_include]]
         )
 
     @property
@@ -281,7 +259,6 @@ class Session(object):
             if i == idx:
                 return frame
 
-
     @property
     def photodiode_trace(self, raw=False):
         if raw:
@@ -309,34 +286,24 @@ class Session(object):
         dm_signal, dm_background = demodulation.demodulate(
             photometry, led211, led531
         )
-        if (
-            self.path
-            == "/home/slenzi/spine_shares/loomer/srv/glusterfs/imaging/l/loomer/processed_data/074744/20190404_20_33_34"
-        ):
-            print("flipping channels")
-            dm_signal, dm_background = dm_background, dm_signal
+
         return dm_signal, dm_background
 
     @cached_property
     def signal(self):
-        return self.data["signal"]
+        if "signal" in self.data:
+            return self.data["signal"]
 
     @cached_property
     def background(self):
-        return self.data["background"]
+        if "background" in self.data:
+            return self.data["background"]
 
     @cached_property
     def fully_sampled_delta_f(self, filter_artifact_cutoff_samples=40000):
         pd, clock, auditory, pmt, led211, led531 = load.load_all_channels_raw(
             self.path
         )
-
-        if (
-            self.path
-            == "/home/slenzi/spine_shares/loomer/srv/glusterfs/imaging/l/loomer/processed_data/074744/20190404_20_33_34"
-        ):
-            print("flipping channels")
-            led211, led531 = led531, led211
 
         pmt[:filter_artifact_cutoff_samples] = np.median(pmt)
         delta_f = demodulation.lerner_deisseroth_preprocess(
@@ -569,6 +536,24 @@ def load_sessions(mouse_id):
     raise MouseNotFoundError()
 
 
+class PhotometrySession(Session):
+    def __init__(
+        self,
+            dt,
+            mouse_id=None,
+            n_looms_to_view=0,
+            n_habituation_looms=120,
+            n_trials_to_consider=3,
+    ):
+        super().__init__(
+            dt,
+            mouse_id,
+            n_looms_to_view,
+            n_habituation_looms,
+            n_trials_to_consider,
+        )
+
+
 def contains_analog_input(file_names):
     if "AI.bin" in file_names or "AI.tdms" in file_names:
         return True
@@ -603,21 +588,3 @@ def get_tracks_from_raw(directory):
         print(f"copying {raw_path} to {processed_path}")
         copyfile(raw_path, processed_path)
     return True
-
-
-# def get_frame_rate(directory):
-#
-#     tdms_path = os.path.join(directory, 'AI.tdms')
-#     if not os.path.exists(tdms_path):
-#         frame_rate = 30
-#     else:
-#         tdms_file = TdmsFile(tdms_path)
-#         tdms_groups = tdms_file.groups()
-#         all_channels = tdms_groups[0].channels()
-#         clock = all_channels[1].data
-#         clock_on = (clock > 2.5).astype(int)
-#         ni_sample_rate = 1/all_channels[1].properties['wf_increment']
-#         clock_ups = np.where(np.diff(clock_on) == 1)[0]
-#         frame_rate = round(np.mean(ni_sample_rate/np.diff(clock_ups)))
-#
-#     return frame_rate

@@ -4,8 +4,7 @@ import pandas as pd
 import numpy as np
 
 from looming_spots.db import loom_trial_group
-
-FILE_PATH = r'C:\Users\Lee\Documents\slenzi\lsie\data\updated_loom_sheet_format.csv'
+from looming_spots.db.constants import FILE_PATH
 
 
 def load_df(file_path=FILE_PATH):

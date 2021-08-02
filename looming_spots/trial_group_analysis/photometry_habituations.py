@@ -173,7 +173,7 @@ def get_max_integral_habituations(mtgs):
         )
         max_integrals = [
             np.nanmax(t.integral_downsampled()) / max_event
-            for t in mtg.habituation_trials()[:24]
+            for t in mtg.lsie_trials()[:24]
         ]
 
         plt.scatter(
@@ -189,10 +189,10 @@ def get_normalised_habituation_heatmap(mtg):
         [np.nanmax(t.integral_downsampled()) for t in mtg.loom_trials()]
     )
     hm = np.full(
-        (len(mtg.loom_trials()[0].delta_f()), len(mtg.habituation_trials())),
+        (len(mtg.loom_trials()[0].delta_f()), len(mtg.lsie_trials())),
         np.nan,
     )
-    for i, t in enumerate(mtg.habituation_trials()):
+    for i, t in enumerate(mtg.lsie_trials()):
         hm[:, i] = t.delta_f() / max_event
     return hm
 
@@ -218,7 +218,7 @@ def plot_binned_max_integral_habituation_pooled(mtgs, col="k"):
         )
         max_integrals = [
             np.nanmax(t.integral_downsampled()) / max_event
-            for t in mtg.habituation_trials()[:24]
+            for t in mtg.lsie_trials()[:24]
         ]
         all_integrals.append(max_integrals)
 
@@ -260,7 +260,7 @@ def get_habituation_protocol_responses(mtgs):
         max_integrals = [
             np.nanmax(t.integral_escape_metric(int(pre_test_latency)))
             / normalising_factor
-            for t in mtg.habituation_trials()[:24]
+            for t in mtg.lsie_trials()[:24]
         ]
         group_integral_escape_metrics.append(max_integrals)
     return group_integral_escape_metrics
@@ -328,7 +328,7 @@ def get_signal_metric_dataframe_variable_contrasts(mtgs, metric):
         )
         # event_metric_dict.setdefault('metric', metrics)
         event_metric_dict.setdefault("contrast", [t.contrast for t in trials])
-        event_metric_dict.setdefault("escape", [t.is_flee() for t in trials])
+        event_metric_dict.setdefault("escape", [t.classify_escape() for t in trials])
         event_metric_dict.setdefault("loom number", [t.get_loom_trial_idx() for t in trials])
 
         metric_df = pd.DataFrame.from_dict(event_metric_dict)
@@ -374,7 +374,7 @@ def get_signal_metric_dataframe(mtgs, metric):
                 "contrast", [t.contrast for t in trials]
             )
             event_metric_dict.setdefault(
-                "escape", [t.is_flee() for t in trials]
+                "escape", [t.classify_escape() for t in trials]
             )
 
             metric_df = pd.DataFrame.from_dict(event_metric_dict)
@@ -407,14 +407,14 @@ def plot_signal_against_metric(mtgs, metric):
         for t in mtg.pre_test_trials()[:3]:
             val = t.metric_functions[metric]()
             signal = max(t.integral_downsampled()[200:350])
-            color = "r" if t.is_flee() else "k"
+            color = "r" if t.classify_escape() else "k"
             plt.scatter(val, signal, color=color)
 
         plt.subplot(122)
         for t in mtg.post_test_trials()[:3]:
             val = t.metric_functions[metric]()
             signal = max(t.integral_downsampled()[200:350])
-            color = "r" if t.is_flee() else "k"
+            color = "r" if t.classify_escape() else "k"
             plt.scatter(val, signal, color=color)
     return fig
 
@@ -443,7 +443,7 @@ def get_time_series_df(mtgs):
                     "test type", [test_type] * len(data)
                 )
                 event_metric_dict.setdefault(
-                    "escape", [t.is_flee()] * len(data)
+                    "escape", [t.classify_escape()] * len(data)
                 )
                 event_metric_dict.setdefault(
                     "trial_number", [i + start] * len(data)
@@ -479,7 +479,7 @@ def habituation_df(mtg_groups, mtg_group_labels):
             for trials, test_type in zip(
                 [
                     mtg.pre_test_trials()[:3],
-                    mtg.habituation_trials()[:24],
+                    mtg.lsie_trials()[:24],
                     mtg.post_test_trials()[:3],
                 ],
                 ["pre test", "habituation", "post test"],
@@ -489,7 +489,7 @@ def habituation_df(mtg_groups, mtg_group_labels):
                 signals = []
 
                 if test_type != 'habituation':
-                    escape_result = [t.is_flee() for t in trials]
+                    escape_result = [t.classify_escape() for t in trials]
                 else:
                     escape_result = [False for _ in trials]
 
@@ -549,7 +549,7 @@ def get_trials_df(mtgs, metric):
         event_metric_dict.setdefault(metric, metric_values)
 
         event_metric_dict.setdefault("contrast", [t.contrast for t in trials])
-        event_metric_dict.setdefault("escape", [t.is_flee() for t in trials])
+        event_metric_dict.setdefault("escape", [t.classify_escape() for t in trials])
 
         metric_df = pd.DataFrame.from_dict(event_metric_dict)
         all_df = all_df.append(metric_df, ignore_index=True)

@@ -22,10 +22,10 @@ from OpenGL import GL
 from PyQt5.QtQml import QQmlApplicationEngine
 from PyQt5.QtWidgets import QApplication
 
-from looming_spots.track_analysis.event_detection.gui.image_providers import (
+from looming_spots.analyse.event_detection.gui.image_providers import (
     PyplotImageProvider,
 )
-from looming_spots.track_analysis.event_detection.gui.detection_interface import (
+from looming_spots.analyse.event_detection.gui.detection_interface import (
     DetectionInterface,
 )
 
@@ -37,7 +37,7 @@ class GuiError(Exception):
 def get_main_window(app_engine):
     if sys.platform == "win32":
         base_dir = os.path.abspath(
-            os.path.normpath("./track_analysis/event_detection/gui/")
+            os.path.normpath("./analyse/event_detection/gui/")
         )  # FIXME: should be conf based
     else:
         base_dir = os.path.abspath(

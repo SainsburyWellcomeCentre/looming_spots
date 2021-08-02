@@ -33,7 +33,7 @@ def plot_ichloc_pretest_disruption(mids=ICHLOC_MIDS):
     for i, mid in enumerate(mids):
         trials = []
         mtg = loom_trial_group.MouseLoomTrialGroup(mid)
-        for t in mtg.habituation_trials():
+        for t in mtg.lsie_trials():
             trials.extend([t])
         hm = make_trial_heatmap_location_overlay(trials)
         ax = plt.subplot(2, 3, i + 1)

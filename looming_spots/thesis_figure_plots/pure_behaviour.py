@@ -99,7 +99,7 @@ def plot_cossell_curves_by_mouse(exp_group_label, subtract_val=None):
     for mid in mids:
         mtg = loom_trial_group.MouseLoomTrialGroup(mid)
         t = mtg.pre_test_trials()[0]
-        escape_rate = np.mean([t.is_flee() for t in mtg.pre_test_trials()[:3]])
+        escape_rate = np.mean([t.classify_escape() for t in mtg.pre_test_trials()[:3]])
 
         contrast = (
             (subtract_val - float(t.contrast))
@@ -235,7 +235,7 @@ def compare_groups_lsie_exploration(
         for i, mid in enumerate(mids):
             trials = []
             mtg = loom_trial_group.MouseLoomTrialGroup(mid)
-            for t in mtg.habituation_trials():
+            for t in mtg.lsie_trials():
                 trials.extend([t])
             hm = make_trial_heatmap_location_overlay(trials)
             group_hm.append(hm)
@@ -293,7 +293,7 @@ def get_group_lsie_exploration_hms(
         for i, mid in enumerate(mids):
             trials = []
             mtg = loom_trial_group.MouseLoomTrialGroup(mid)
-            for t in mtg.habituation_trials():
+            for t in mtg.lsie_trials():
                 trials.extend([t])
             hm = make_trial_heatmap_location_overlay(trials)
             group_hm.append(hm)
@@ -312,7 +312,7 @@ def get_lsie_exploration_dataframe(
         mtgs = experimental_log.get_mtgs_in_experiment(group_label)
         for i, mtg in enumerate(mtgs):
             time_delta = (
-                mtg.habituation_trials()[0].time
+                mtg.lsie_trials()[0].time
                 - mtg.pre_test_trials()[0].time
             )
             if time_delta.seconds < 3600 and time_delta.days == 0:

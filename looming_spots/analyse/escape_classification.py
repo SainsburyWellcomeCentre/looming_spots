@@ -12,7 +12,54 @@ from looming_spots.db.constants import (
     FRAME_RATE,
     SPEED_THRESHOLD,
     LOOM_ONSETS,
-)
+    ARENA_SIZE_CM, LOOMING_STIMULUS_ONSET)
+
+
+def load_track():
+    pass
+
+
+def estimate_latency(normalised_x_track, smooth=False, limit=600):
+    home_front = 0.2
+
+    inside_house = normalised_x_track[:limit] < home_front
+    smoothed_x_track = gaussian_filter(normalised_x_track, 2)
+    smoothed_x_speed = np.diff(smoothed_x_track)
+    normalised_x_speed = np.concatenate(
+        [[np.nan], np.diff(normalised_x_track)])
+    if smooth:
+        speed = smoothed_x_speed[:limit]
+    else:
+        speed = normalised_x_speed[:limit]
+
+    towards_house = speed < -0.0001
+
+    starts, ends = get_starts_and_ends(towards_house, 7)
+
+    for s, e in zip(starts, ends):
+        if s > LOOMING_STIMULUS_ONSET:
+            if s < LOOMING_STIMULUS_ONSET:
+                continue
+            elif any(inside_house[s:e]):
+                return s
+    print("did not find any starts... attempting with smoothed track")
+
+    if not smooth:
+        try:
+            return estimate_latency(smooth=True) + 5
+        except Exception as e:
+            print(e)
+            return np.nan
+
+
+def peak_speed(normalised_x_track, return_loc=False):
+    peak_speed, arg_peak_speed = get_peak_speed_and_latency(
+        normalised_x_track
+    )
+    peak_speed = peak_speed * FRAME_RATE * ARENA_SIZE_CM
+    if return_loc:
+        return peak_speed, arg_peak_speed
+    return peak_speed
 
 
 def leaves_house(smoothed_track, context):
@@ -30,7 +77,7 @@ def leaves_house(smoothed_track, context):
 def fast_enough(speed):
     return any(
         [
-            x < CLASSIFICATION_SPEED
+            x < SPEED_THRESHOLD
             for x in speed[
                 CLASSIFICATION_WINDOW_START:CLASSIFICATION_WINDOW_END
             ]
@@ -50,28 +97,41 @@ def reaches_home(track, context):
     )
 
 
-def retreats_rapidly_at_onset(track):
-    latency, _ = estimate_latency(track)
-    if latency < CLASSIFICATION_LATENCY:
-        return True
+def classify_escape(speed_thresh=-SPEED_THRESHOLD):
+    peak_speed, arg_peak_speed = peak_speed(True)
+    latency = latency_peak_detect()
+    time_to_shelter = n_samples_to_reach_shelter()
+
+    print(f'speed: {peak_speed}, '
+          f'threshold: {speed_thresh}, '
+          f'latency: {latency} '
+          f'limit: {CLASSIFICATION_WINDOW_END-20}, '
+          f'time to shelter: {time_to_shelter}')
+
+    if time_to_shelter is None or latency is None:
+        return False
+
+    return (peak_speed > speed_thresh) and (time_to_shelter < CLASSIFICATION_WINDOW_END)
+
+#
+# def classify_flee(loom_folder, context):
+#     track = gaussian_filter(load_normalised_track(loom_folder, context), 3)
+#     speed = np.diff(track)
+#
+#     if (
+#         fast_enough(speed)
+#         and reaches_home(track, context)
+#         and leaves_house(loom_folder, context)
+#     ):
+#         print(f"leaves: {leaves_house(loom_folder, context)}")
+#         return True
+#
+#     print(
+#         f"fast enough: {fast_enough(speed)}, reaches home: {reaches_home(track, context)}"
+#     )
+#     return False
 
 
-def classify_flee(loom_folder, context):
-    track = gaussian_filter(load_normalised_track(loom_folder, context), 3)
-    speed = np.diff(track)
-
-    if (
-        fast_enough(speed)
-        and reaches_home(track, context)
-        and leaves_house(loom_folder, context)
-    ):
-        print(f"leaves: {leaves_house(loom_folder, context)}")
-        return True
-
-    print(
-        f"fast enough: {fast_enough(speed)}, reaches home: {reaches_home(track, context)}"
-    )
-    return False
 
 
 def estimate_latency(

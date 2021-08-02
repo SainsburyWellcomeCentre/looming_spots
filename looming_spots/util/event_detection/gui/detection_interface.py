@@ -96,7 +96,7 @@ class DetectionInterface(QObject):
         """
 
         :return:
-        :rtype: track_analysis.event_detection.detection_params.DetectionParams
+        :rtype: analyse.event_detection.detection_params.DetectionParams
         """
         if self.current_block:
             params = self.current_block.detection_params[self.angle]

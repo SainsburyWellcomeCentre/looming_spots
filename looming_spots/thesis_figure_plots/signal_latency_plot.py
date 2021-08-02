@@ -56,7 +56,7 @@ def get_signal_df_mtgs(groups, timepoint=215):
                         / normalising_factor
                 )
                 vals.append(val)
-                escapes.append(t.is_flee())
+                escapes.append(t.classify_escape())
                 contrasts.append(t.contrast)
 
             for metric in mtg.analysed_metrics():
@@ -106,7 +106,7 @@ def plot_mouse_pre_post_tests(mtg, normalisation_factor,
     fname = f'theoretical_threshold_pre_post_{mtg.mouse_id}_{label}'
     for t in pre_test_trials:
         plt.sca(axes[0][0])
-        color = 'r' if t.is_flee() else 'k'
+        color = 'r' if t.classify_escape() else 'k'
         plt.axhline(theoretical_escape_threshold, color=color, linewidth=2)
         [plt.axvline(x, color='k', ls='--') for x in LOOM_ONSETS]
         plt.plot(t.integral_downsampled() / normalisation_factor, color=color)
@@ -125,7 +125,7 @@ def plot_mouse_pre_post_tests(mtg, normalisation_factor,
 
     for t in post_test_trials:
         plt.sca(axes[0][1])
-        if (t.is_flee() or mtg.mouse_id == '898990'):
+        if (t.classify_escape() or mtg.mouse_id == '898990'):
             color = 'r'
         else:
             color = 'k'
@@ -197,7 +197,7 @@ def plot_mouse_trials_separate_scaled(label, mtg, normalisation_factor, normalis
     for i, t in enumerate(post_test_trials):
         plt.sca(row_1_axes[i])
 
-        if (t.is_flee() or mtg.mouse_id == '898990'):
+        if (t.classify_escape() or mtg.mouse_id == '898990'):
             color = 'r'
         else:
             color = 'k'
@@ -225,7 +225,7 @@ def plot_threshold_and_sub_threshold_trialwise(axes, mtg, normalisation_factor, 
                                                t, theoretical_escape_threshold):
     plt.sca(axes[0])
 
-    if (t.is_flee() or mtg.mouse_id == '898990'):
+    if (t.classify_escape() or mtg.mouse_id == '898990'):
         color = 'r'
     else:
         color = 'k'
@@ -257,7 +257,7 @@ def plot_all_integrals_normalised_to_threshold(mtgs, label):
         ax=plt.sca(axes[0])
 
         for t in pre_test_trials:
-            if (t.is_flee() or mtg.mouse_id == '898990'):
+            if (t.classify_escape() or mtg.mouse_id == '898990'):
                 color = 'r'
             else:
                 color = 'k'
@@ -281,7 +281,7 @@ def plot_all_integrals_normalised_to_threshold(mtgs, label):
 
         plt.sca(axes[1])
         for t in post_test_trials:
-            if (t.is_flee() or mtg.mouse_id == '898990'):
+            if (t.classify_escape() or mtg.mouse_id == '898990'):
                 color = 'r'
             else:
                 color = 'k'
@@ -553,7 +553,7 @@ def plot_integrals_post_test_scaled_to_smallest_pretest(mtg):
     post_test_trials = mtg.post_test_trials()[:3]
     min_thresh = np.mean([t.integral_downsampled()[int(t.latency_peak_detect())] for t in pre_test_trials])
     for t in post_test_trials:
-        color='r' if t.is_flee() else 'k'
+        color='r' if t.classify_escape() else 'k'
         latency = t.latency_peak_detect()
         if latency is not None:
             plt.plot(t.integral_downsampled()/min_thresh, color=color)

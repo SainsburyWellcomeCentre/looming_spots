@@ -58,7 +58,7 @@ def get_pooled_escape_probilities_all_contrasts_block(
         trials = get_trials_of_contrast_mouse_group(
             mouse_ids, c, start=block_id * 18, end=(block_id + 1) * 18
         )
-        avg_contrast_probability = np.nanmean([t.is_flee() for t in trials])
+        avg_contrast_probability = np.nanmean([t.classify_escape() for t in trials])
         escape_curve.append(avg_contrast_probability)
 
     return escape_curve
@@ -102,9 +102,9 @@ def get_contrast_escape_curve_from_group_label(
 
     for c in all_contrasts:
         trials_of_contrast = get_trials_of_contrast(all_trials, c)
-        avg_curve.append(np.mean([t.is_flee() for t in trials_of_contrast]))
+        avg_curve.append(np.mean([t.classify_escape() for t in trials_of_contrast]))
         sem_curve.append(
-            scipy.stats.sem([t.is_flee() for t in trials_of_contrast])
+            scipy.stats.sem([t.classify_escape() for t in trials_of_contrast])
         )
 
     if subtract_val is not None:

@@ -8,7 +8,7 @@ setup(
     license="MIT",
     author="Stephen Lenzi",
     author_email="s.lenzi@ucl.ac.uk",
-    description="looming spot track_analysis in python",
+    description="looming spot analyse in python",
     install_requires=[
         "numpy",
         "configobj",

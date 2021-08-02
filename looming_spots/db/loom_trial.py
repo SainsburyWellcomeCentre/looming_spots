@@ -1,27 +1,22 @@
 import os
 import pathlib
-import warnings
 
 import numpy as np
 import matplotlib.pyplot as plt
 import pims
-import skvideo
-from cached_property import cached_property
+from looming_spots.analyse.escape_classification import classify_escape
+
+from looming_spots.analyse.tracks import downsample_track, downsample_y_track, smooth_track, smooth_speed, \
+    normalise_speed
 from matplotlib import patches
-from scipy.ndimage import gaussian_filter
 from scipy import signal
 from datetime import timedelta
 import seaborn as sns
 import pandas as pd
-import photometry
-from scipy.signal import resample
 
-import looming_spots.track_analysis.escape_classification
 import looming_spots.preprocess.normalisation
 import looming_spots.util.video_processing
-from looming_spots.util.event_detection.events_collection import (
-    EventsCollection,
-)
+
 from looming_spots.db.constants import (
     LOOMING_STIMULUS_ONSET,
     END_OF_CLASSIFICATION_WINDOW,
@@ -31,25 +26,14 @@ from looming_spots.db.constants import (
     N_SAMPLES_BEFORE,
     N_SAMPLES_AFTER,
     N_SAMPLES_TO_SHOW,
-    SPEED_THRESHOLD, CLASSIFICATION_WINDOW_END, LOOM_ONSETS)
+    SPEED_THRESHOLD, CLASSIFICATION_WINDOW_END, LOOM_ONSETS, BOX_CORNER_COORDINATES)
 
-from looming_spots.track_analysis import arena_region_crossings
+from looming_spots.analyse import arena_region_crossings
 from looming_spots.preprocess import photodiode
 
 from looming_spots.util import video_processing, plotting
-from photometry.event_detect import (
-    get_starts_and_ends,
-    subtract_event_from_trace,
-)
-from photometry import events
-from photometry.demodulation import apply_butterworth_lowpass_filter
 
 from looming_spots.util.transformations import get_inverse_projective_transform, get_box_coordinates_from_file
-
-
-def remove_pre_stimulus_events(df, event_times):
-    for e in event_times():
-        pass
 
 
 class LoomTrial(object):
@@ -60,7 +44,6 @@ class LoomTrial(object):
         sample_number,
         trial_type,
         stimulus_type,
-        frame_rate,  # TODO: remove
         trial_video_fname="{}{}.mp4",
         contrast=None,
         loom_trial_idx=None,
@@ -84,8 +67,6 @@ class LoomTrial(object):
             self.directory, f"{self.stimulus_type}{self.stimulus_number()}"
         )
         self.frame_rate = self.session.frame_rate
-
-        #self.end = self.sample_number + N_SAMPLES_AFTER
 
         self.time_to_first_loom = None
 
@@ -135,21 +116,21 @@ class LoomTrial(object):
     def get_auditory_trial_idx(self):
         return self.auditory_trial_idx
 
-    def habituation_loom_after(self):
+    def lsie_loom_after(self):
         current_trial = self
         while current_trial is not None:
             if current_trial.trial_type == "habituation":
                 return True
             current_trial = current_trial.next_trial
 
-    def habituation_loom_before(self):
+    def lsie_loom_before(self):
         current_trial = self
         while current_trial is not None:
             if current_trial.trial_type == "habituation":
                 return True
             current_trial = current_trial.previous_trial
 
-    def get_last_habituation_trial(self):
+    def get_last_lsie_trial(self):
         current_trial = self
         while current_trial is not None:
             if current_trial.trial_type == "habituation":
@@ -168,7 +149,7 @@ class LoomTrial(object):
         self.auditory_trial_idx = idx
         return self.auditory_trial_idx
 
-    def n_habituations(self):
+    def n_lsies(self):
         current_trial = self.first_trial()
         current_trial_type = current_trial.trial_type
         n_habituations = 1 if current_trial_type == "habituation" else 0
@@ -189,11 +170,11 @@ class LoomTrial(object):
     def get_trial_type(self):
         if self.trial_type == "habituation":
             return "habituation"
-        elif self.habituation_loom_before() and self.habituation_loom_after():
+        elif self.lsie_loom_before() and self.lsie_loom_after():
             return "post_test"  # TODO:'pre_and_post_test'
-        elif self.habituation_loom_after():
+        elif self.lsie_loom_after():
             return "pre_test"
-        elif self.habituation_loom_before():
+        elif self.lsie_loom_before():
             return "post_test"
         else:
             return "pre_test"
@@ -211,7 +192,7 @@ class LoomTrial(object):
             "latency peak detect": self.latency_peak_detect_s,
             "reaction time": self.reaction_time_s,
             "time in safety zone": self.time_in_safety_zone,
-            "classified as flee": self.is_flee,
+            "classified as flee": self.classify_escape,
             "time of loom": self.get_time,
             "loom number": self.get_loom_trial_idx,#self.get_stimulus_number,
             "time to reach shelter stimulus onset": self.time_to_reach_shelter_stim_onset,
@@ -223,18 +204,6 @@ class LoomTrial(object):
         }
 
         return func_dict
-
-    @property
-    def normalisation_dict(self):
-        normalisation_dict = {
-            "speed": 120,
-            "acceleration": 6,
-            "latency to escape": 12,
-            "time in safety zone": 12,
-            "classified as flee": 1,
-            "time to reach safety": 12,
-        }
-        return normalisation_dict
 
     @property
     def context(self):
@@ -292,56 +261,6 @@ class LoomTrial(object):
 
     def is_a9(self):
         return True
-        #if (
-        #    np.mean(self.get_reference_frame()[340:390, 200:250]) < 50
-        #):  # FIXME: hard code
-        #    return True
-
-    def laser_on(self):
-        sig, bg = self.signal_and_background()
-        bg_zero = bg - np.median(bg[:100])
-        if any(bg_zero[:600] > 0.000001):
-            return True
-
-    def delta_f(self):
-        df = self.session.data["delta_f"][self.start : self.end][:600]
-        df -= np.median(df[176:200])  # 120 # 195
-        return df
-
-    def signal_and_background(self):
-        sig = self.session.data["signal"][self.start : self.end]
-        bg = self.session.data["bg_fit"][self.start : self.end]
-        return sig, bg
-
-
-    @cached_property
-    def fully_sampled_delta_f(self):
-        start = self.raw_start() - int(
-            self.n_samples_before * 10000 / self.frame_rate
-        )  # TODO: derive from raw data instead for precision
-        end = start + int(400 * 10000 / self.frame_rate)
-        df = self.session.fully_sampled_delta_f[0][start:end]
-
-        med_range = [
-            int(100 * 10000 / self.frame_rate),
-            int(190 * 10000 / self.frame_rate),
-        ]  # 150, 200
-        df -= np.median(df[med_range[0] : med_range[1]])
-        return df
-
-    def delta_f_post_events_removed(self, df, template_width=30):
-        for e in self.events():
-            if e.start_p > LOOMING_STIMULUS_ONSET + 10:
-                df = subtract_event_from_trace(df, e.peak_p)
-        return df
-
-    def delta_f_with_pre_stimulus_events_removed(self, template_width=30):
-
-        df = self.delta_f().copy()
-        for e in self.events():
-            if template_width < e.start_p < LOOMING_STIMULUS_ONSET:
-                df = subtract_event_from_trace(df, e.peak_p)
-        return df
 
     def photodiode(self):
         auditory_signal = self.session.data["photodiode"]
@@ -387,7 +306,7 @@ class LoomTrial(object):
         return method
 
     @property
-    def raw_track(self):
+    def track_in_standard_space(self):
         p = pathlib.Path(self.session.path)
         lab5 = p / '5_label'
 
@@ -410,10 +329,6 @@ class LoomTrial(object):
 
         return np.array(x), np.array(y)
 
-    def check_is_tracks_csv(self):
-        p = pathlib.Path(self.session.path)
-        return not any([x in os.listdir(str(p)) for x in ['x_manual.npy', "dlc_x_tracks.npy"]])
-
     def load_tracks(self, p, name):
         x_path = p / name.format('x')
         y_path = p / name.format('y')
@@ -423,70 +338,49 @@ class LoomTrial(object):
 
     @property
     def x_track(self):
-        if self.check_is_tracks_csv():
-            print('adjusting tracks post hoc using projective transform')
-            return np.array(self.projective_transform_tracks()[0])
-
-        return self.raw_track[0]
+        return self.track_in_standard_space[0]
 
     @property
     def y_track(self):
-        if self.check_is_tracks_csv():
-            print('adjusting tracks post hoc using projective transform')
-            return np.array(self.projective_transform_tracks()[1])
-        return self.raw_track[1]
+        return self.track_in_standard_space[1]
 
     @property
-    def normalised_x_track(self):
+    def normalised_x_track(self, target_frame_rate=30):
         normalised_track = 1 - (self.x_track / 600)
-        if self.frame_rate != 30:
-
-            print('downsampling the track to 30hz')
-
-            n_points_ori = len(normalised_track)
-            n_points_new = int(n_points_ori * (FRAME_RATE / self.frame_rate))
-            # normalised_track_old = resample(normalised_track, n_points_new)
-
-            track_timebase = (np.arange(len(normalised_track)) - self.n_samples_before) / self.frame_rate
-            new_timebase = (np.arange(n_points_new) - N_SAMPLES_BEFORE) / FRAME_RATE
-            normalised_track = np.interp(new_timebase, track_timebase, normalised_track)
-
-            # normalised_track = downsample_x_track(normalised_track, downsampling_factor)
+        if self.frame_rate != target_frame_rate:
+            normalised_track = downsample_track(normalised_track, self.frame_rate, self.n_samples_before)
         return normalised_track
 
     @property
     def normalised_y_track(self):
+        normalised_track = (self.y_track / 240) * 0.4
         if self.frame_rate != 30:
-            n_points_ori = len(self.y_track)
-            n_points_new = n_points_ori * (30/self.frame_rate)
-            y_track = resample(self.y_track, n_points_new)
-        else:
-            y_track = self.y_track
-        return (self.y_track / 240) * 0.4
+            normalised_track = downsample_track(normalised_track, self.frame_rate, self.n_samples_before)
+        return normalised_track
 
     @property
-    def smoothed_x_track(self):  # TODO: extract implementation to tracks
-        y = gaussian_filter(self.normalised_x_track, 2)
-        return y
+    def smoothed_x_track(self):
+        smoothed_x_track = smooth_track("x")
+        return smoothed_x_track
 
     @property
-    def smoothed_y_track(self):  # TODO: extract implementation to tracks
-        return gaussian_filter(self.normalised_y_track, 2)
+    def smoothed_x_speed(self):
+        smoothed_x_speed = smooth_speed("x")
+        return smoothed_x_speed
 
     @property
-    def smoothed_x_speed(self):  # TODO: extract implementation to tracks
-        return np.diff(self.smoothed_x_track)
+    def smoothed_y_track(self):
+        smoothed_y_track = smooth_track("y")
+        return smoothed_y_track
 
     @property
     def smoothed_y_speed(self):
-        return np.diff(self.smoothed_y_track)
+        smoothed_y_speed = smooth_speed("y")
+        return smoothed_y_speed
 
     @property
-    def normalised_x_speed(self):  # TODO: extract implementation to tracks
-        normalised_x_speed = np.concatenate(
-            [[np.nan], np.diff(self.normalised_x_track)]
-        )
-        return normalised_x_speed
+    def normalised_x_speed(self):
+        return normalise_speed(self.normalised_x_track)
 
     def peak_x_acc(self):  # TODO: extract implementation to tracks
         acc_window = self.get_accelerations_to_shelter()
@@ -516,7 +410,7 @@ class LoomTrial(object):
         start = signal.find_peaks(acc, std * n_stds)[0][0]
         if start > 350:
             start = np.nan
-        return start #signal.find_peaks(acc, height=0.0002)[0][0]
+        return start
 
     def reaction_time_s(self):
         return self.reaction_time() / self.frame_rate
@@ -527,42 +421,8 @@ class LoomTrial(object):
     ):  # TODO: extract implementation to tracks
         return np.roll(np.diff(self.smoothed_x_speed), 2)
 
-    def is_flee(self):
-        return self.classify_flee()
-
-    def classify_flee(self, speed_thresh=-SPEED_THRESHOLD):
-        peak_speed, arg_peak_speed = self.peak_speed(True)
-        latency = self.latency_peak_detect()
-        time_to_shelter = self.n_samples_to_reach_shelter()
-        print(f'speed {peak_speed}, threshold {speed_thresh}, latency {latency} limit: {CLASSIFICATION_WINDOW_END-20}, time to shelter {time_to_shelter}, limit: {CLASSIFICATION_WINDOW_END}')
-
-        if time_to_shelter is None or latency is None:
-            return False
-
-        return (peak_speed > speed_thresh) and (time_to_shelter < CLASSIFICATION_WINDOW_END) #and (latency < (CLASSIFICATION_WINDOW_END-20))
-
-    def classify_flee_old(self):
-        track = gaussian_filter(self.normalised_x_track, 3)
-        speed = np.diff(track)
-
-        if looming_spots.track_analysis.escape_classification.fast_enough(
-            speed
-        ) and looming_spots.track_analysis.escape_classification.reaches_home(
-            track, self.context
-        ):  # and not leaves_house(track, self.context)
-            leaves_house_within = looming_spots.track_analysis.escape_classification.leaves_house(
-                track, self.context
-            )
-            print(f"leaves: {leaves_house_within}")
-            return True
-        fast_enough = looming_spots.track_analysis.escape_classification.fast_enough(
-            speed
-        )
-        reaches_shelter = looming_spots.track_analysis.escape_classification.reaches_home(
-            track, self.context
-        )
-        print(f"fast enough: {fast_enough}, reaches home: {reaches_shelter}")
-        return False
+    def classify_escape(self):
+        return classify_escape()
 
     def plot_peak_x_acceleration(self):
         if self.peak_x_acc() < -0.001:  # FIXME: hard code
@@ -574,22 +434,13 @@ class LoomTrial(object):
             )
 
     def plot_track_on_image(self, start=0, end=-1):
-        x_track, y_track = self.raw_track
+        x_track, y_track = self.track_in_standard_space
         #plt.imshow(self.get_reference_frame())
-        track_color = "r" if self.is_flee() else "k"
+        track_color = "r" if self.classify_escape() else "k"
         if self.trial_type == "habituation":
             track_color = "b"
         plt.plot(x_track[start:end], y_track[start:end], color=track_color)
         plt.plot(x_track[self.n_samples_before], y_track[self.n_samples_before], 'o')
-
-    def peak_speed(self, return_loc=False):
-        peak_speed, arg_peak_speed = looming_spots.track_analysis.escape_classification.get_peak_speed_and_latency(
-            self.normalised_x_track
-        )
-        peak_speed = peak_speed * FRAME_RATE * ARENA_SIZE_CM
-        if return_loc:
-            return peak_speed, arg_peak_speed
-        return peak_speed
 
     def latency(self):
         return (
@@ -642,35 +493,6 @@ class LoomTrial(object):
     def latency_p(self):
         return self.peak_x_acc_idx() - LOOMING_STIMULUS_ONSET
 
-    def estimate_latency(self, smooth=False, limit=600):
-        home_front = 0.2 #looming_spots.preprocess.normalisation.normalised_shelter_front(self.context)
-
-        inside_house = self.normalised_x_track[:limit] < home_front
-
-        if smooth:
-            speed = self.smoothed_x_speed[:limit]
-        else:
-            speed = self.normalised_x_speed[:limit]
-
-        towards_house = speed < -0.0001
-
-        starts, ends = get_starts_and_ends(towards_house, 7)
-
-        for s, e in zip(starts, ends):
-            if s > LOOMING_STIMULUS_ONSET:
-                if s < LOOMING_STIMULUS_ONSET:
-                    continue
-                elif any(inside_house[s:e]):
-                    return s
-        print("did not find any starts... attempting with smoothed track")
-
-        if not smooth:
-            try:
-                return self.estimate_latency(smooth=True) + 5
-            except Exception as e:
-                print(e)
-                return np.nan
-
     def has_escaped_by(self, sample_n):
         return self.estimate_latency(False) < sample_n
 
@@ -689,7 +511,7 @@ class LoomTrial(object):
 
     @property
     def mouse_location_at_stimulus_onset(self):
-        x_track, y_track = self.raw_track
+        x_track, y_track = self.track_in_standard_space
         return x_track[LOOMING_STIMULUS_ONSET], y_track[LOOMING_STIMULUS_ONSET]
 
     def max_speed(self):
@@ -710,7 +532,7 @@ class LoomTrial(object):
         else:
             plt.sca(ax)
         if color is None:
-            color = "r" if self.is_flee() else "k"
+            color = "r" if self.classify_escape() else "k"
         plt.plot(self.normalised_x_track, color=color)
         plt.ylabel("x position in box (cm)")
         plt.xlabel("time (s)")
@@ -722,24 +544,6 @@ class LoomTrial(object):
         self.convert_x_axis(track_length, n_steps=11)
         plt.xlim([0, n_samples_to_show])
         sns.despine(ax=ax, top=True, right=True, left=False, bottom=False)
-
-    def get_all_bodyparts(self):
-        p = pathlib.Path(self.session.path) / '5_label'
-        tracks_path = self.get_tracks_path(p)
-        if tracks_path is not None:
-            df = pd.read_hdf(tracks_path)
-            df = df[df.keys()[0][0]]
-            body_part_labels = ['nose', 'L_ear', 'R_ear', 'body', 'tail_base', 'tail_tip']
-            body_parts = {body_part_label: df[body_part_label] for body_part_label in body_part_labels}
-            df_y = pd.DataFrame({body_part_label: body_part["y"] for body_part_label, body_part in body_parts.items()})
-            df_x = pd.DataFrame({body_part_label: body_part["x"] for body_part_label, body_part in body_parts.items()})
-            return df_x[self.start:self.end].reset_index(), df_y[self.start:self.end].reset_index()
-        else:
-            return None, None
-
-    def get_roughly_normalised_bodyparts(self):
-        x,y = self.get_all_bodyparts()
-        return 1 - (x/ 600), 1-(y/200)
 
     def get_tracks_path(self, directory):
         fname = '*.h5'
@@ -776,8 +580,8 @@ class LoomTrial(object):
         )
 
     def days_since_last_session_type(self):
-        if self.habituation_loom_before():
-            last_habituation_trial = self.get_last_habituation_trial()
+        if self.lsie_loom_before():
+            last_habituation_trial = self.get_last_lsie_trial()
             time_since_last_session_type = (
                 self.time - last_habituation_trial.time
             )
@@ -797,201 +601,18 @@ class LoomTrial(object):
         ends = locs[1::2]
         return starts, ends
 
-    def photometry_peaks(self):
-        peaks = []
-        starts, ends = self.actual_loom_onsets()
-        for start, end in zip(starts, ends):
-            peaks.append(max(max(self.delta_f()[start:end]), 0))
-        return peaks
-
-    def photometry_sums(self):
-        sums = []
-        starts, ends = self.actual_loom_onsets()
-        for start, end in zip(starts, ends):
-            sums.append(max(sum(self.delta_f()[start:end]), 0))
-        return sums
-
-    @property
-    def event_metric_functions(self):
-        func_dict = {  #'peaks': self.photometry_peaks,
-            #'sum': self.photometry_sums,
-            "integral at latency": self.integral_at_latency,
-            "integral at end": self.integral_at_end
-            # 'latency': self.photometry_latency,
-            # 'duration': self.photometry_duration,
-        }
-
-        return func_dict
-
     def events_df(self):
         metric_dict = {}
 
         idx = np.arange(len(self.actual_loom_onsets()[0]))
         trial_idx = [self.loom_number] * len(idx)
-        peaks = self.photometry_peaks()
         mouse_ids = [self.session.mouse_id] * len(idx)
-        sums = self.photometry_sums()
 
         metric_dict.setdefault("within_stimulus_loom_id", idx)
         metric_dict.setdefault("trial id", trial_idx)
-        metric_dict.setdefault("peak", peaks)
-        metric_dict.setdefault("sum", sums)
         metric_dict.setdefault("mouse_id", mouse_ids)
 
         return pd.DataFrame.from_dict(metric_dict)
-
-    def detect_events(self):
-        return self.detect_events_scipy(self.delta_f())
-
-    @staticmethod
-    def detect_events_scipy(delta_f):
-        df = delta_f - apply_butterworth_lowpass_filter(
-            delta_f, 0.1, 30, order=8
-        )
-
-        pks = signal.find_peaks(df, np.std(df), width=2)  # 1.5 * np.std(df)
-        starts = pks[1]["left_ips"].astype(int)
-        ends = pks[1]["right_ips"].astype(int)
-        peak_locs = pks[0]
-        half_rise = np.mean([pks[0], starts], axis=0)
-        amplitudes = pks[1]["peak_heights"]
-
-        return starts, ends, peak_locs, half_rise, amplitudes
-
-    def events(self):
-        starts, _, peak_locs, half_rise, amplitudes = self.detect_events()
-        all_events = []
-        for (s, peak_loc, half_rise, amplitude) in zip(
-            starts, peak_locs, half_rise, amplitudes
-        ):
-            e = events.Event(
-                s,
-                peak_loc,
-                half_rise,
-                amplitude,
-                self.delta_f(),
-                sampling_interval=1,
-            )
-            all_events.append(e)
-        return EventsCollection(all_events)
-
-    @cached_property
-    def events_trace(self):
-        if self.stimulus_type == "auditory":
-            mask = np.zeros_like(self.delta_f())
-            mask[200:290] = 1
-            return mask * self.delta_f()
-        return self.events().events_trace(200, 350)  # fixme
-
-    @cached_property
-    def cumulative_sum_trace(self):
-        return np.cumsum(self.events_trace)
-
-    @cached_property
-    def cumulative_sum_raw(self):
-        df = self.delta_f_with_pre_stimulus_events_removed()
-        df[df < 0] = 0  # remove negative cumsum
-        mask = np.zeros_like(df)
-        # plt.plot(df)
-        mask[200:350] = 1
-        cumsum = np.cumsum(df * mask)
-        cumsum[350:] = np.nan
-        return cumsum
-
-    @cached_property
-    def integral(self, end_sample=150):
-
-        end_sample = int(end_sample * 10000 / FRAME_RATE)
-        SAMPLING = 10000
-        df = self.fully_sampled_delta_f
-
-        mask = np.full(len(df), np.nan)
-        start = int(LOOMING_STIMULUS_ONSET * 10000 / FRAME_RATE)
-        integral = [
-            np.trapz(df[start : start + x], dx=1 / SAMPLING)
-            for x in range(end_sample)
-        ]
-
-        mask[start : start + end_sample] = integral
-        return mask
-
-    def integral_downsampled(self):
-
-        SAMPLING = self.frame_rate
-        end_sample = self.frame_rate*5
-        df = self.delta_f()
-
-        mask = np.full(len(df), np.nan)
-        integral = [
-            np.trapz(
-                df[LOOMING_STIMULUS_ONSET: LOOMING_STIMULUS_ONSET + x],
-                dx=1 / SAMPLING,
-            )
-            for x in range(end_sample)
-        ]
-
-        mask[
-            LOOMING_STIMULUS_ONSET : (LOOMING_STIMULUS_ONSET + end_sample)
-        ] = integral
-        return mask
-
-    def get_integral(self, df):
-        SAMPLING = self.frame_rate
-        end_sample = self.frame_rate*5
-
-        mask = np.full(len(df), np.nan)
-        integral = [
-            np.trapz(
-                df[LOOMING_STIMULUS_ONSET: LOOMING_STIMULUS_ONSET + x],
-                dx=1 / SAMPLING,
-            )
-            for x in range(end_sample)
-        ]
-
-        mask[
-        LOOMING_STIMULUS_ONSET: (LOOMING_STIMULUS_ONSET + end_sample)
-        ] = integral
-        return mask
-
-
-    def get_delta_f_integral(self, s, e):
-        SAMPLING = self.frame_rate
-        end_sample = self.frame_rate*5
-        df = self.delta_f()
-
-        integral = [
-            np.trapz(
-                df[s: e + x],
-                dx=1 / SAMPLING,
-            )
-            for x in range(end_sample)
-        ]
-        return integral
-
-    def get_cumsum(self, scale_factor):
-        return self.cumulative_sum_raw / scale_factor
-
-    def plot_delta_f_with_track(self, color=None, scale_factor=1, norm_factor=1):
-        if color is None:
-            color_df = 'b'
-            color_track = 'r'
-        else:
-            color_df = color
-            color_track = color
-        scale_factor = max(self.delta_f()[:600]) * norm_factor
-        plt.plot(
-            self.delta_f() / norm_factor, #scale_factor, #delta_f_with_pre_stimulus_events_removed
-            color=color_df,
-        )
-        plt.plot(self.normalised_x_track, color=color_track)
-        #self.plot_stimulus()
-        [plt.axvline(x, color='k', ls='--') for x in LOOM_ONSETS]
-        plt.xlim([0, self.frame_rate*20])
-        plt.ylim([0, 1])
-        plt.hlines(0.5, 250, 280)
-        plt.vlines(250, 0.5, 0.6)
-
-        plt.vlines(300, 0.5, 0.6, color='r')
 
     def plot_stimulus(self):  # FIXME: duplicated elsewhere
         ax = plt.gca()
@@ -1007,37 +628,6 @@ class LoomTrial(object):
         return photodiode.find_nearest_pd_up_from_frame_number(
             self.session.path, self.start
         )
-
-    def plot_track_and_delta_f(self, axes=None):
-        if axes is None:
-            fig1 = plt.figure()
-            plt.subplot(211)
-        else:
-            plt.sca(axes[0])
-
-        self.plot_track()
-        self.plot_stimulus()
-        if axes is None:
-            plt.subplot(212)
-        else:
-            plt.sca(axes[1])
-        plt.plot(self.delta_f()[:N_SAMPLES_TO_SHOW])  # TODO: extract nsamplestoshow
-        plt.ylim([-0.15, 0.4])
-        self.plot_stimulus()
-        if axes is None:
-            return fig1
-
-    def integral_escape_metric(self, latency=None):
-        if latency is not None:
-            return self.integral_downsampled()[int(latency)]
-        else:
-            try:
-                return self.integral_downsampled()[
-                    self.estimate_latency(False)
-                ]
-            except Exception as e:
-                warnings.warn("returning NaN for escape metric")
-                return np.nan
 
     def n_samples_to_reach_shelter(self):
         n_samples = arena_region_crossings.get_next_entry_from_track(
@@ -1062,10 +652,9 @@ class LoomTrial(object):
     def n_samples_to_tz_reentry(self):
         return arena_region_crossings.get_next_entry_from_track(
             self.smoothed_x_track,
-            self.context,
             "tz",
             "middle",
-            LOOMING_STIMULUS_ONSET,
+            LOOMING_STIMULUS_ONSET
         )
 
     def track_overlay(self, duration_in_samples=200, track_heatmap=None):
@@ -1074,13 +663,13 @@ class LoomTrial(object):
 
         x, y = (
             np.array(
-                self.raw_track[0][
+                self.track_in_standard_space[0][
                     LOOMING_STIMULUS_ONSET : LOOMING_STIMULUS_ONSET
                     + duration_in_samples
                 ]
             ),
             np.array(
-                self.raw_track[1][
+                self.track_in_standard_space[1][
                     LOOMING_STIMULUS_ONSET : LOOMING_STIMULUS_ONSET
                     + duration_in_samples
                 ]
@@ -1092,7 +681,7 @@ class LoomTrial(object):
         return track_heatmap
 
     def loom_evoked_speed_before_loom(self):
-        return looming_spots.track_analysis.escape_classification.loom_evoked_speed_change(
+        return looming_spots.analyse.escape_classification.loom_evoked_speed_change(
             self.smoothed_x_speed,
             LOOMING_STIMULUS_ONSET,
             window_before=14,
@@ -1102,7 +691,7 @@ class LoomTrial(object):
         ]
 
     def loom_evoked_speed_after_loom(self):
-        return looming_spots.track_analysis.escape_classification.loom_evoked_speed_change(
+        return looming_spots.analyse.escape_classification.loom_evoked_speed_change(
             self.smoothed_x_speed,
             LOOMING_STIMULUS_ONSET,
             window_before=20,
@@ -1112,28 +701,17 @@ class LoomTrial(object):
         ]
 
     def loom_evoked_speed_change(self):
-        if not self.is_flee():
+        if not self.classify_escape():
             return (
                 self.loom_evoked_speed_before_loom()
                 - self.loom_evoked_speed_after_loom()
             )
 
     def movement_loom_on_vs_loom_off(self):
-        if not self.is_flee():
-            return looming_spots.track_analysis.escape_classification.movement_loom_on_vs_loom_off(
+        if not self.classify_escape():
+            return looming_spots.analyse.escape_classification.movement_loom_on_vs_loom_off(
                 self.smoothed_x_speed
             )
-
-    def get_heading(self):
-        df_x, df_y = self.get_roughly_normalised_bodyparts()
-        left_ear = np.array([df_x['L_ear'], df_y['L_ear']]).T
-        right_ear = np.array([df_x['R_ear'], df_y['R_ear']]).T
-        body = np.array([df_x['body'], df_y['body']]).T
-        head_middle = (left_ear + right_ear) / 2
-        delta_point = np.array(head_middle - body)
-        theta_deg = np.rad2deg(np.arccos(
-            (delta_point[:, 1]) / (np.sqrt(np.nansum(np.square(delta_point), 1)) * np.linalg.norm([1, 0]))))
-        return theta_deg
 
     def get_box_corner_coordinates(self):
         box_path = pathlib.Path(self.folder).parent.glob('box_corner_coordinates.npy')
@@ -1143,10 +721,8 @@ class LoomTrial(object):
         return get_box_coordinates_from_file(str(list(pathlib.Path(self.folder).parent.glob('box_corner_coordinates.npy'))[0]))
 
     def projective_transform_tracks(self, Xin, Yin):
-        p = get_inverse_projective_transform(dest=self.get_box_corner_coordinates(), src=np.array([[0, 240],
-                                                                                                   [0, 0],
-                                                                                                   [600, 240],
-                                                                                                   [600, 0]]),
+        p = get_inverse_projective_transform(dest=self.get_box_corner_coordinates(),
+                                             src=np.array(BOX_CORNER_COORDINATES),
                                              )
         new_track_x = []
         new_track_y = []
@@ -1164,7 +740,6 @@ class VisualStimulusTrial(LoomTrial):
         directory,
         sample_number,
         trial_type,
-        frame_rate,
         stimulus_type="loom",
     ):
         super().__init__(
@@ -1173,7 +748,6 @@ class VisualStimulusTrial(LoomTrial):
             sample_number,
             trial_type,
             stimulus_type,
-            frame_rate,
             trial_video_fname="{}{}.mp4",
 
         )
@@ -1186,7 +760,7 @@ class VisualStimulusTrial(LoomTrial):
         path_out = "_overlay.".join(path_in.split("."))
 
         video_processing.loom_superimposed_video(
-            path_in, path_out, width=width, height=height, origin=origin, track=self.raw_track
+            path_in, path_out, width=width, height=height, origin=origin, track=self.track_in_standard_space
         )
 
     def get_video(self):
@@ -1205,10 +779,9 @@ class AuditoryStimulusTrial(LoomTrial):
         sample_number,
         trial_type,
         stimulus_type="auditory",
-        frame_rate=30,
     ):
         super().__init__(
-            session, directory, sample_number, trial_type, stimulus_type, frame_rate
+            session, directory, sample_number, trial_type, stimulus_type
         )
 
     def make_stimulus_superimposed_video(

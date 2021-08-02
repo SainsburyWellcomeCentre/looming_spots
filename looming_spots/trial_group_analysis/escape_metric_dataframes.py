@@ -31,7 +31,7 @@ def get_behaviour_metric_dataframe(mtgs, metric, test_type):
         )
         event_metric_dict.setdefault("metric", [metric] * len(trials))
         event_metric_dict.setdefault("contrast", [t.contrast for t in trials])
-        event_metric_dict.setdefault("escape", [t.is_flee() for t in trials])
+        event_metric_dict.setdefault("escape", [t.classify_escape() for t in trials])
         metric_df = pd.DataFrame.from_dict(event_metric_dict)
         all_df = all_df.append(metric_df, ignore_index=True)
     return all_df
@@ -62,7 +62,7 @@ def get_escape_metric_df_trials(
     )
     event_metric_dict.setdefault("metric", [metric] * len(trials))
     event_metric_dict.setdefault("contrast", [t.contrast for t in trials])
-    event_metric_dict.setdefault("escape", [t.is_flee() for t in trials])
+    event_metric_dict.setdefault("escape", [t.classify_escape() for t in trials])
     metric_df = pd.DataFrame.from_dict(event_metric_dict)
     all_df = all_df.append(metric_df, ignore_index=True)
     return all_df
@@ -117,7 +117,7 @@ def get_base_df_dict(mtg, test_type, trials):
         "test type", [test_type] * len(trials)
     )
     event_metric_dict.setdefault("contrast", [t.contrast for t in trials])
-    event_metric_dict.setdefault("escape", [t.is_flee() for t in trials])
+    event_metric_dict.setdefault("escape", [t.classify_escape() for t in trials])
     return event_metric_dict
 
 

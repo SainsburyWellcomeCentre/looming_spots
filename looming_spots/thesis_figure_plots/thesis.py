@@ -376,14 +376,14 @@ def ohda_imaging():
         avg_loom = []
         for i, t in enumerate(mtg.loom_trials()):
             if t.contrast == 0:
-                color = 'r' if t.is_flee() else 'k'
+                color = 'r' if t.classify_escape() else 'k'
                 plt.plot(t.delta_f()[:600] * 20, color=color, linestyle='-')
                 t.plot_track()
                 t.plot_stimulus()
 
         plt.figure()
         for i, t in enumerate(mtg.auditory_trials()):
-            color = 'r' if t.is_flee() else 'k'
+            color = 'r' if t.classify_escape() else 'k'
             plt.plot(t.delta_f()[:600] * 20, color=color, linestyle='-')
             t.plot_track()
             t.plot_stimulus()

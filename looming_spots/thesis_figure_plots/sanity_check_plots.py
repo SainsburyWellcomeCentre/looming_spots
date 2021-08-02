@@ -27,7 +27,7 @@ def plot_escape_and_delta_f_with_latencies():
             axes[2].plot(t.integral_downsampled(), color='r')
 
         for t in mtg.post_test_trials()[:3]:
-            color = 'r' if t.is_flee() else 'k'
+            color = 'r' if t.classify_escape() else 'k'
             axes[0].plot(t.normalised_x_track[:600], color=color)
             axes[1].plot(t.delta_f()[:600], color='k')
             axes[1].plot(pre_latency, t.delta_f()[pre_latency], 'o', color='k')
@@ -71,7 +71,7 @@ def plot_trajectory_metrics_sanity(mid, test_type, start=195, end=350):
         plt.title(f'{mtg.mouse_id}_{t.loom_number}')
         x = t.smoothed_x_track[start:end]
         y = t.smoothed_y_track[start:end]
-        color = 'r' if t.is_flee() else 'k'
+        color = 'r' if t.classify_escape() else 'k'
         #if x[0] < 0.65:
         plt.plot(y, x, color=color)
         #plt.plot(x[0], y[0], 'o', color='g')

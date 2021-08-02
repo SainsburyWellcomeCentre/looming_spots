@@ -12,6 +12,7 @@ CLASSIFICATION_WINDOW_END = 350  # 345
 SPEED_THRESHOLD = -0.017 * FRAME_RATE * ARENA_SIZE_CM  #0.02 0.015
 CLASSIFICATION_LATENCY = 5
 END_OF_CLASSIFICATION_WINDOW = 550
+BOX_CORNER_COORDINATES = [[0, 240], [0, 0], [600, 240], [600, 0]]
 
 LOOM_ONSETS = [200, 228, 256, 284, 312]
 
@@ -60,13 +61,14 @@ def get_raw_path(mouse_id):
     return os.path.join(RAW_DATA_DIRECTORY, mouse_id)
 
 
-HEAD_DIRECTORY = r'Z:\margrie\glusterfs\imaging\l\loomer'
-RAW_DATA_DIRECTORY = os.path.join(HEAD_DIRECTORY, "raw_data")
-PROCESSED_DATA_DIRECTORY = os.path.join(HEAD_DIRECTORY, "processed_data")
-FIGURE_DIRECTORY = r'C:\Users\Lee\Documents\slenzi\lsie\docs\figures'
+HEAD_DIRECTORY = '/home/slenzi/winstor/margrie/glusterfs/imaging/l/loomer/'
+FIGURE_DIRECTORY = '~/lsie/docs/figures/'
 OLD_RAW_DIRECTORY = (
     "/home/slenzi/spine_shares/loomer/srv/glusterfs/imaging/l/loomer/raw_data/"
 )
+FILE_PATH = '~/Downloads/updated_loom_sheet_format.csv'
+RAW_DATA_DIRECTORY = os.path.join(HEAD_DIRECTORY, "raw_data")
+PROCESSED_DATA_DIRECTORY = os.path.join(HEAD_DIRECTORY, "processed_data")
 CONTEXT_B_SPOT_POSITION = 1240
 
 
@@ -81,3 +83,5 @@ def load_metadata(directory):
         write_empty_values=True,
     )
     return metadata
+
+
