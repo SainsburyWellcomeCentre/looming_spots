@@ -1,4 +1,5 @@
 import numpy as np
+from looming_spots.analyse.tracks import get_peak_speed_and_latency
 from scipy.ndimage import gaussian_filter
 
 from looming_spots.preprocess.normalisation import (
@@ -8,7 +9,6 @@ from looming_spots.preprocess.normalisation import (
 from looming_spots.db.constants import (
     CLASSIFICATION_WINDOW_END,
     CLASSIFICATION_WINDOW_START,
-    CLASSIFICATION_LATENCY,
     FRAME_RATE,
     SPEED_THRESHOLD,
     LOOM_ONSETS,
@@ -175,22 +175,6 @@ def samples_to_shelter(normalised_x_track):
     if len(in_home_idx) == 0:
         return np.nan
     return in_home_idx[0]
-
-
-def get_peak_speed_and_latency(normalised_track):
-    """
-    :return peak_speed:
-    :return arg_peak: the frame number of the peak speed
-    """
-    filtered_track = gaussian_filter(normalised_track, 3)
-    distances = np.diff(filtered_track)
-    peak_speed = np.nanmin(
-        distances[CLASSIFICATION_WINDOW_START:CLASSIFICATION_WINDOW_END]
-    )
-    arg_peak = np.argmin(
-        distances[CLASSIFICATION_WINDOW_START:CLASSIFICATION_WINDOW_END]
-    )
-    return -peak_speed, arg_peak + CLASSIFICATION_WINDOW_START
 
 
 def loom_evoked_speed_change(

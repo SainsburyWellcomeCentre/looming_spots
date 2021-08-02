@@ -7,7 +7,7 @@ import pims
 from looming_spots.analyse.escape_classification import classify_escape
 
 from looming_spots.analyse.tracks import downsample_track, downsample_y_track, smooth_track, smooth_speed, \
-    normalise_speed
+    normalise_speed, peak_speed, smooth_acceleration, projective_transform_tracks
 from matplotlib import patches
 from scipy import signal
 from datetime import timedelta
@@ -336,6 +336,19 @@ class LoomTrial(object):
         y = np.load(str(y_path))[self.start:self.end]
         return x, y
 
+    def get_box_corner_coordinates(self):
+        box_path = pathlib.Path(self.folder).parent.glob('box_corner_coordinates.npy')
+        if len(list(box_path)) == 0:
+            print('no box coordinates found...')
+
+        return get_box_coordinates_from_file(
+            str(list(pathlib.Path(self.folder).parent.glob('box_corner_coordinates.npy'))[0]))
+
+    def projective_transform_tracks(self, Xin, Yin):
+
+        new_track_x, new_track_y = projective_transform_tracks(Xin, Yin, self.get_box_corner_coordinates())
+        return new_track_x, new_track_y
+
     @property
     def x_track(self):
         return self.track_in_standard_space[0]
@@ -393,6 +406,9 @@ class LoomTrial(object):
             + LOOMING_STIMULUS_ONSET
         )
 
+    def peak_speed(self, return_loc=False):
+        return peak_speed(self.normalised_x_track, return_loc)
+
     def get_accelerations_to_shelter(self):
         acc_window = self.smoothed_x_acceleration[
             LOOMING_STIMULUS_ONSET:END_OF_CLASSIFICATION_WINDOW
@@ -413,34 +429,16 @@ class LoomTrial(object):
         return start
 
     def reaction_time_s(self):
-        return self.reaction_time() / self.frame_rate
+        return self.reaction_time() / FRAME_RATE
 
     @property
     def smoothed_x_acceleration(
         self
-    ):  # TODO: extract implementation to tracks
-        return np.roll(np.diff(self.smoothed_x_speed), 2)
+    ):
+        return smooth_acceleration(self.normalised_x_track)
 
     def classify_escape(self):
         return classify_escape()
-
-    def plot_peak_x_acceleration(self):
-        if self.peak_x_acc() < -0.001:  # FIXME: hard code
-            plt.plot(
-                self.peak_x_acc_idx(),
-                self.normalised_x_track[self.peak_x_acc_idx()],
-                "o",
-                color="b",
-            )
-
-    def plot_track_on_image(self, start=0, end=-1):
-        x_track, y_track = self.track_in_standard_space
-        #plt.imshow(self.get_reference_frame())
-        track_color = "r" if self.classify_escape() else "k"
-        if self.trial_type == "habituation":
-            track_color = "b"
-        plt.plot(x_track[start:end], y_track[start:end], color=track_color)
-        plt.plot(x_track[self.n_samples_before], y_track[self.n_samples_before], 'o')
 
     def latency(self):
         return (
@@ -713,25 +711,26 @@ class LoomTrial(object):
                 self.smoothed_x_speed
             )
 
-    def get_box_corner_coordinates(self):
-        box_path = pathlib.Path(self.folder).parent.glob('box_corner_coordinates.npy')
-        if len(list(box_path)) == 0:
-            print('no box coordinates found...')
 
-        return get_box_coordinates_from_file(str(list(pathlib.Path(self.folder).parent.glob('box_corner_coordinates.npy'))[0]))
 
-    def projective_transform_tracks(self, Xin, Yin):
-        p = get_inverse_projective_transform(dest=self.get_box_corner_coordinates(),
-                                             src=np.array(BOX_CORNER_COORDINATES),
-                                             )
-        new_track_x = []
-        new_track_y = []
-        for x, y in zip(Xin, Yin):
-            inverse_mapped = p.inverse([x, y])[0]
-            new_track_x.append(inverse_mapped[0])
-            new_track_y.append(inverse_mapped[1])
-        return new_track_x, new_track_y
 
+    def plot_peak_x_acceleration(self):
+        if self.peak_x_acc() < -0.001:  # FIXME: hard code
+            plt.plot(
+                self.peak_x_acc_idx(),
+                self.normalised_x_track[self.peak_x_acc_idx()],
+                "o",
+                color="b",
+            )
+
+    def plot_track_on_image(self, start=0, end=-1):
+        x_track, y_track = self.track_in_standard_space
+        #plt.imshow(self.get_reference_frame())
+        track_color = "r" if self.classify_escape() else "k"
+        if self.trial_type == "habituation":
+            track_color = "b"
+        plt.plot(x_track[start:end], y_track[start:end], color=track_color)
+        plt.plot(x_track[self.n_samples_before], y_track[self.n_samples_before], 'o')
 
 class VisualStimulusTrial(LoomTrial):
     def __init__(
