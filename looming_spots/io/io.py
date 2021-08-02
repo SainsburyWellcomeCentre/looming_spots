@@ -6,7 +6,7 @@ from shutil import copyfile
 import numpy as np
 from nptdms import TdmsFile
 
-from looming_spots.db.constants import (
+from looming_spots.constants import (
     RAW_DATA_DIRECTORY,
     PROCESSED_DATA_DIRECTORY,
     AUDITORY_STIMULUS_CHANNEL_ADDED_DATE,

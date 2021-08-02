@@ -3,7 +3,7 @@ import pathlib
 
 import pims
 
-from looming_spots.db import loom_trial_group
+from looming_spots.db import trial_group
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -12,7 +12,7 @@ mouse_ids = ['1012998', '1034952', '1034953', '1034954_b', '1034956']
 
 def plot_escape_and_delta_f_with_latencies():
     for mid in mouse_ids:
-        mtg = loom_trial_group.MouseLoomTrialGroup(mid)
+        mtg = trial_group.MouseLoomTrialGroup(mid)
         fig, axes = plt.subplots(3, 1)
         plt.title(mid)
 
@@ -39,7 +39,7 @@ def plot_escape_and_delta_f_with_latencies():
 
 
 def plot_all_metrics_sanity(mid):
-    mtg = loom_trial_group.MouseLoomTrialGroup(mid)
+    mtg = trial_group.MouseLoomTrialGroup(mid)
     for t in mtg.loom_trials()[:3]:
         plt.figure()
         plt.title(f'{mtg.mouse_id}_{t.loom_number}')
@@ -65,7 +65,7 @@ def plot_all_metrics_sanity(mid):
 
 def plot_trajectory_metrics_sanity(mid, test_type, start=195, end=350):
     matplotlib.rcParams["figure.figsize"] = [3.2, 8]
-    mtg = loom_trial_group.MouseLoomTrialGroup(mid)
+    mtg = trial_group.MouseLoomTrialGroup(mid)
     trials = mtg.pre_test_trials()[:3] if test_type == 'pre_test' else mtg.post_test_trials()[:3]
     for t in trials:
         plt.title(f'{mtg.mouse_id}_{t.loom_number}')

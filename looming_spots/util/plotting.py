@@ -5,7 +5,7 @@ from matplotlib import pyplot as plt, patches as patches
 from matplotlib.collections import LineCollection
 
 import looming_spots.preprocess.normalisation
-from looming_spots.db.constants import LOOM_ONSETS
+from looming_spots.constants import LOOM_ONSETS
 
 
 def plot_looms(fig):
@@ -69,7 +69,7 @@ def plot_looms_ax(ax=None, vertical=True, height=1.3, loom_n_samples=14, relativ
 
 def create_loom_patch(start, upsample_factor=1, vertical=True, height=1.3, loom_n_samples=14, y=-0.2):
     width = loom_n_samples * upsample_factor
-    x=start * upsample_factor
+    x = start * upsample_factor
     if not vertical:
         width, height = height, width
         x, y = y, x

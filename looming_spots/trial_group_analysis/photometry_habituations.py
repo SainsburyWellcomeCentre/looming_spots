@@ -5,7 +5,7 @@ import scipy.stats
 import pandas as pd
 import seaborn as sns
 
-from looming_spots.db import loom_trial_group
+from looming_spots.db import trial_group
 
 
 def plot_tracks_and_signals(mtgs, test_type="pre_test"):
@@ -384,7 +384,7 @@ def get_signal_metric_dataframe(mtgs, metric):
 
 
 def plot_signal_against_escape_metrics(mouse_ids):
-    mtgs = [loom_trial_group.MouseLoomTrialGroup(mid) for mid in mouse_ids]
+    mtgs = [trial_group.MouseLoomTrialGroup(mid) for mid in mouse_ids]
     dfs = []
     for metric in [
         "latency to escape",
@@ -562,7 +562,7 @@ def compare_integrals_tracks(mids):
     for mid in mids:
         plt.figure()
         plt.title(mid)
-        mtg = loom_trial_group.MouseLoomTrialGroup(mid)
+        mtg = trial_group.MouseLoomTrialGroup(mid)
         for t in mtg.pre_test_trials()[:3]:
             print(t.estimate_latency(False))
             plt.plot(t.integral_downsampled(), color='r')

@@ -50,7 +50,7 @@ def get_main_window(app_engine):
                 qml_source_path
             )
         )
-    app_engine.load(qml_source_path)
+    app_engine.load_raw(qml_source_path)
     try:
         win = app_engine.rootObjects()[0]
     except IndexError:

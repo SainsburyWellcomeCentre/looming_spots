@@ -1,8 +1,8 @@
-from looming_spots.db import loom_trial_group, experimental_log
+from looming_spots.db import trial_group, experimental_log
 from matplotlib import patches
 import matplotlib.pyplot as plt
 
-from looming_spots.db.loom_trial_group import (
+from looming_spots.db.trial_group import (
     make_trial_heatmap_location_overlay,
 )
 
@@ -17,7 +17,7 @@ def plot_ichloc_pretest_disruption(mids=ICHLOC_MIDS):
         "ichloc (15mW) inactivation of SNL during pre-test (same-day)"
     )
     for mid in mids:
-        mtg = loom_trial_group.MouseLoomTrialGroup(mid)
+        mtg = trial_group.MouseLoomTrialGroup(mid)
         ax = plt.sca(axes[0])
         for t in mtg.pre_test_trials():
             t.plot_track(ax)
@@ -32,7 +32,7 @@ def plot_ichloc_pretest_disruption(mids=ICHLOC_MIDS):
     plt.figure()
     for i, mid in enumerate(mids):
         trials = []
-        mtg = loom_trial_group.MouseLoomTrialGroup(mid)
+        mtg = trial_group.MouseLoomTrialGroup(mid)
         for t in mtg.lsie_trials():
             trials.extend([t])
         hm = make_trial_heatmap_location_overlay(trials)

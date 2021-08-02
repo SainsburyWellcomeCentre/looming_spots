@@ -1,4 +1,4 @@
-from looming_spots.db.constants import RAW_DATA_DIRECTORY
+from looming_spots.constants import RAW_DATA_DIRECTORY
 from looming_spots.tracking_dlc import track_5label, process_DLC_output
 import pathlib
 import numpy as np

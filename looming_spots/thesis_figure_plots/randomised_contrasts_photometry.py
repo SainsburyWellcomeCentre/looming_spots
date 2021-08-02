@@ -1,7 +1,7 @@
 from looming_spots.trial_group_analysis.photometry_habituations import (
     get_signal_metric_dataframe_variable_contrasts,
 )
-from looming_spots.db import loom_trial_group
+from looming_spots.db import trial_group
 from looming_spots.thesis_figure_plots import photometry_example_traces
 from matplotlib import patches
 import matplotlib.pyplot as plt
@@ -37,7 +37,7 @@ def plot_first_loom_raw_signal():
 
 def plot_scatter_by_contrast(mids=snl_contrast_curve_mids):
     mtgs = [
-        loom_trial_group.MouseLoomTrialGroup(mid)
+        trial_group.MouseLoomTrialGroup(mid)
         for mid in mids
     ]
     all_plots = []
@@ -88,7 +88,7 @@ def get_trials_of_contrast(trials, contrast):
 
 def waveform_comparison(ctst, mid):
 
-    mtg = loom_trial_group.MouseLoomTrialGroup(mid)
+    mtg = trial_group.MouseLoomTrialGroup(mid)
 
     trials = get_trials_of_contrast(mtg.loom_trials(), ctst)
     test_ctst_trials=get_trials_of_contrast(mtg.loom_trials(), 0)

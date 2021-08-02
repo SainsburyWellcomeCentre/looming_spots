@@ -5,7 +5,7 @@ import pims
 import scipy.signal
 
 import looming_spots.util.video_processing
-from looming_spots.db.constants import FRAME_RATE
+from looming_spots.constants import FRAME_RATE
 
 from looming_spots.io.io import (
     load_pd_on_clock_ups,

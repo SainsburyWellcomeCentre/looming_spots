@@ -10,7 +10,7 @@ import skvideo.io
 import pims
 
 import looming_spots.preprocess
-from looming_spots.db.constants import LOOM_ONSETS
+from looming_spots.constants import LOOM_ONSETS
 
 
 def load_video_from_path(vid_path):

@@ -12,13 +12,15 @@ from cached_property import cached_property
 
 import looming_spots.io.io
 import looming_spots.util
-from looming_spots.db.constants import (
+from looming_spots.analyse import tracks
+from looming_spots.analyse.tracks import get_tracking_method
+from looming_spots.constants import (
     AUDITORY_STIMULUS_CHANNEL_ADDED_DATE,
     PROCESSED_DATA_DIRECTORY,
     CONTEXT_B_SPOT_POSITION,
 )
 
-from looming_spots.db import loom_trial
+from looming_spots.db import trial
 from looming_spots.exceptions import LoomsNotTrackedError, MouseNotFoundError
 
 from looming_spots.preprocess import photodiode, normalisation
@@ -157,7 +159,7 @@ class Session(object):
                 trials = []
                 for i, onset_in_samples in enumerate(idx):
                     if stimulus_type == "visual":
-                        t = loom_trial.VisualStimulusTrial(
+                        t = trial.VisualStimulusTrial(
                             self,
                             directory=self.path,
                             sample_number=onset_in_samples,
@@ -165,7 +167,7 @@ class Session(object):
                             stimulus_type="loom",
                         )
                     elif stimulus_type == "auditory":
-                        t = loom_trial.AuditoryStimulusTrial(
+                        t = trial.AuditoryStimulusTrial(
                             self,
                             directory=self.path,
                             sample_number=onset_in_samples,
@@ -396,7 +398,6 @@ class Session(object):
             "delta_f": self.get_delta_f,
             "loom_onsets": self.get_loom_idx,
             "auditory_onsets": self.get_auditory_idx,
-            "x_pos_norm": self.get_normalised_x_pos,
             "trials": self.get_session_trials,
         }
 
@@ -406,17 +407,7 @@ class Session(object):
         return self.photodiode_trace - np.median(self.photodiode_trace)
 
     def track(self):
-        p = pathlib.Path(self.path)
-        if len(list(p.rglob('dlc_x_tracks.npy'))) > 0:
-            x_path = str(list(p.rglob("dlc_x_tracks.npy"))[0])
-            y_path = str(list(p.rglob("dlc_y_tracks.npy"))[0])
-            x = np.load(x_path)
-            y = np.load(y_path)
-            if len(x) - len(self) > 5:
-                warning_text = f"noticed a mismatch between track length: {len(x)} and session data: {len(self)}"
-                warnings.warn(warning_text)
-
-            return x[: len(self)], y[: len(self)]
+        return tracks.track_in_standard_space(self.path, get_tracking_method(self.path), 0, len(self))
 
     def x_pos(self):
         return self.track()[0]
@@ -465,9 +456,6 @@ class Session(object):
     @classmethod
     def set_previous_session(cls, self, other):
         setattr(self, "previous_session", other)
-
-    def get_normalised_x_pos(self):
-        return normalisation.normalise_x_track(self.x_pos(), self.context)
 
 
 def get_context_from_stimulus_mat(directory):

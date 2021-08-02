@@ -1,7 +1,7 @@
 from looming_spots.trial_group_analysis.escape_metric_dataframes import (
     get_behaviour_metric_dataframe,
 )
-from looming_spots.db import experimental_log, loom_trial_group
+from looming_spots.db import experimental_log, trial_group
 import pandas as pd
 
 
@@ -44,7 +44,7 @@ def plot_effect_of_delay_on_habituation_efficacy(metric="classified as flee"):
 
             for mid_group in groups:
                 mtgs = [
-                    loom_trial_group.MouseLoomTrialGroup(mid)
+                    trial_group.MouseLoomTrialGroup(mid)
                     for mid in mid_group
                 ]
                 df = get_behaviour_metric_dataframe(mtgs, metric, "post_test")
@@ -85,7 +85,7 @@ def n_stimuli_effect(metric="classified as flee"):
                     "contrast protocol: {contrast_protocol}, mouse ids: {mid_group}"
                 )
                 mtgs = [
-                    loom_trial_group.MouseLoomTrialGroup(mid)
+                    trial_group.MouseLoomTrialGroup(mid)
                     for mid in mid_group
                 ]
                 df = get_behaviour_metric_dataframe(mtgs, metric, "post_test")

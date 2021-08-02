@@ -1,7 +1,7 @@
 import pandas as pd
 
 import numpy as np
-from looming_spots.db import loom_trial_group
+from looming_spots.db import trial_group
 
 
 def get_behaviour_metric_dataframe(mtgs, metric, test_type):
@@ -80,7 +80,7 @@ def get_escape_metrics_mtgs(mtgs, metric, experimental_condition=None):
 
 def get_behaviour_metrics_df(mids, group_label, metrics):
     all_df = pd.DataFrame()
-    mtgs = [loom_trial_group.MouseLoomTrialGroup(mid) for mid in mids]
+    mtgs = [trial_group.MouseLoomTrialGroup(mid) for mid in mids]
     base_df = get_behaviour_metric_dataframe()
     for metric in metrics:
         values = get_metric_values(metric)

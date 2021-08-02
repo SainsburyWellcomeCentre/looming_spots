@@ -8,8 +8,8 @@ from looming_spots.trial_group_analysis.escape_metric_dataframes import (
 from looming_spots.trial_group_analysis.randomised_contrast_escape_curves import (
     get_contrast_escape_curve_from_group_label,
 )
-from looming_spots.db import experimental_log, loom_trial_group
-from looming_spots.db.loom_trial_group import (
+from looming_spots.db import experimental_log, trial_group
+from looming_spots.db.trial_group import (
     make_trial_heatmap_location_overlay,
 )
 import pandas as pd
@@ -40,7 +40,7 @@ def plot_cossell_curves_sns():
         "background_contrast_cossel_curve",
     ]:
         mids = experimental_log.get_mouse_ids_in_experiment(group)
-        mtgs = [loom_trial_group.MouseLoomTrialGroup(mid) for mid in mids]
+        mtgs = [trial_group.MouseLoomTrialGroup(mid) for mid in mids]
         df = get_behaviour_metric_dataframe(mtgs, "latency to escape")
         if group == "spot_contrast_cossel_curve":
             df["contrast"] = 0.1607 - df["contrast"]
@@ -97,7 +97,7 @@ def plot_all_lsie():
 def plot_cossell_curves_by_mouse(exp_group_label, subtract_val=None):
     mids = experimental_log.get_mouse_ids_in_experiment(exp_group_label)
     for mid in mids:
-        mtg = loom_trial_group.MouseLoomTrialGroup(mid)
+        mtg = trial_group.MouseLoomTrialGroup(mid)
         t = mtg.pre_test_trials()[0]
         escape_rate = np.mean([t.classify_escape() for t in mtg.pre_test_trials()[:3]])
 
@@ -119,7 +119,7 @@ def plot_pre_test_effect():
         plt.title(label)
         for mid in mouse_ids:
             try:
-                mtg = loom_trial_group.MouseLoomTrialGroup(mid)
+                mtg = trial_group.MouseLoomTrialGroup(mid)
                 ax = plt.sca(axes[0])
                 for t in mtg.pre_test_trials()[:3]:
                     t.plot_track(ax)
@@ -138,7 +138,7 @@ def plot_pre_test_effect():
 
     plt.figure(figsize=(4, 7))
     plt.title("Post-LSIE Escape Probability \n (n=7 mice)")
-    ltg = loom_trial_group.ExperimentalConditionGroup(labels)
+    ltg = trial_group.ExperimentalConditionGroup(labels)
     df = ltg.to_df("post_test", True)
     df = df.rename(columns={"classified as flee": "escape probability"})
     sns.barplot(
@@ -166,7 +166,7 @@ def plot_pre_test_effect_post_test_only():
 
         for mid in mouse_ids:
             try:
-                mtg = loom_trial_group.MouseLoomTrialGroup(mid)
+                mtg = trial_group.MouseLoomTrialGroup(mid)
                 for t in mtg.post_test_trials()[:3]:
                     t.plot_track(ax)
             except looming_spots.exceptions.LoomNumberError as e:
@@ -177,7 +177,7 @@ def plot_pre_test_effect_post_test_only():
 
     plt.figure(figsize=(4, 7))
     plt.title("Post-LSIE Escape Probability \n (n=7 mice)")
-    ltg = loom_trial_group.ExperimentalConditionGroup(labels)
+    ltg = trial_group.ExperimentalConditionGroup(labels)
     df = ltg.to_df("post_test", True)
     df = df.rename(columns={"classified as flee": "escape probability"})
     sns.barplot(
@@ -223,7 +223,7 @@ def compare_groups_lsie_exploration(
     groups=("pre_hab_post_immediate", "pre_hab_post_24hr")
 ):
     import matplotlib.pyplot as plt
-    from looming_spots.db import loom_trial_group, experimental_log
+    from looming_spots.db import trial_group, experimental_log
 
     immediate = experimental_log.get_mouse_ids_in_experiment(groups[0])
     day_before = experimental_log.get_mouse_ids_in_experiment(groups[1])
@@ -234,7 +234,7 @@ def compare_groups_lsie_exploration(
         plt.figure()
         for i, mid in enumerate(mids):
             trials = []
-            mtg = loom_trial_group.MouseLoomTrialGroup(mid)
+            mtg = trial_group.MouseLoomTrialGroup(mid)
             for t in mtg.lsie_trials():
                 trials.extend([t])
             hm = make_trial_heatmap_location_overlay(trials)
@@ -267,7 +267,7 @@ def compare_groups_lsie_exploration(
     ):
         for i, mid in enumerate(mids):
             event_metric_dict = {}
-            mtg = loom_trial_group.MouseLoomTrialGroup(mid)
+            mtg = trial_group.MouseLoomTrialGroup(mid)
             event_metric_dict.setdefault("mouse id", [mid])
             event_metric_dict.setdefault("group", [group])
             event_metric_dict.setdefault(
@@ -292,7 +292,7 @@ def get_group_lsie_exploration_hms(
         mids = experimental_log.get_mouse_ids_in_experiment(group)
         for i, mid in enumerate(mids):
             trials = []
-            mtg = loom_trial_group.MouseLoomTrialGroup(mid)
+            mtg = trial_group.MouseLoomTrialGroup(mid)
             for t in mtg.lsie_trials():
                 trials.extend([t])
             hm = make_trial_heatmap_location_overlay(trials)

@@ -6,7 +6,7 @@ import numpy as np
 import scipy.misc
 import skvideo.io
 
-import looming_spots.db.constants
+import looming_spots.constants
 import looming_spots.deprecated.metadata.experiment_metadata
 import looming_spots.util.video_processing
 
@@ -205,7 +205,7 @@ class Ref(object):
     def __init__(self, directory, path=None):
         if not path:
             self.path = DEFAULT_VIDEO_PATH
-        self.metadata = looming_spots.db.constants.load_metadata(directory)
+        self.metadata = looming_spots.constants.load_metadata(directory)
         self.initialise_metadata()
         self.left = None
         self.right = None

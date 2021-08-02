@@ -3,8 +3,8 @@ import operator
 import pandas as pd
 import numpy as np
 
-from looming_spots.db import loom_trial_group
-from looming_spots.db.constants import FILE_PATH
+from looming_spots.db import trial_group
+from looming_spots.constants import FILE_PATH
 
 
 def load_df(file_path=FILE_PATH):
@@ -22,7 +22,7 @@ def get_mouse_ids_in_experiment(experiment_key):
 
 def get_mtgs_in_experiment(experiment_key):
     mids = get_mouse_ids_in_experiment(experiment_key)
-    return [loom_trial_group.MouseLoomTrialGroup(mid, experiment_key) for mid in mids]
+    return [trial_group.MouseLoomTrialGroup(mid, experiment_key) for mid in mids]
 
 
 def get_mouse_ids(df, ignore_future_experiments=True):
