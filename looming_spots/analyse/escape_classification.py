@@ -19,6 +19,30 @@ def load_track():
     pass
 
 
+def get_starts_and_ends(above_threshold, min_event_size=3):
+    diff = np.diff(above_threshold.astype(int))
+    unfiltered_starts = np.where(diff > 0)[0]
+    unfiltered_ends = np.where(diff < 0)[0]
+
+    if unfiltered_ends[0] < unfiltered_starts[0]:
+        unfiltered_ends = unfiltered_ends[1:]
+    if unfiltered_starts[-1] > unfiltered_ends[-1]:
+        unfiltered_starts = unfiltered_starts[:-1]
+
+    starts = [
+        s
+        for (s, e) in zip(unfiltered_starts, unfiltered_ends)
+        if e - s > min_event_size
+    ]
+    ends = [
+        e
+        for (s, e) in zip(unfiltered_starts, unfiltered_ends)
+        if e - s > min_event_size
+    ]
+
+    return starts, ends
+
+
 def estimate_latency(normalised_x_track, smooth=False, limit=600):
     home_front = 0.2
 

@@ -176,3 +176,25 @@ def format_ax(xlabel="contrast", ylabel="escape probability", ax=None):
     ax.spines["right"].set_color("none")
     ax.spines["bottom"].set_position(("axes", -0.04))
     ax.spines["left"].set_position(("axes", 0.015))
+
+
+def convert_x_axis(n_samples, n_steps, frame_rate):
+    plt.xticks(
+        np.linspace(0, n_samples - 1, n_steps),
+        np.linspace(0, n_samples / frame_rate, n_steps),
+    )
+
+
+def convert_y_axis(old_min, old_max, new_min, new_max, n_steps):
+    plt.yticks(
+        np.linspace(old_min, old_max, n_steps),
+        np.linspace(new_min, new_max, n_steps),
+    )
+
+
+def get_x_length(ax=None):
+    if ax is None:
+        ax = plt.gca()
+    line = ax.lines[0]
+    xdata = line.get_xdata()
+    return len(xdata)
