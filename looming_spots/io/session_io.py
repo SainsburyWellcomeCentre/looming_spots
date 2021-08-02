@@ -190,15 +190,6 @@ class Session(object):
         return [t for t in self.trials if t.trial_type == key]
 
     @property
-    def context(self):  # FIXME: this is BS
-        try:
-            return get_context_from_stimulus_mat(self.path)
-        except FileNotFoundError as e:
-            print(e)
-            print("guessing A10")
-            return "A"
-
-    @property
     def contrast_protocol(self):  # TEST: FIXME:
         pd = self.photodiode_trace
         n_samples = 500
@@ -221,7 +212,7 @@ class Session(object):
     def trials_results(self):
         test_trials = [t for t in self.trials if "test" in t.trial_type]
         return np.array(
-            [t.classify_escape() for t in test_trials[: self.n_trials_to_include]]
+            [t.track.classify_escape() for t in test_trials[: self.n_trials_to_include]]
         )
 
     @property
@@ -322,8 +313,6 @@ class Session(object):
 
     @cached_property
     def loom_idx(self):
-        if self.path == '/home/slenzi/winstor/margrie/glusterfs/imaging/l/loomer/processed_data/1114179/20210415_12_41_00/':
-            return []
         loom_idx_path = os.path.join(self.path, "loom_starts.npy")
         if not os.path.isfile(loom_idx_path):
             _ = photodiode.get_loom_idx_from_raw(self.path, save=True)[0]
@@ -371,7 +360,7 @@ class Session(object):
     def test_loom_classification(self):  # TEST
         assert len(self.lsie_loom_idx) + len(self.test_loom_idx) == int(
             len(self.loom_idx) / 5
-        )  # FIXME: hard code
+        )
 
     def extract_trials(self):
         for t in self.trials:
@@ -456,23 +445,6 @@ class Session(object):
         setattr(self, "previous_session", other)
 
 
-def get_context_from_stimulus_mat(directory):
-    stimulus_path = os.path.join(directory, "stimulus.mat")
-    if os.path.isfile(stimulus_path):
-        stimulus_params = scipy.io.loadmat(stimulus_path)["params"]
-        dot_locations = [
-            x[0] for x in stimulus_params[0][0] if len(x[0]) == 2
-        ]  # only spot position has length 2
-
-        return (
-            "B"
-            if any(CONTEXT_B_SPOT_POSITION in x for x in dot_locations)
-            else "A"
-        )
-    else:
-        return "A10"
-
-
 def load_sessions(mouse_id):
     mouse_directory = os.path.join(PROCESSED_DATA_DIRECTORY, mouse_id)
     print(f"loading.... {mouse_directory}")
@@ -522,24 +494,6 @@ def load_sessions(mouse_id):
     raise MouseNotFoundError()
 
 
-class PhotometrySession(Session):
-    def __init__(
-        self,
-            dt,
-            mouse_id=None,
-            n_looms_to_view=0,
-            n_lsie_looms=120,
-            n_trials_to_consider=3,
-    ):
-        super().__init__(
-            dt,
-            mouse_id,
-            n_looms_to_view,
-            n_lsie_looms,
-            n_trials_to_consider,
-        )
-
-
 def contains_analog_input(file_names):
     if "AI.bin" in file_names or "AI.tdms" in file_names:
         return True
@@ -553,7 +507,7 @@ def contains_video(file_names):
 
 
 def contains_tracks(session_directory):
-    p=pathlib.Path(session_directory)
+    p = pathlib.Path(session_directory)
     if len(list(p.rglob("dlc_x_tracks.npy"))) ==0:
         return False
     else:
