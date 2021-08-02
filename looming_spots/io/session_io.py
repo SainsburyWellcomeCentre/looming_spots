@@ -22,9 +22,7 @@ from looming_spots.constants import (
 
 from looming_spots.db import trial
 from looming_spots.exceptions import LoomsNotTrackedError, MouseNotFoundError
-
-from looming_spots.preprocess import photodiode, normalisation
-
+from looming_spots.preprocess import photodiode
 from looming_spots.util import generic_functions
 from photometry import demodulation, load
 

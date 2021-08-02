@@ -3,9 +3,7 @@ import numpy as np
 from matplotlib import pyplot as plt, patches as patches
 
 from matplotlib.collections import LineCollection
-
-import looming_spots.preprocess.normalisation
-from looming_spots.constants import LOOM_ONSETS
+from looming_spots.constants import LOOM_ONSETS, SHELTER_FRONT
 
 
 def plot_looms(fig):
@@ -50,9 +48,7 @@ def plot_stimulus(fig, onset=200, n_samples=90):
 def plot_shelter_location(fig, context):
     for ax in fig.axes:
         plt.sca(ax)
-        house_front = looming_spots.preprocess.normalisation.normalised_shelter_front(
-            context
-        )
+        house_front = SHELTER_FRONT
         plt.axhline(house_front, 0, 400, ls="--")
 
 

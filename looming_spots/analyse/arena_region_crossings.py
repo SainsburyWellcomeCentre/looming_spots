@@ -1,9 +1,8 @@
 import numpy as np
-
-from looming_spots.preprocess.normalisation import normalised_shelter_front
+from looming_spots.constants import SHELTER_FRONT
 
 """
-Functions for labelling mouse position and defining crossings from each region 
+Functions for labeling mouse position and defining crossings from each region 
 into the others for analysis of responses to aversive stimuli.
 
  --------
@@ -69,7 +68,7 @@ def get_next_entry_from_track(
     :param start:
     :return:
     """
-    shelter_boundary = 0.2 #normalised_shelter_front(context)
+    shelter_boundary = 0.2
     tz_boundary = 0.6
     positions = {
         "shelter": normalised_x_track < shelter_boundary,
@@ -86,7 +85,7 @@ def get_next_entry_from_track(
 
 def get_all_entries_from_track(normalised_x_track):
 
-    shelter_boundary = 0.2 #normalised_shelter_front(context)
+    shelter_boundary = 0.2
     tz_boundary = 0.6
     positions = {
         "shelter": normalised_x_track < shelter_boundary,
@@ -100,7 +99,7 @@ def get_all_entries_from_track(normalised_x_track):
 
 
 def entry_bools(normalised_x_track):
-    shelter_boundary = 0.2  # normalised_shelter_front(context)
+    shelter_boundary = SHELTER_FRONT
     tz_boundary = 0.6
     positions = {
         "shelter": normalised_x_track < shelter_boundary,
@@ -116,8 +115,8 @@ def entry_bools(normalised_x_track):
 def get_all_entries(normalised_x_track):
     entries = entry_bools(normalised_x_track)
     shelter_entries = np.where(np.diff(entries['shelter'].astype(int)) == 1)[0]
-    tz_entries = np.where(np.diff(entries['tz'].astype(int))==1)[0]
-    middle_entries=np.where(np.diff(entries['middle'].astype(int)) ==1)[0]
+    tz_entries = np.where(np.diff(entries['tz'].astype(int)) == 1)[0]
+    middle_entries=np.where(np.diff(entries['middle'].astype(int)) == 1)[0]
     track_starts=[]
 
     for i, tz_entry in enumerate(tz_entries):
@@ -131,6 +130,7 @@ def get_all_entries(normalised_x_track):
             else:
                 track_starts.append(tz_entry)
         except Exception as e:
+            print(e)
             return track_starts
 
     return track_starts

@@ -5,7 +5,7 @@ import numpy as np
 from looming_spots.analyse import arena_region_crossings
 from looming_spots.constants import FRAME_RATE, N_SAMPLES_BEFORE, CLASSIFICATION_WINDOW_START, \
     CLASSIFICATION_WINDOW_END, ARENA_SIZE_CM, BOX_CORNER_COORDINATES, LOOMING_STIMULUS_ONSET, \
-    N_SAMPLES_TO_SHOW
+    N_SAMPLES_TO_SHOW, SHELTER_FRONT
 from looming_spots.util.transformations import get_inverse_projective_transform, get_box_coordinates_from_file
 from scipy.ndimage import gaussian_filter
 import pandas as pd
@@ -123,7 +123,8 @@ def time_in_shelter(normalised_x_track):
     )
 
 
-def n_samples_to_reach_shelter(smoothed_x_track):
+def n_samples_to_reach_shelter(normalised_x_track):
+    smoothed_x_track = smooth_track(normalised_x_track)
     n_samples = arena_region_crossings.get_next_entry_from_track(
         smoothed_x_track,
         "shelter",
@@ -171,7 +172,7 @@ def smooth_acceleration_from_track(normalised_track):
     return np.roll(np.diff(smoothed_speed), 2)
 
 
-def peak_speed(normalised_x_track, return_loc=False):
+def get_peak_speed(normalised_x_track, return_loc=False):
     peak_speed, arg_peak_speed = get_peak_speed_and_latency(
         normalised_x_track
     )
@@ -220,3 +221,59 @@ def projective_transform_tracks(Xin, Yin,
         new_track_x.append(inverse_mapped[0])
         new_track_y.append(inverse_mapped[1])
     return new_track_x, new_track_y
+
+
+def get_starts_and_ends(above_threshold, min_event_size=3):
+    diff = np.diff(above_threshold.astype(int))
+    unfiltered_starts = np.where(diff > 0)[0]
+    unfiltered_ends = np.where(diff < 0)[0]
+
+    if unfiltered_ends[0] < unfiltered_starts[0]:
+        unfiltered_ends = unfiltered_ends[1:]
+    if unfiltered_starts[-1] > unfiltered_ends[-1]:
+        unfiltered_starts = unfiltered_starts[:-1]
+
+    starts = [
+        s
+        for (s, e) in zip(unfiltered_starts, unfiltered_ends)
+        if e - s > min_event_size
+    ]
+    ends = [
+        e
+        for (s, e) in zip(unfiltered_starts, unfiltered_ends)
+        if e - s > min_event_size
+    ]
+
+    return starts, ends
+
+
+def estimate_latency(normalised_x_track, smooth=False, limit=600):
+
+    inside_house = normalised_x_track[:limit] < SHELTER_FRONT
+    smoothed_x_track = gaussian_filter(normalised_x_track, 2)
+    smoothed_x_speed = np.diff(smoothed_x_track)
+    normalised_x_speed = np.concatenate(
+        [[np.nan], np.diff(normalised_x_track)])
+    if smooth:
+        speed = smoothed_x_speed[:limit]
+    else:
+        speed = normalised_x_speed[:limit]
+
+    towards_house = speed < -0.0001
+
+    starts, ends = get_starts_and_ends(towards_house, 7)
+
+    for s, e in zip(starts, ends):
+        if s > LOOMING_STIMULUS_ONSET:
+            if s < LOOMING_STIMULUS_ONSET:
+                continue
+            elif any(inside_house[s:e]):
+                return s
+    print("did not find any starts... attempting with smoothed track")
+
+    if not smooth:
+        try:
+            return estimate_latency(smooth=True) + 5
+        except Exception as e:
+            print(e)
+            return np.nan

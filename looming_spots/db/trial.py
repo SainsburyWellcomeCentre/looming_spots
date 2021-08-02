@@ -9,7 +9,6 @@ from looming_spots.db.track import Track
 from matplotlib import patches
 from datetime import timedelta
 
-import looming_spots.preprocess.normalisation
 import looming_spots.util.video_processing
 
 from looming_spots.constants import (

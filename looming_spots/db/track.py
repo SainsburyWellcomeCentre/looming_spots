@@ -1,8 +1,9 @@
 
 import numpy as np
 import seaborn as sns
-from looming_spots.analyse.tracks import load_track_csv, projective_transform_tracks, downsample_track, \
-    normalised_speed_from_track, smooth_track, smooth_speed_from_track, peak_speed, smooth_acceleration_from_track, \
+from looming_spots.analyse.escape_classification import classify_escape
+from looming_spots.analyse.tracks import projective_transform_tracks, downsample_track, \
+    normalised_speed_from_track, smooth_track, smooth_speed_from_track, get_peak_speed, smooth_acceleration_from_track, \
     latency_peak_detect_s, time_in_shelter, time_to_shelter, track_in_standard_space, get_tracking_method, \
     load_box_corner_coordinates
 from looming_spots.constants import FRAME_RATE, ARENA_SIZE_CM, LOOMING_STIMULUS_ONSET, END_OF_CLASSIFICATION_WINDOW, \
@@ -103,7 +104,7 @@ class Track(object):
         )
 
     def peak_speed(self, return_loc=False):
-        return peak_speed(self.normalised_x_track, return_loc)
+        return get_peak_speed(self.normalised_x_track, return_loc)
 
     def get_accelerations_to_shelter(self):
         acc_window = self.smoothed_x_acceleration[
@@ -140,7 +141,7 @@ class Track(object):
         return time_in_shelter(self.normalised_x_track)
 
     def is_escape(self):
-        pass
+        return classify_escape(self.normalised_x_track)
 
     def time_to_shelter(self):
         return time_to_shelter(self.normalised_x_track)
