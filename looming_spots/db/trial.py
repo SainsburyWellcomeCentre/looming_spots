@@ -22,6 +22,21 @@ from looming_spots.util import video_processing, plotting
 
 
 class LoomTrial(object):
+
+    """
+    The aim of the LoomTrial class is to associate all trial-level metadata and data into one place.
+    A trial is defined as a data window surrounding the presentation of a stimulus, as detected using a photodiode
+    pulse presented in conjunction with a stimulus.
+
+
+    This includes:
+
+    - where the data comes from (i.e. the session, see session_io)
+    - stimulus metadata (e.g. contrast, time, type)
+    - trial data (e.g. the positional xy tracks (see db.track), photodiode traces and other coaquired data)
+
+    """
+
     def __init__(
         self,
         session,

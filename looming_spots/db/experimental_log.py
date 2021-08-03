@@ -7,6 +7,13 @@ from looming_spots.db import loom_trial_group
 from looming_spots.constants import FILE_PATH
 
 
+"""
+Mouse records are kept by the user, in a csv file. This module allows easy access to mouse ids that belong
+in each experimentally defined group. Usually by keywords defined in the spreadsheet.
+
+"""
+
+
 def load_df(file_path=FILE_PATH):
     df = pd.read_csv(file_path)
     df = df[~df["exclude"]]

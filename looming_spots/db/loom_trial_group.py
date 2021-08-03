@@ -15,6 +15,20 @@ from looming_spots.db import experimental_log
 
 class MouseLoomTrialGroup(object):
 
+    """
+    The aim of the MouseLoomTrialGroup class is to provide easy trial navigation for a given mouse and track
+    these over different recording sessions etc.
+
+    This includes the following functionality:
+
+    - grouping trials temporally (i.e. before, during or after LSIE)
+    - grouping trials by trial type (e.g. visual or auditory)
+    - associating mouse-level metadata
+    - generating mouse-level dataframes for further analysis
+
+
+    """
+
     def __init__(self, mouse_id, exp_key=None):
 
         self.mouse_id = mouse_id
