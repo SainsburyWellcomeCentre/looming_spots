@@ -6,7 +6,7 @@ import seaborn as sns
 from looming_spots.trial_group_analysis.escape_metric_dataframes import (
     get_behaviour_metric_dataframe,
 )
-from looming_spots.db import experimental_log, trial_group
+from looming_spots.db import experimental_log, loom_trial_group
 sns.set_style('whitegrid')
 LINEWIDTH=3
 flatui = ["#9b59b6", "#3498db", "#95a5a6"]
@@ -80,7 +80,7 @@ def get_behaviour_metrics_df(metric, group_keys=None):
         group_dict= {key: experimental_log.get_mouse_ids_in_experiment(key) for key in group_keys}
     all_df = pd.DataFrame()
     for label, mids in group_dict.items():
-        mtgs = [trial_group.MouseLoomTrialGroup(mid) for mid in mids]
+        mtgs = [loom_trial_group.MouseLoomTrialGroup(mid) for mid in mids]
         df = get_behaviour_metric_dataframe(mtgs, metric, "variable_contrast")
         df["experimental group"] = [label] * len(df)
         all_df = all_df.append(df)

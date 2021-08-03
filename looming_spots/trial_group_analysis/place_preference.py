@@ -5,6 +5,7 @@ import numpy as np
 from configobj import ConfigObj
 
 import looming_spots.preprocess.normalisation
+from looming_spots.analyse import tracks
 from looming_spots.util.generic_functions import chunks
 
 N_MIN = 10
@@ -61,7 +62,7 @@ def plot_sides(session, start=None):
     if start is None:
         start = int(config["track_start"])
     end = start + N_SAMPLES_TO_ANALYSE
-    track = looming_spots.preprocess.normalisation.load_normalised_track(
+    track = tracks.load_normalised_track(
         session.path + "/camera", context="split"
     )[start:end]
     x, y = looming_spots.preprocess.normalisation.load_raw_track(

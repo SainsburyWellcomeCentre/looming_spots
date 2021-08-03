@@ -16,7 +16,7 @@ from looming_spots.constants import (
     N_LOOMS_PER_STIMULUS,
     N_SAMPLES_BEFORE,
 
-    )
+    ARENA_LENGTH_PX, ARENA_WIDTH_PX)
 
 from looming_spots.util import video_processing, plotting
 
@@ -137,14 +137,14 @@ class LoomTrial(object):
     def n_lsies(self):
         current_trial = self.first_trial()
         current_trial_type = current_trial.trial_type
-        n_habituations = 1 if current_trial_type == "habituation" else 0
+        n_lsie_protocols = 1 if current_trial_type == "lsie" else 0
 
         while current_trial is not None:
             if current_trial.trial_type != current_trial_type:
-                n_habituations += 1
+                n_lsie_protocols += 1
                 current_trial_type = current_trial.trial_type
             current_trial = current_trial.next_trial
-        return n_habituations
+        return n_lsie_protocols
 
     def first_trial(self):
         current_trial = self
@@ -153,8 +153,8 @@ class LoomTrial(object):
         return current_trial
 
     def get_trial_type(self):
-        if self.trial_type == "habituation":
-            return "habituation"
+        if self.trial_type == "lsie":
+            return "lsie"
         elif self.lsie_loom_before() and self.lsie_loom_after():
             return "post_test"  # TODO:'pre_and_post_test'
         elif self.lsie_loom_after():
@@ -276,7 +276,7 @@ class VisualStimulusTrial(LoomTrial):
         )
 
     def make_loom_superimposed_video(
-        self, width=600, height=240, origin=(0, 40)
+        self, width=ARENA_LENGTH_PX, height=ARENA_WIDTH_PX, origin=(0, 40)
     ):
 
         path_in = str(pathlib.Path(self.directory) / self.video_name)

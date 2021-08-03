@@ -9,7 +9,7 @@ import pingouin as pg
 import numpy as np
 import seaborn as sns
 
-from looming_spots.db import trial_group
+from looming_spots.db import loom_trial_group
 from looming_spots.thesis_figure_plots import randomised_contrast_escape_curves_lesions
 from looming_spots.thesis_figure_plots.randomised_contrast_escape_curves_lesions import get_behaviour_metrics_df, \
     get_escape_curve_df
@@ -23,7 +23,7 @@ def plot_example_tracks_var_contrast(mids=('CA452_1',)):
     """"""
     norm = mpl.colors.Normalize(vmin=0, vmax=0.1607)
     for mid in mids:
-        mtg = trial_group.MouseLoomTrialGroup(mid)
+        mtg = loom_trial_group.MouseLoomTrialGroup(mid)
         for t in mtg.all_trials[:18]:
             c = tuple([norm(t.contrast)]*3)
             t.plot_track(color=c)
@@ -32,7 +32,7 @@ def plot_example_tracks_var_contrast(mids=('CA452_1',)):
 
 
 def plot_all_metrics(mids=('CA452_1',), metrics=('speed', 'acceleration', 'time in safety zone')):
-    mtgs = [trial_group.MouseLoomTrialGroup(mid) for mid in mids]
+    mtgs = [loom_trial_group.MouseLoomTrialGroup(mid) for mid in mids]
     fig, axes = plt.subplots(1, len(metrics)+1)
     all_df = pd.DataFrame()
     for metric, ax in zip(metrics, axes):
@@ -331,7 +331,7 @@ def two_way_mixed_anova(df, post_hoc=False):
 def get_group_track_statistics(mids, bins):
     all_speeds = []
     for mid in mids:
-        mtg = trial_group.MouseLoomTrialGroup(mid)
+        mtg = loom_trial_group.MouseLoomTrialGroup(mid)
         t = mtg.all_trials[0]
         x, y = t.session.track()
         s = t.sample_number - (30 * 5 * 60)
@@ -366,11 +366,11 @@ def chapter_5():
 
 
 def ohda_imaging():
-    from looming_spots.db import trial_group
+    from looming_spots.db import loom_trial_group
     mids = ['FJ5_2', 'FJ5_3']
     import matplotlib.pyplot as plt
     for mid in mids:
-        mtg = trial_group.MouseLoomTrialGroup(mid)
+        mtg = loom_trial_group.MouseLoomTrialGroup(mid)
 
         plt.figure()
         avg_loom = []
@@ -390,7 +390,7 @@ def ohda_imaging():
 
 
 def get_time_series_df(mid):
-    mtg = trial_group.MouseLoomTrialGroup(mid)
+    mtg = loom_trial_group.MouseLoomTrialGroup(mid)
     df_dict={}
     trial_number = []
     signal = []
@@ -430,7 +430,7 @@ def plot_scatter_by_contrast(mids, group_label,
     set_plotting_globals()
     figure_dir = Path(figure_dir)
     mtgs = [
-        trial_group.MouseLoomTrialGroup(mid)
+        loom_trial_group.MouseLoomTrialGroup(mid)
         for mid in mids
     ]
 
@@ -496,7 +496,7 @@ def plot_snl_laser_stim(mids):
 def get_df_metrics_as_columns(mids,
                               metrics = ('speed', 'latency peak detect', 'time to reach shelter stimulus onset'),
                               experimental_group_label='control'):
-    mtgs = [trial_group.MouseLoomTrialGroup(mid) for mid in mids]
+    mtgs = [loom_trial_group.MouseLoomTrialGroup(mid) for mid in mids]
 
     df = escape_metric_dataframes.get_behaviour_metrics_dataframe(mtgs,
                                                                   metrics,
@@ -506,7 +506,7 @@ def get_df_metrics_as_columns(mids,
 
 
 def get_track_df(mids):
-    mtgs = [trial_group.MouseLoomTrialGroup(mid) for mid in mids]
+    mtgs = [loom_trial_group.MouseLoomTrialGroup(mid) for mid in mids]
     df = escape_metric_dataframes.get_track_dataframe(mtgs, 'variable_contrast')
     return df
 

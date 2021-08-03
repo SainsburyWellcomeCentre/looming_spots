@@ -3,8 +3,7 @@ import scipy
 from scipy import stats
 from matplotlib import pyplot as plt
 
-# from looming_spots.deprecated.analysis import plot_trials
-from looming_spots.db import trial_group, experimental_log
+from looming_spots.db import loom_trial_group, experimental_log
 
 
 """
@@ -15,7 +14,7 @@ functions relating to pseudorandom presentations of low-or-high contrast looms
 
 
 def plot_block_escape_curves_with_avg(mids, color="k", block_id=0):
-    mtg = trial_group.MouseLoomTrialGroup(mids[0])
+    mtg = loom_trial_group.MouseLoomTrialGroup(mids[0])
     contrast_set = np.unique(mtg.contrasts())
     all_escape_curves = []
     for mid in mids:
@@ -69,11 +68,11 @@ def get_trials_of_contrast(trials, c):
 
 
 def get_trials_of_contrast_mouse_group(mids, c, start=0, end=18):
-    from looming_spots.db import trial_group
+    from looming_spots.db import loom_trial_group
 
     all_trials = []
     for mid in mids:
-        mtg = trial_group.MouseLoomTrialGroup(mid)
+        mtg = loom_trial_group.MouseLoomTrialGroup(mid)
         trials = [t for t in mtg.all_trials[start:end] if t.contrast == c]
         all_trials.extend(trials)
     return all_trials
@@ -85,7 +84,7 @@ def get_all_trials(experimental_group_label):
     )
     all_trials = []
     for mid in mids:
-        mtg = trial_group.MouseLoomTrialGroup(mid)
+        mtg = loom_trial_group.MouseLoomTrialGroup(mid)
         trials = mtg.pre_test_trials()[:3]
         all_trials.extend(trials)
     return all_trials

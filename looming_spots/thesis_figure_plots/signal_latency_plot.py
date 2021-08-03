@@ -1,4 +1,4 @@
-from looming_spots.db import trial_group, experimental_log
+from looming_spots.db import loom_trial_group, experimental_log
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -488,7 +488,7 @@ def plot_snl_signal_escape_latency():
 
 
 def plot_895773_latency_escapes():
-    mtg = trial_group.MouseLoomTrialGroup('895773')
+    mtg = loom_trial_group.MouseLoomTrialGroup('895773')
     fig = plt.figure()
     pre_test_trials = mtg.pre_test_trials()[:3]
     pre_test_latency = np.nanmean([t.latency_peak_detect() for t in pre_test_trials])

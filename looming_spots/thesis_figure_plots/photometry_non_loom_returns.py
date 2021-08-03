@@ -3,7 +3,7 @@ import numpy as np
 
 import seaborn as sns
 import pandas as pd
-from looming_spots.db import trial_group, experimental_log
+from looming_spots.db import loom_trial_group, experimental_log
 from looming_spots.thesis_figure_plots import photometry_example_traces
 group='photometry_habituation_tre-GCaMP-contrasts'
 mtgs = experimental_log.get_mtgs_in_experiment(group)

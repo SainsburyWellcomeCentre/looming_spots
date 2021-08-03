@@ -1,7 +1,8 @@
 import pandas as pd
 
 import numpy as np
-from looming_spots.db import trial_group
+from looming_spots.constants import N_SAMPLES_TO_SHOW
+from looming_spots.db import loom_trial_group
 
 
 def get_behaviour_metric_dataframe(mtgs, metric, test_type):
@@ -13,6 +14,8 @@ def get_behaviour_metric_dataframe(mtgs, metric, test_type):
             trials = mtg.post_test_trials()[:3]
         elif test_type == "variable_contrast":
             trials = mtg.loom_trials()[:18]
+        else:
+            raise NotImplementedError()
 
         event_metric_dict = {}
         vals = []
@@ -23,7 +26,7 @@ def get_behaviour_metric_dataframe(mtgs, metric, test_type):
         mids = [mtg.mouse_id] * len(trials)
         event_metric_dict.setdefault("mouse id", mids)
         event_metric_dict.setdefault(
-            "loom number", [t.loom_trial_idx for t in trials]  #get_stimulus_number()
+            "loom number", [t.loom_trial_idx for t in trials]
         )
         event_metric_dict.setdefault("metric value", vals)
         event_metric_dict.setdefault(
@@ -80,7 +83,7 @@ def get_escape_metrics_mtgs(mtgs, metric, experimental_condition=None):
 
 def get_behaviour_metrics_df(mids, group_label, metrics):
     all_df = pd.DataFrame()
-    mtgs = [trial_group.MouseLoomTrialGroup(mid) for mid in mids]
+    mtgs = [loom_trial_group.MouseLoomTrialGroup(mid) for mid in mids]
     base_df = get_behaviour_metric_dataframe()
     for metric in metrics:
         values = get_metric_values(metric)
@@ -111,7 +114,7 @@ def get_base_df_dict(mtg, test_type, trials):
     mids = [mtg.mouse_id] * len(trials)
     event_metric_dict.setdefault("mouse id", mids)
     event_metric_dict.setdefault(
-        "loom number", [t.loom_trial_idx for t in trials]  # get_stimulus_number()
+        "loom number", [t.loom_trial_idx for t in trials]
     )
     event_metric_dict.setdefault(
         "test type", [test_type] * len(trials)
@@ -136,6 +139,8 @@ def get_trials(mtg, test_type):
         trials = mtg.post_test_trials()[:3]
     elif test_type == "variable_contrast":
         trials = mtg.loom_trials()[:18]
+    else:
+        raise NotImplementedError()
     return trials
 
 
@@ -146,8 +151,8 @@ def get_track_dataframe(mtgs, test_type):
         trials = get_trials(mtg, test_type)
         for t in trials:
             track_dict = {}
-            x = t.normalised_x_track[:600]
-            y = t.normalised_x_track[:600]
+            x = t.normalised_x_track[:N_SAMPLES_TO_SHOW]
+            y = t.normalised_x_track[:N_SAMPLES_TO_SHOW]
             track_dict.setdefault('x', x)
             track_dict.setdefault('y', x)
             track_dict.setdefault('timepoint', np.arange(len(x)))

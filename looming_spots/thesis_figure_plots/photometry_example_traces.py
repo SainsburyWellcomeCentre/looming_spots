@@ -1,6 +1,6 @@
 import numpy as np
 from looming_spots.constants import FIGURE_DIRECTORY, FRAME_RATE, N_SAMPLES_TO_SHOW
-from looming_spots.db import trial_group, experimental_log
+from looming_spots.db import loom_trial_group, experimental_log
 from looming_spots.thesis_figure_plots.randomised_contrast_escape_curves_lesions import flatui
 from looming_spots.trial_group_analysis import photometry_habituations
 from pingouin import partial_corr
@@ -128,7 +128,7 @@ def plot_pre_test_max_integral():
         "921000",
         "907822",
     ]
-    mtgs = [trial_group.MouseLoomTrialGroup(mid) for mid in mids]
+    mtgs = [loom_trial_group.MouseLoomTrialGroup(mid) for mid in mids]
     all_max_integrals = []
     for mtg in mtgs:
         norm_factor = max([np.nanmax(t.integral) for t in mtg.loom_trials()])
@@ -170,7 +170,7 @@ def plot_all_pre_tests(mids):
     all_tracks = []
     all_delta_f = []
     for mid in mids:
-        mtg = trial_group.MouseLoomTrialGroup(mid)
+        mtg = loom_trial_group.MouseLoomTrialGroup(mid)
         norm_factor = max([np.nanmax(t.delta_f()) for t in mtg.loom_trials()])
         if len(mtg.contrasts()) == 0:
             pre_trials = mtg.loom_trials()[:3]
@@ -196,7 +196,7 @@ def plot_all_post_tests(mids):
     all_tracks = []
     all_delta_f = []
     for mid in mids:
-        mtg = trial_group.MouseLoomTrialGroup(mid)
+        mtg = loom_trial_group.MouseLoomTrialGroup(mid)
         norm_factor = max([np.nanmax(t.delta_f()) for t in mtg.loom_trials()])
         for t in mtg.post_test_trials()[:3]:
             norm_df = t.delta_f() / norm_factor
@@ -282,7 +282,7 @@ def plot_lsie_evoked_signals_binned_by_contrast(
         ax=plt.subplot(111)
     plt.sca(ax)
     for group, color in zip(groups, colors):
-        mtgs = [trial_group.MouseLoomTrialGroup(mid) for mid in group]
+        mtgs = [loom_trial_group.MouseLoomTrialGroup(mid) for mid in group]
 
         photometry_habituations.plot_habituation_curve_with_sem(mtgs, color)
     plt.legend(
@@ -304,7 +304,7 @@ def plot_LSIE_evoked_signals_all_mice(
         pre_test_24hr.remove("074744")
     plt.figure()
     for group, color in zip(groups, colors):
-        mtgs = [trial_group.MouseLoomTrialGroup(mid) for mid in group]
+        mtgs = [loom_trial_group.MouseLoomTrialGroup(mid) for mid in group]
         photometry_habituations.plot_habituation_curve_with_sem(mtgs, color)
         photometry_habituations.plot_habituation_curve_with_sem(mtgs, color)
     plt.legend(
@@ -312,7 +312,7 @@ def plot_LSIE_evoked_signals_all_mice(
     )  # two loops because legend
 
     for group, color in zip(groups, colors):
-        mtgs = [trial_group.MouseLoomTrialGroup(mid) for mid in group]
+        mtgs = [loom_trial_group.MouseLoomTrialGroup(mid) for mid in group]
         for mtg in mtgs:
             photometry_habituations.plot_habituation_curve_with_sem(
                 [mtg], color, linewidth=0.5, plot_dots=False
@@ -327,9 +327,9 @@ def plot_LSIE_evoked_signals_all_mice(
 def plot_LSIE_bars(groups=(pre_test_sameday, pre_test_24hr)):
     if "074744" in pre_test_24hr:
         pre_test_24hr.remove("074744")
-    mtgs_sup = [trial_group.MouseLoomTrialGroup(mid) for mid in groups[1]]
+    mtgs_sup = [loom_trial_group.MouseLoomTrialGroup(mid) for mid in groups[1]]
     mtgs_non_sup = [
-        trial_group.MouseLoomTrialGroup(mid) for mid in groups[0]
+        loom_trial_group.MouseLoomTrialGroup(mid) for mid in groups[0]
     ]
 
     fig = plt.figure(figsize=(3, 5))
@@ -364,7 +364,7 @@ def plot_escape_metrics_variable_contrast_experiments(
 ):
 
     all_dfs = []
-    mtgs = [trial_group.MouseLoomTrialGroup(mid) for mid in mouse_ids]
+    mtgs = [loom_trial_group.MouseLoomTrialGroup(mid) for mid in mouse_ids]
 
     for metric in metrics:
         df = photometry_habituations.get_signal_metric_dataframe_variable_contrasts(
@@ -426,7 +426,7 @@ def plot_ca_vs_metric_signal_before_after_lsie(
         "898990",
     ]
 
-    mtgs = [trial_group.MouseLoomTrialGroup(mid) for mid in mouse_ids]
+    mtgs = [loom_trial_group.MouseLoomTrialGroup(mid) for mid in mouse_ids]
     for metric in metrics:
         df = photometry_habituations.get_signal_metric_dataframe(mtgs, metric)
         all_dfs.append(df)
@@ -449,7 +449,7 @@ def plot_ca_vs_metric_signal_before_after_lsie(
 def plot_lsie_suppression_over_variable_contrast(hue="test type"):
     all_dfs = []
     mouse_ids = ["898992", "916063", "921000", "907822"]
-    mtgs = [trial_group.MouseLoomTrialGroup(mid) for mid in mouse_ids]
+    mtgs = [loom_trial_group.MouseLoomTrialGroup(mid) for mid in mouse_ids]
     for metric in [
         "latency to escape",
         "speed",
@@ -464,7 +464,7 @@ def plot_lsie_suppression_over_variable_contrast(hue="test type"):
 
     mouse_ids = ["074743", "074746", "895773", "953828", "953829"]
 
-    mtgs = [trial_group.MouseLoomTrialGroup(mid) for mid in mouse_ids]
+    mtgs = [loom_trial_group.MouseLoomTrialGroup(mid) for mid in mouse_ids]
     for metric in [
         "latency to escape",
         "speed",
@@ -512,10 +512,10 @@ def plot_habituation_trialwise_with_lowess_fit(groups=(pre_test_24hr, pre_test_s
         pre_test_24hr.remove("074744")
 
     mtgs_24 = [
-        trial_group.MouseLoomTrialGroup(mid) for mid in (groups[0])
+        loom_trial_group.MouseLoomTrialGroup(mid) for mid in (groups[0])
     ]
     mtgs_imm = [
-        trial_group.MouseLoomTrialGroup(mid) for mid in (groups[1])
+        loom_trial_group.MouseLoomTrialGroup(mid) for mid in (groups[1])
     ]
 
     df = photometry_habituations.habituation_df(
@@ -586,7 +586,7 @@ def plot_group_by_test_type(df, group_label, x_measure="trial number", y_measure
 
 def get_first_loom_response_by_contrast(contrast_curve_mids=contrast_curves, n_samples=30, start=200):
     mtgs = [
-        trial_group.MouseLoomTrialGroup(mid)
+        loom_trial_group.MouseLoomTrialGroup(mid)
         for mid in contrast_curve_mids
     ]
     df_all = pd.DataFrame()
@@ -772,7 +772,7 @@ def plot_d1_d2_gcamp_pre_post_normalised():
     labels = ['d1-cre-flexGCaMP', 'd2-cre-flexGCaMP']
 
     for group, label in zip(groups, labels):
-        mtgs = [trial_group.MouseLoomTrialGroup(mid) for mid in group]
+        mtgs = [loom_trial_group.MouseLoomTrialGroup(mid) for mid in group]
         fig_pre, axes_pre = plt.subplots(3, 1)
         fig_post, axes_post = plt.subplots(3, 1)
 
@@ -814,7 +814,7 @@ def plot_d1_d2_gcamp_pre_post_normalised_one_plot():
     labels = ['d1-cre-flexGCaMP', 'd2-cre-flexGCaMP']
 
     for group, label in zip(groups, labels):
-        mtgs = [trial_group.MouseLoomTrialGroup(mid) for mid in group]
+        mtgs = [loom_trial_group.MouseLoomTrialGroup(mid) for mid in group]
         fig, axes = plt.subplots(2, 1)
         avg_pre = []
         avg_post = []
@@ -844,7 +844,7 @@ def plot_d1_d2_gcamp_pre_post_normalised_one_plot():
 def plot_LSIE_bars_all_groups(groups=(pre_test_sameday, pre_test_24hr)):
     fig, axes = plt.subplots(1, len(groups), figsize=(5, 5))
     for i,group in enumerate(groups):
-        mtgs = [trial_group.MouseLoomTrialGroup(mid) for mid in group]
+        mtgs = [loom_trial_group.MouseLoomTrialGroup(mid) for mid in group]
 
         plt.ylabel("integral dF/F at avg. escape latency in pre-test")
         ax = plt.sca(axes[i])
@@ -867,7 +867,7 @@ def analyse_signal_by_escape_latency():
     labels = ['pre_test_snl_all']
 
     for group, label in zip(groups, labels):
-        mtgs = [trial_group.MouseLoomTrialGroup(mid) for mid in group]
+        mtgs = [loom_trial_group.MouseLoomTrialGroup(mid) for mid in group]
 
         for mtg in mtgs:
 
@@ -1037,7 +1037,7 @@ def get_normalised_signals_mtg(mtg, n_samples_before=10):
 
 
 def analyse_pre_trials_latency(mids):
-    mtgs = [trial_group.MouseLoomTrialGroup(m) for m in mids if m not in ["074744"]]
+    mtgs = [loom_trial_group.MouseLoomTrialGroup(m) for m in mids if m not in ["074744"]]
     trials = [mtg.pre_test_trials()[:3] for mtg in mtgs]
     shortest_latency_trial = trials[np.argmin([t.latency_peak_detect() for t in trials])]
     threshold = shortest_latency_trial.integral_downsampled()[shortest_latency_trial.latency_peak_detect()]
@@ -1127,13 +1127,13 @@ def compare_peaks(mtgs):
 
 
 def compute_stats_peaks(groups=('photometry_habituation_tre-GCaMP_24hr_pre', 'photometry_habituation_tre-GCaMP_same_day_pre')):
-    from looming_spots.db import trial_group, experimental_log
+    from looming_spots.db import loom_trial_group, experimental_log
     from looming_spots.thesis_figure_plots import photometry_example_traces
     mids = []
     for group in groups:
         mids.extend(experimental_log.get_mouse_ids_in_experiment(group))
 
-    mtgs = [trial_group.MouseLoomTrialGroup(mid) for mid in mids]
+    mtgs = [loom_trial_group.MouseLoomTrialGroup(mid) for mid in mids]
     a = photometry_example_traces.compare_peaks(mtgs)
     keys = []
     vals = []

@@ -5,7 +5,7 @@ import numpy as np
 from looming_spots.analyse import arena_region_crossings
 from looming_spots.constants import FRAME_RATE, N_SAMPLES_BEFORE, CLASSIFICATION_WINDOW_START, \
     CLASSIFICATION_WINDOW_END, ARENA_SIZE_CM, BOX_CORNER_COORDINATES, LOOMING_STIMULUS_ONSET, \
-    N_SAMPLES_TO_SHOW, SHELTER_FRONT
+    N_SAMPLES_TO_SHOW, SHELTER_FRONT, ARENA_LENGTH_PX, ARENA_WIDTH_PX
 from looming_spots.util.transformations import get_inverse_projective_transform, get_box_coordinates_from_file
 from scipy.ndimage import gaussian_filter
 import pandas as pd
@@ -21,6 +21,20 @@ def load_raw_track(session_directory, name, start, end, loom_folder=None):
         x = np.load(str(x_path))[start:end]
         y = np.load(str(y_path))[start:end]
     return x, y
+
+
+def normalised_x_track(x, frame_rate=30, target_frame_rate=30):
+    normalised_track = 1 - (x / ARENA_LENGTH_PX)
+    if frame_rate != target_frame_rate:
+        normalised_track = downsample_track(normalised_track, frame_rate)
+    return normalised_track
+
+
+def normalised_y_track(y, frame_rate=30, target_frame_rate=30):
+    normalised_track = (y / ARENA_WIDTH_PX) * 0.4
+    if frame_rate != target_frame_rate:
+        normalised_track = downsample_track(normalised_track, frame_rate)
+    return normalised_track
 
 
 def load_box_corner_coordinates(session_directory):
@@ -74,8 +88,11 @@ def get_tracking_method(session_directory):
     elif len(list(lab5.glob("dlc_x_tracks.npy"))) > 0:
         method = 'dlc_5_label'
 
-    else:
+    elif len(list(p.glob("loom0"))) > 0:
         method = 'old_school'
+
+    else:
+        method = None
 
     return method
 
@@ -84,8 +101,8 @@ def latency_peak_detect(normalised_x_track, n_stds=2.5):
     speed = -smooth_speed_from_track(normalised_x_track)[N_SAMPLES_BEFORE:]
     std = np.nanstd(speed[:N_SAMPLES_TO_SHOW])
     all_peak_starts = signal.find_peaks(speed, std * n_stds, width=1)[1]['left_ips']
-
-    return all_peak_starts[0] + 200
+    if len(all_peak_starts) > 0:
+        return all_peak_starts[0] + 200
 
 
 def latency_peak_detect_s(normalised_x_track):
@@ -247,7 +264,7 @@ def get_starts_and_ends(above_threshold, min_event_size=3):
     return starts, ends
 
 
-def estimate_latency(normalised_x_track, smooth=False, limit=600):
+def estimate_latency(normalised_x_track, smooth=False, limit=N_SAMPLES_TO_SHOW):
 
     inside_house = normalised_x_track[:limit] < SHELTER_FRONT
     smoothed_x_track = gaussian_filter(normalised_x_track, 2)

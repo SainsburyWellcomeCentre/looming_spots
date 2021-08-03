@@ -10,31 +10,31 @@ def get_all_context_combos(df):
     all_combos = [context.strip("r") for context in all_combos]
     all_combos = list(itertools.combinations(all_combos, 2))
 
-    for habituation_context, post_test_context in all_combos:
+    for lsie_context, post_test_context in all_combos:
 
-        habituation_context += "r"
+        lsie_context += "r"
 
         exclude_pre_tests_df = df[df["test_type"] != "pre_test"]
-        habituation_df = exclude_pre_tests_df[
-            exclude_pre_tests_df["test_type"] == "habituation"
+        lsie_df = exclude_pre_tests_df[
+            exclude_pre_tests_df["test_type"] == "lsie"
         ]
         post_test_df = exclude_pre_tests_df[
             exclude_pre_tests_df["test_type"] == "post_test"
         ]
 
-        habituations_in_context_df = habituation_df[
-            habituation_df.isin([habituation_context])["context"]
+        lsie_in_context_df = lsie_df[
+            lsie_df.isin([lsie_context])["context"]
         ]
         post_tests_in_context_df = post_test_df[
             post_test_df.isin([post_test_context])["context"]
         ]
 
         mids_in_group = set(
-            habituations_in_context_df["mouse_id"]
+            lsie_in_context_df["mouse_id"]
         ).intersection(post_tests_in_context_df["mouse_id"])
 
         results_dict.setdefault(
-            "".join([habituation_context, post_test_context]), mids_in_group
+            "".join([lsie_context, post_test_context]), mids_in_group
         )
 
     return results_dict
