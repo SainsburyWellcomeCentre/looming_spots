@@ -15,8 +15,9 @@ from looming_spots.constants import (
     LOOMING_STIMULUS_ONSET,
     N_LOOMS_PER_STIMULUS,
     N_SAMPLES_BEFORE,
-
-    ARENA_LENGTH_PX, ARENA_WIDTH_PX)
+    ARENA_LENGTH_PX,
+    ARENA_WIDTH_PX,
+)
 
 from looming_spots.util import video_processing, plotting
 
@@ -48,11 +49,10 @@ class LoomTrial(object):
         contrast=None,
         loom_trial_idx=None,
         auditory_trial_idx=None,
-
     ):
         self.session = session
         self.frame_rate = self.session.frame_rate
-        self.n_samples_before = int(N_SAMPLES_BEFORE/30*self.frame_rate)
+        self.n_samples_before = int(N_SAMPLES_BEFORE / 30 * self.frame_rate)
         self.sample_number = int(sample_number)
         self.mouse_id = self.session.mouse_id
         self.stimulus_type = stimulus_type
@@ -181,7 +181,13 @@ class LoomTrial(object):
 
     @property
     def track(self):
-        return Track(self.folder, self.session.path, self.start, self.end, self.frame_rate)
+        return Track(
+            self.folder,
+            self.session.path,
+            self.start,
+            self.end,
+            self.frame_rate,
+        )
 
     def stimulus_number(self):
         if self.stimulus_type == "loom":
@@ -208,10 +214,10 @@ class LoomTrial(object):
         return self.stimulus_number()
 
     def processed_video_path(self):
-        return list(pathlib.Path(self.directory).glob('cam_transform*.mp4'))[0]
+        return list(pathlib.Path(self.directory).glob("cam_transform*.mp4"))[0]
 
     def extract_video(self, overwrite=False):
-        print('extracting')
+        print("extracting")
         if not overwrite:
             if os.path.isfile(self.video_path):
                 return "video already exists... skipping"
@@ -287,7 +293,6 @@ class VisualStimulusTrial(LoomTrial):
             trial_type,
             stimulus_type,
             trial_video_fname="{}{}.mp4",
-
         )
 
     def make_loom_superimposed_video(
@@ -298,7 +303,12 @@ class VisualStimulusTrial(LoomTrial):
         path_out = "_overlay.".join(path_in.split("."))
 
         video_processing.loom_superimposed_video(
-            path_in, path_out, width=width, height=height, origin=origin, track=self.track_in_standard_space
+            path_in,
+            path_out,
+            width=width,
+            height=height,
+            origin=origin,
+            track=self.track_in_standard_space,
         )
 
     def get_video(self):
@@ -306,7 +316,7 @@ class VisualStimulusTrial(LoomTrial):
             self.session.path.replace("processed", "raw")
         ).joinpath("camera.avi")
         vid = pims.Video(vid_path)
-        return vid[self.start:self.end]
+        return vid[self.start : self.end]
 
 
 class AuditoryStimulusTrial(LoomTrial):

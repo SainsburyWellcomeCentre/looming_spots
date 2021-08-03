@@ -54,7 +54,7 @@ def get_next_entry(start, place_of_entry, place_of_exit):
             continue
         if is_entry(t, place_of_entry, place_of_exit):
             return t
-    print('no entries found')
+    print("no entries found")
 
 
 def get_next_entry_from_track(
@@ -104,17 +104,26 @@ def get_all_tz_entries(normalised_x_track):
     :return:
     """
     entries = arena_entry_bools_dictionary(normalised_x_track)
-    shelter_entries = np.where(np.diff(entries['shelter'].astype(int)) == 1)[0]
-    tz_entries = np.where(np.diff(entries['tz'].astype(int)) == 1)[0]
-    middle_entries=np.where(np.diff(entries['middle'].astype(int)) == 1)[0]
-    track_starts=[]
+    shelter_entries = np.where(np.diff(entries["shelter"].astype(int)) == 1)[0]
+    tz_entries = np.where(np.diff(entries["tz"].astype(int)) == 1)[0]
+    middle_entries = np.where(np.diff(entries["middle"].astype(int)) == 1)[0]
+    track_starts = []
 
     for i, tz_entry in enumerate(tz_entries):
         try:
-            first_next_middle = min(middle_entries[middle_entries > tz_entry], key=lambda x: abs(x - tz_entry))
+            first_next_middle = min(
+                middle_entries[middle_entries > tz_entry],
+                key=lambda x: abs(x - tz_entry),
+            )
 
-            first_next_shelter = min(shelter_entries[shelter_entries > first_next_middle], key=lambda x: abs(x - first_next_middle))
-            first_next_tz = min(tz_entries[tz_entries > first_next_middle], key=lambda x: abs(x - first_next_middle))
+            first_next_shelter = min(
+                shelter_entries[shelter_entries > first_next_middle],
+                key=lambda x: abs(x - first_next_middle),
+            )
+            first_next_tz = min(
+                tz_entries[tz_entries > first_next_middle],
+                key=lambda x: abs(x - first_next_middle),
+            )
             if first_next_tz < first_next_shelter:
                 continue
             else:
@@ -124,4 +133,3 @@ def get_all_tz_entries(normalised_x_track):
             return track_starts
 
     return track_starts
-

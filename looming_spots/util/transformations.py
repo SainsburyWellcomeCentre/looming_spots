@@ -3,15 +3,18 @@ import skimage.transform
 import numpy as np
 
 
-def get_inverse_projective_transform(src=np.array([[0, 240],
-                                           [0, 0],
-                                           [600, 240],
-                                           [600, 0]]),
-                             dest=np.array([[27.08333156, 296.33332465],
-                                            [77.49999672, 126.74999637],
-                                            [628.41664697, 308.24999096],
-                                            [607.33331426, 130.41666292]]),
-                             output_shape=(240, 600)):
+def get_inverse_projective_transform(
+    src=np.array([[0, 240], [0, 0], [600, 240], [600, 0]]),
+    dest=np.array(
+        [
+            [27.08333156, 296.33332465],
+            [77.49999672, 126.74999637],
+            [628.41664697, 308.24999096],
+            [607.33331426, 130.41666292],
+        ]
+    ),
+    output_shape=(240, 600),
+):
     """
     coordinates np.array([x1, y1], [x2, y2], [x3, y3], [x4, y4])
 
@@ -41,4 +44,3 @@ def get_box_coordinates_from_file(box_path):
     new_box_coords[2] = napari_fmt_coords[2]
     new_box_coords[3] = napari_fmt_coords[3]
     return new_box_coords
-

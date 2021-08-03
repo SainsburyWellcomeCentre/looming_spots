@@ -29,7 +29,10 @@ def get_mouse_ids_in_experiment(experiment_key):
 
 def get_mtgs_in_experiment(experiment_key):
     mids = get_mouse_ids_in_experiment(experiment_key)
-    return [loom_trial_group.MouseLoomTrialGroup(mid, experiment_key) for mid in mids]
+    return [
+        loom_trial_group.MouseLoomTrialGroup(mid, experiment_key)
+        for mid in mids
+    ]
 
 
 def get_mouse_ids(df, ignore_future_experiments=True):

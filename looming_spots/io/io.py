@@ -37,7 +37,9 @@ def sync_raw_and_processed_data(
     subprocess.call(cmd, shell=True)
 
 
-def load_pd_and_clock_raw(directory):  # TODO: raw loading should be entirely extracted to load module
+def load_pd_and_clock_raw(
+    directory,
+):  # TODO: raw loading should be entirely extracted to load module
     if "AI.tdms" in os.listdir(directory):
 
         path = os.path.join(directory, "AI.tdms")
@@ -84,7 +86,7 @@ def load_pd_on_clock_ups(directory, pd_threshold=2.5):
 
 
 def load_auditory_on_clock_ups(directory, pd_threshold=2.5):
-    auditory_path = Path(directory) / 'auditory_stimulus.npy'
+    auditory_path = Path(directory) / "auditory_stimulus.npy"
     if not os.path.isfile(str(auditory_path)):
         pd, clock, auditory = load_pd_and_clock_raw(directory)
         clock_ups = get_clock_ups(clock, pd_threshold)

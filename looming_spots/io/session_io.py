@@ -35,6 +35,7 @@ class Session(object):
 
 
     """
+
     def __init__(
         self,
         dt,
@@ -42,7 +43,6 @@ class Session(object):
         n_looms_to_view=0,
         n_lsie_looms=120,
         n_trials_to_consider=3,
-
     ):
         self.dt = dt
         self.mouse_id = mouse_id
@@ -61,10 +61,10 @@ class Session(object):
         :return:
         """
         p = pathlib.Path(self.path)
-        frame_rate_file_exists = len(list(p.glob('frame_rate.npy'))) == 1
+        frame_rate_file_exists = len(list(p.glob("frame_rate.npy"))) == 1
 
         if frame_rate_file_exists:
-            frame_rate = np.load(str(p / 'frame_rate.npy'))
+            frame_rate = np.load(str(p / "frame_rate.npy"))
         else:
             if "AI.tdms" in os.listdir(self.path):
                 clock = self.get_clock_raw()
@@ -77,7 +77,7 @@ class Session(object):
                     frame_rate = 100
             else:
                 frame_rate = 30
-            np.save(str(p / 'frame_rate.npy'), frame_rate)
+            np.save(str(p / "frame_rate.npy"), frame_rate)
 
         return frame_rate
 
@@ -117,7 +117,9 @@ class Session(object):
 
     @property
     def video_path(self):
-        return os.path.join(self.path.replace('processed_data', 'raw_data'), "camera.avi")
+        return os.path.join(
+            self.path.replace("processed_data", "raw_data"), "camera.avi"
+        )
 
     @property
     def parent_path(self):
@@ -168,9 +170,13 @@ class Session(object):
     def trials(self):
         visual_trials_idx = self.get_visual_trials_idx()
         auditory_trials_idx = self.get_auditory_trials_idx()
-        visual_trials = self.initialise_trials(visual_trials_idx, "visual",)
+        visual_trials = self.initialise_trials(
+            visual_trials_idx,
+            "visual",
+        )
         auditory_trials = self.initialise_trials(
-            auditory_trials_idx, "auditory",
+            auditory_trials_idx,
+            "auditory",
         )
 
         return sorted(visual_trials + auditory_trials)
@@ -217,7 +223,10 @@ class Session(object):
     def trials_results(self):
         test_trials = [t for t in self.trials if "test" in t.trial_type]
         return np.array(
-            [t.track.classify_escape() for t in test_trials[: self.n_trials_to_include]]
+            [
+                t.track.classify_escape()
+                for t in test_trials[: self.n_trials_to_include]
+            ]
         )
 
     @property
@@ -250,6 +259,7 @@ class Session(object):
 
     def get_reference_frame(self, idx=0):
         import skvideo.io
+
         vid = skvideo.io.vreader(self.video_path)
         for i, frame in enumerate(vid):
             if i == idx:
@@ -389,7 +399,9 @@ class Session(object):
         return self.photodiode_trace - np.median(self.photodiode_trace)
 
     def track(self):
-        return tracks.track_in_standard_space(self.path, get_tracking_method(self.path), 0, len(self))
+        return tracks.track_in_standard_space(
+            self.path, get_tracking_method(self.path), 0, len(self)
+        )
 
     def x_pos(self):
         return self.track()[0]
@@ -467,7 +479,9 @@ def load_sessions(mouse_id):
                     print("not datetime, skipping")
                     continue
 
-                if not contains_video(file_names) and not contains_tracks(session_directory):
+                if not contains_video(file_names) and not contains_tracks(
+                    session_directory
+                ):
                     print("no video or tracks")
                     if not get_tracks_from_raw(
                         mouse_directory.replace("processed_data", "raw_data")
@@ -503,7 +517,7 @@ def contains_video(file_names):
 
 def contains_tracks(session_directory):
     p = pathlib.Path(session_directory)
-    if len(list(p.rglob("dlc_x_tracks.npy"))) ==0:
+    if len(list(p.rglob("dlc_x_tracks.npy"))) == 0:
         return False
     else:
         return True

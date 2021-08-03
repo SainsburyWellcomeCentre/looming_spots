@@ -2,7 +2,10 @@ import os
 import numpy as np
 from datetime import datetime
 
-from looming_spots.constants import ORDERED_ACQUISITION_CHANNEL_LABELS, PROCESSED_OUTPUT_VARIABLE_LABELS
+from looming_spots.constants import (
+    ORDERED_ACQUISITION_CHANNEL_LABELS,
+    PROCESSED_OUTPUT_VARIABLE_LABELS,
+)
 from nptdms import TdmsFile
 
 
@@ -22,9 +25,7 @@ def load_all_channels_raw(
         return load_from_ai_bin(directory)
 
 
-def load_from_ai_bin(
-    directory
-):
+def load_from_ai_bin(directory):
 
     path = os.path.join(directory, "AI.bin")
     raw_ai = np.fromfile(path, dtype="double")
@@ -35,15 +36,15 @@ def load_from_ai_bin(
     raw_dict = {}
     if recording_date > datetime(2019, 1, 25):
         raw_ai = raw_ai.reshape(int(raw_ai.shape[0] / 3), 3)
-        raw_dict.setdefault('photodiode', raw_ai[:, 0])
-        raw_dict.setdefault('clock', raw_ai[:, 1])
-        raw_dict.setdefault('auditory_stimulus', raw_ai[:, 2])
+        raw_dict.setdefault("photodiode", raw_ai[:, 0])
+        raw_dict.setdefault("clock", raw_ai[:, 1])
+        raw_dict.setdefault("auditory_stimulus", raw_ai[:, 2])
         return raw_dict
 
     raw_ai = raw_ai.reshape(int(raw_ai.shape[0] / 2), 2)
-    raw_dict.setdefault('photodiode', raw_ai[:, 0])
-    raw_dict.setdefault('clock', raw_ai[:, 1])
-    raw_dict.setdefault('auditory_stimulus', np.zeros(len(raw_ai[:, 1])))
+    raw_dict.setdefault("photodiode", raw_ai[:, 0])
+    raw_dict.setdefault("clock", raw_ai[:, 1])
+    raw_dict.setdefault("auditory_stimulus", np.zeros(len(raw_ai[:, 1])))
 
     return raw_dict
 
@@ -63,7 +64,12 @@ def load_all_channels_on_clock_ups(directory):
             k: data[clock_ups] for k, data in raw_data_dict.items()
         }
         if "photodetector" in raw_data_dict:
-            signal, background, bg_fit, delta_f = demodulation.lerner_deisseroth_preprocess(
+            (
+                signal,
+                background,
+                bg_fit,
+                delta_f,
+            ) = demodulation.lerner_deisseroth_preprocess(
                 raw_data_dict["photodetector"],
                 raw_data_dict["led211"],
                 raw_data_dict["led531"],
@@ -99,8 +105,12 @@ def save_downsampled_data(directory: str, data_dict: dict):
         full_path = get_full_path(directory, k)
         if not os.path.isfile(full_path):
             np.save(full_path, v)
-    for k in set(list(data_dict.keys())).symmetric_difference(set(ORDERED_ACQUISITION_CHANNEL_LABELS +
-                                                                  PROCESSED_OUTPUT_VARIABLE_LABELS)):
+    for k in set(list(data_dict.keys())).symmetric_difference(
+        set(
+            ORDERED_ACQUISITION_CHANNEL_LABELS
+            + PROCESSED_OUTPUT_VARIABLE_LABELS
+        )
+    ):
         full_path = get_full_path(directory, k)
         np.save(full_path, [0])
 

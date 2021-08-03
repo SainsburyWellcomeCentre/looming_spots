@@ -104,7 +104,8 @@ def plot_integral_at_latency_bars(mtgs, bar_colors=("k", "k")):
                 np.nanmax(
                     [
                         t.integral_escape_metric(int(pre_test_latency))
-                        for t in mtg.pre_test_trials()[:3] + mtg.post_test_trials()[:3]  #mtg.loom_trials()[:30]
+                        for t in mtg.pre_test_trials()[:3]
+                        + mtg.post_test_trials()[:3]  # mtg.loom_trials()[:30]
                     ]
                 )
             ]
@@ -157,7 +158,7 @@ def plot_integral_at_latency_bars(mtgs, bar_colors=("k", "k")):
     )
     print(scipy.stats.ttest_ind(group_avg_pre, group_avg_post))
     print(pingouin.wilcoxon(group_avg_pre, group_avg_post))
-    print('all trials wilcoxon:')
+    print("all trials wilcoxon:")
     print(pingouin.wilcoxon(all_trials_pre, all_trials_post))
 
 
@@ -328,8 +329,12 @@ def get_signal_metric_dataframe_variable_contrasts(mtgs, metric):
         )
         # event_metric_dict.setdefault('metric', metrics)
         event_metric_dict.setdefault("contrast", [t.contrast for t in trials])
-        event_metric_dict.setdefault("escape", [t.classify_escape() for t in trials])
-        event_metric_dict.setdefault("loom number", [t.get_loom_trial_idx() for t in trials])
+        event_metric_dict.setdefault(
+            "escape", [t.classify_escape() for t in trials]
+        )
+        event_metric_dict.setdefault(
+            "loom number", [t.get_loom_trial_idx() for t in trials]
+        )
 
         metric_df = pd.DataFrame.from_dict(event_metric_dict)
         all_df = all_df.append(metric_df, ignore_index=True)
@@ -464,13 +469,16 @@ def habituation_df(mtg_groups, mtg_group_labels):
             pre_test_latency = np.nanmean(
                 [t.latency_peak_detect() for t in mtg.pre_test_trials()[:3]]
             )
-            print(f"pre_test_latency: {pre_test_latency}, mouse: {mtg.mouse_id}")
+            print(
+                f"pre_test_latency: {pre_test_latency}, mouse: {mtg.mouse_id}"
+            )
             norm_factor = max(
                 [
                     np.nanmax(
                         [
                             t.integral_escape_metric(int(pre_test_latency))
-                            for t in mtg.pre_test_trials()[:3] + mtg.post_test_trials()[:3]
+                            for t in mtg.pre_test_trials()[:3]
+                            + mtg.post_test_trials()[:3]
                         ]
                     )
                 ]
@@ -488,7 +496,7 @@ def habituation_df(mtg_groups, mtg_group_labels):
                 contrasts = []
                 signals = []
 
-                if test_type != 'habituation':
+                if test_type != "habituation":
                     escape_result = [t.classify_escape() for t in trials]
                 else:
                     escape_result = [False for _ in trials]
@@ -549,7 +557,9 @@ def get_trials_df(mtgs, metric):
         event_metric_dict.setdefault(metric, metric_values)
 
         event_metric_dict.setdefault("contrast", [t.contrast for t in trials])
-        event_metric_dict.setdefault("escape", [t.classify_escape() for t in trials])
+        event_metric_dict.setdefault(
+            "escape", [t.classify_escape() for t in trials]
+        )
 
         metric_df = pd.DataFrame.from_dict(event_metric_dict)
         all_df = all_df.append(metric_df, ignore_index=True)
@@ -558,18 +568,19 @@ def get_trials_df(mtgs, metric):
 
 def compare_integrals_tracks(mids):
     import matplotlib.pyplot as plt
-    plt.close('all')
+
+    plt.close("all")
     for mid in mids:
         plt.figure()
         plt.title(mid)
         mtg = loom_trial_group.MouseLoomTrialGroup(mid)
         for t in mtg.pre_test_trials()[:3]:
             print(t.estimate_latency(False))
-            plt.plot(t.integral_downsampled(), color='r')
+            plt.plot(t.integral_downsampled(), color="r")
 
         for t in mtg.post_test_trials()[:3]:
             print(t.estimate_latency(False))
-            plt.plot(t.integral_downsampled(), color='k')
+            plt.plot(t.integral_downsampled(), color="k")
         plt.figure()
         plt.title(mid)
         for t in mtg.pre_test_trials()[:3]:

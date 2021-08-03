@@ -24,8 +24,10 @@ def get_binned_preference(
 
     path_to_video = os.path.join(session.path, video_name)
     config = load_config(session.path)
-    normalised_track = looming_spots.preprocess.normalisation.load_normalised_track(
-        path_to_video, context="split"
+    normalised_track = (
+        looming_spots.preprocess.normalisation.load_normalised_track(
+            path_to_video, context="split"
+        )
     )
 
     if start is None:

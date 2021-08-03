@@ -25,6 +25,5 @@ setup(
         "scikit-image",
         "opencv",
         "tables",
-
     ],
 )

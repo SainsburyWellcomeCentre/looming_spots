@@ -35,7 +35,7 @@ class MouseLoomTrialGroup(object):
         if exp_key is not None:
             self.exp_key = exp_key
         else:
-            self.exp_key = 'no exp key given'
+            self.exp_key = "no exp key given"
         self.trial_type_to_analyse = None
         self.kept_trials = None
 
@@ -54,8 +54,12 @@ class MouseLoomTrialGroup(object):
             t.set_auditory_trial_idx(i)
 
     def mixed_post_test(self):
-        all_escape = all(t.classify_escape() for t in self.post_test_trials()[:3])
-        none_escape = all(not t.classify_escape() for t in self.post_test_trials()[:3])
+        all_escape = all(
+            t.classify_escape() for t in self.post_test_trials()[:3]
+        )
+        none_escape = all(
+            not t.classify_escape() for t in self.post_test_trials()[:3]
+        )
         return not (all_escape or none_escape)
 
     def contrasts(self):
@@ -94,7 +98,7 @@ class MouseLoomTrialGroup(object):
 
     @cached_property
     def all_trials(
-        self
+        self,
     ):  # TODO: this can probably be achieved more elegantly  #TODO: weakref
         print(self.mouse_id)
 
@@ -133,7 +137,8 @@ class MouseLoomTrialGroup(object):
     @cached_property
     def sessions(self):  # TODO: weakref
         unlinked_sessions = looming_spots.io.session_io.load_sessions(
-            self.mouse_id)
+            self.mouse_id
+        )
         singly_linked_trials, doubly_linked_sessions = [], []
 
         for i, (s_current, s_next) in enumerate(
@@ -166,9 +171,7 @@ class MouseLoomTrialGroup(object):
         ]
 
     def lsie_trials(self):
-        return [
-            t for t in self.all_trials if t.get_trial_type() == "lsie"
-        ]
+        return [t for t in self.all_trials if t.get_trial_type() == "lsie"]
 
     def get_trials_of_type(self, key, limit=3):
         if key == "pre_test":
@@ -202,7 +205,7 @@ class MouseLoomTrialGroup(object):
 
     def get_reference_frame(self):
         video_path = pathlib.Path(self.sessions[0].video_path)
-        image_path = video_path.parent / 'background_frame.npy'
+        image_path = video_path.parent / "background_frame.npy"
         if os.path.isfile(str(video_path)):
             img = np.load(str(video_path))
         else:
@@ -307,7 +310,9 @@ class MouseLoomTrialGroup(object):
         low_contrast_trials = [t for t in self.all_trials if t.contrast != 0]
         low_contrast_values = [t.contrast for t in low_contrast_trials]
 
-        Z = [x for _, x in sorted(zip(low_contrast_values, low_contrast_trials))]
+        Z = [
+            x for _, x in sorted(zip(low_contrast_values, low_contrast_trials))
+        ]
         return Z
 
 

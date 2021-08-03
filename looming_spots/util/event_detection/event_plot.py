@@ -12,13 +12,13 @@ def plot_events(trace, events_pos, peaks_pos, peak_ampls, half_rises):
     x = np.linspace(-(50 * 0.04), 0.04, 100)  # 2 secs
     y = x.copy()
     y.fill(0)
-    line1, = ax.plot(
+    (line1,) = ax.plot(
         x, y, "b-"
     )  # Returns a tuple of line objects, thus the comma
 
     cursors_y = (0, 0, 0)  # defaults
     cursors_x = (x[0], x[len(x) / 2], x[-1])
-    line2, = ax.plot(cursors_x, cursors_y, "r*")
+    (line2,) = ax.plot(cursors_x, cursors_y, "r*")
 
     for event_start, event_end, half_rise_t in zip(
         events_pos, peaks_pos, half_rises

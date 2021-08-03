@@ -59,9 +59,7 @@ def main(args_list):
     #    if len(args_list) == 7:
     #        sampleInterval = float(args_list[6])
     n_pnts_for_peak_detection = 100
-    n_pnts_high_pass_filter = (
-        100
-    )  # OPTIMISE: compute as function of (n_pnts_bsl + n_pnts_peak + n_pnts_rise_t)
+    n_pnts_high_pass_filter = 100  # OPTIMISE: compute as function of (n_pnts_bsl + n_pnts_peak + n_pnts_rise_t)
 
     #    for i in range(2):
     for j in range(green_profiles.shape[1]):

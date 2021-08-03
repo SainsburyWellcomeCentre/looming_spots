@@ -36,10 +36,7 @@ def plot_first_loom_raw_signal():
 
 
 def plot_scatter_by_contrast(mids=snl_contrast_curve_mids):
-    mtgs = [
-        loom_trial_group.MouseLoomTrialGroup(mid)
-        for mid in mids
-    ]
+    mtgs = [loom_trial_group.MouseLoomTrialGroup(mid) for mid in mids]
     all_plots = []
     metrics = [
         "speed",
@@ -49,11 +46,11 @@ def plot_scatter_by_contrast(mids=snl_contrast_curve_mids):
     ]
     for metric in metrics:
         df = get_signal_metric_dataframe_variable_contrasts(mtgs, metric)
-        g=sns.lmplot(
+        g = sns.lmplot(
             metric,
             "ca signal",
             data=df,
-            hue="contrast", #contrast
+            hue="contrast",  # contrast
             fit_reg=False,
             palette=sns.cubehelix_palette(7, hue=0)[::-1],
         )
@@ -64,26 +61,36 @@ def plot_scatter_by_contrast(mids=snl_contrast_curve_mids):
 
         all_plots.append(g)
 
-    df = df.sort_values(by='contrast')
-    df['contrast'] = df['contrast'].astype(str)
+    df = df.sort_values(by="contrast")
+    df["contrast"] = df["contrast"].astype(str)
     sns.lmplot(
         "contrast",
         "ca signal",
         data=df,
-        hue='escape',
+        hue="escape",
         fit_reg=False,
     )
     plt.figure()
-    n_bins=10
-    df_escape = df[df['escape']]
-    df_no_escape = df[~df['escape']]
-    sns.distplot(df_no_escape['ca signal'], bins=int(n_bins), norm_hist=True, hist_kws={'linewidth': 0})
-    sns.distplot(df_escape['ca signal'], bins=int(n_bins), norm_hist=True, hist_kws={'linewidth': 0})
+    n_bins = 10
+    df_escape = df[df["escape"]]
+    df_no_escape = df[~df["escape"]]
+    sns.distplot(
+        df_no_escape["ca signal"],
+        bins=int(n_bins),
+        norm_hist=True,
+        hist_kws={"linewidth": 0},
+    )
+    sns.distplot(
+        df_escape["ca signal"],
+        bins=int(n_bins),
+        norm_hist=True,
+        hist_kws={"linewidth": 0},
+    )
     return all_plots, df, mtgs
 
 
 def get_trials_of_contrast(trials, contrast):
-    return [t for t in trials if t.contrast==contrast]
+    return [t for t in trials if t.contrast == contrast]
 
 
 def waveform_comparison(ctst, mid):
@@ -91,7 +98,9 @@ def waveform_comparison(ctst, mid):
     mtg = loom_trial_group.MouseLoomTrialGroup(mid)
 
     trials = get_trials_of_contrast(mtg.loom_trials(), ctst)
-    test_ctst_trials=get_trials_of_contrast(mtg.loom_trials(), 0)
-    avg_waveform=np.nanmean([t.delta_f()[:600] for t in trials], axis=0)
-    avg_test_waveform=np.nanmean([t.delta_f()[:600] for t in test_ctst_trials],axis=0)
+    test_ctst_trials = get_trials_of_contrast(mtg.loom_trials(), 0)
+    avg_waveform = np.nanmean([t.delta_f()[:600] for t in trials], axis=0)
+    avg_test_waveform = np.nanmean(
+        [t.delta_f()[:600] for t in test_ctst_trials], axis=0
+    )
     return avg_waveform, avg_test_waveform

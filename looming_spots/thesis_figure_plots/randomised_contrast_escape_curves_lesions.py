@@ -7,8 +7,9 @@ from looming_spots.trial_group_analysis.escape_metric_dataframes import (
     get_behaviour_metric_dataframe,
 )
 from looming_spots.db import experimental_log, loom_trial_group
-sns.set_style('whitegrid')
-LINEWIDTH=3
+
+sns.set_style("whitegrid")
+LINEWIDTH = 3
 flatui = ["#9b59b6", "#3498db", "#95a5a6"]
 
 GROUPS = {
@@ -38,33 +39,72 @@ GROUPS = {
         "CA493_3",
         "CA493_4",
     ],
-     "d1_caspase": experimental_log.get_mouse_ids_in_experiment("d1MSN_caspase_lesion_TS"),
-     "d2_caspase": experimental_log.get_mouse_ids_in_experiment("d2MSN_caspase_lesion_TS"),
-    "d2_caspase_AAV2": ['1032008', '1041545', '1041546', '1032007', '1032010'],
-    "d1_caspase_AAV5": ['1068966', '1068091', '1068090', '1068089'],
-    "d1_caspase_AAV2": ['FI1_1', 'FI1_2', 'FI1_3', 'FI1_4', '1057614'],
-    "caspase": ['FI1_1', 'FI1_2', 'FI1_3', 'FI1_4', '1057614', '1068966', '1068091', '1068090', '1068089'] + experimental_log.get_mouse_ids_in_experiment("d1MSN_caspase_lesion_TS"),
-    "naive_escape": experimental_log.get_mouse_ids_in_experiment('naive_escape_in_A'),
-    "d1flexGCaMP_var_contrast": experimental_log.get_mouse_ids_in_experiment('d1flexGCaMP_var_contrast'),
-    "escape_in_a": [ "CA105_1", "CA105_2", "CA105_3","CA105_4", "CA105_5", "CA106_1", "CA106_2", "CA106_3", "CA106_4", "CA106_5", "CA109_1", "CA109_2", "CA109_3"],
-    "A10_naive_pre_tests": [ "CA389_5", "CA389_4", "CA389_2", "CA389_3",],
-
-"to_process": ['CA114_2',
- 'CA50_3',
- 'CA114_3',
- 'CA131_4',
- 'CA132_1',
- 'CA114_5',
- 'CA41_4',
- 'CA40_1',
- 'CA475_1',
- 'CA113_4',
- 'CA132_3',
- 'CA188_4',
- 'CA114_1',
- 'CA131_3',
- 'CA114_4',
- 'CA132_4']
+    "d1_caspase": experimental_log.get_mouse_ids_in_experiment(
+        "d1MSN_caspase_lesion_TS"
+    ),
+    "d2_caspase": experimental_log.get_mouse_ids_in_experiment(
+        "d2MSN_caspase_lesion_TS"
+    ),
+    "d2_caspase_AAV2": ["1032008", "1041545", "1041546", "1032007", "1032010"],
+    "d1_caspase_AAV5": ["1068966", "1068091", "1068090", "1068089"],
+    "d1_caspase_AAV2": ["FI1_1", "FI1_2", "FI1_3", "FI1_4", "1057614"],
+    "caspase": [
+        "FI1_1",
+        "FI1_2",
+        "FI1_3",
+        "FI1_4",
+        "1057614",
+        "1068966",
+        "1068091",
+        "1068090",
+        "1068089",
+    ]
+    + experimental_log.get_mouse_ids_in_experiment("d1MSN_caspase_lesion_TS"),
+    "naive_escape": experimental_log.get_mouse_ids_in_experiment(
+        "naive_escape_in_A"
+    ),
+    "d1flexGCaMP_var_contrast": experimental_log.get_mouse_ids_in_experiment(
+        "d1flexGCaMP_var_contrast"
+    ),
+    "escape_in_a": [
+        "CA105_1",
+        "CA105_2",
+        "CA105_3",
+        "CA105_4",
+        "CA105_5",
+        "CA106_1",
+        "CA106_2",
+        "CA106_3",
+        "CA106_4",
+        "CA106_5",
+        "CA109_1",
+        "CA109_2",
+        "CA109_3",
+    ],
+    "A10_naive_pre_tests": [
+        "CA389_5",
+        "CA389_4",
+        "CA389_2",
+        "CA389_3",
+    ],
+    "to_process": [
+        "CA114_2",
+        "CA50_3",
+        "CA114_3",
+        "CA131_4",
+        "CA132_1",
+        "CA114_5",
+        "CA41_4",
+        "CA40_1",
+        "CA475_1",
+        "CA113_4",
+        "CA132_3",
+        "CA188_4",
+        "CA114_1",
+        "CA131_3",
+        "CA114_4",
+        "CA132_4",
+    ],
 }
 
 
@@ -77,7 +117,10 @@ def get_sub_dictionary(wanted_keys, bigdict):
 def get_behaviour_metrics_df(metric, group_keys=None):
     group_dict = get_sub_dictionary(group_keys, GROUPS)
     if len(group_dict) == 0:
-        group_dict= {key: experimental_log.get_mouse_ids_in_experiment(key) for key in group_keys}
+        group_dict = {
+            key: experimental_log.get_mouse_ids_in_experiment(key)
+            for key in group_keys
+        }
     all_df = pd.DataFrame()
     for label, mids in group_dict.items():
         mtgs = [loom_trial_group.MouseLoomTrialGroup(mid) for mid in mids]
@@ -142,11 +185,11 @@ def two_way_mixed_anova(group_label_1, group_label_2, post_hoc=False):
     return escape_curve_df, aov
 
 
-def plot_lesion_experiments(metric='speed', units='cm/s', group_keys=None):
-    flatui = ["b", "k", 'r','g','c'][:len(group_keys)]
+def plot_lesion_experiments(metric="speed", units="cm/s", group_keys=None):
+    flatui = ["b", "k", "r", "g", "c"][: len(group_keys)]
     df_all = get_behaviour_metrics_df(metric, group_keys=group_keys)
     ax = plt.subplot(221)
-    ax.set_title('escape % vs contrast')
+    ax.set_title("escape % vs contrast")
     # sns.lineplot(
     #     data=df_all,
     #     x="contrast",
@@ -164,14 +207,14 @@ def plot_lesion_experiments(metric='speed', units='cm/s', group_keys=None):
         hue="experimental group",
         palette=flatui,
         order=[0.1507, 0.1407, 0.1307, 0.1207, 0.1107, 0.1007, 0],
-        facecolor='w',
+        facecolor="w",
     )
 
     ax.set(xlabel="spot luminance", ylabel="escape (%)")
-    #ax.invert_xaxis()
+    # ax.invert_xaxis()
 
     ax2 = plt.subplot(222)
-    ax2.set_title('raw (all trials) speed vs trial no.')
+    ax2.set_title("raw (all trials) speed vs trial no.")
     sns.pointplot(
         data=df_all,
         x="loom number",
@@ -179,7 +222,7 @@ def plot_lesion_experiments(metric='speed', units='cm/s', group_keys=None):
         hue="experimental group",
         legend=False,
         linewidth=LINEWIDTH,
-        palette=flatui
+        palette=flatui,
     )
     # sns.scatterplot(
     #     data=df_all,
@@ -193,7 +236,7 @@ def plot_lesion_experiments(metric='speed', units='cm/s', group_keys=None):
 
     df_test_contrast = df_all[df_all["contrast"] == 0]
     ax3 = plt.subplot(223)
-    ax3.set_title('test contrast trials speed vs trial no.')
+    ax3.set_title("test contrast trials speed vs trial no.")
     sns.lineplot(
         data=df_test_contrast,
         x="loom number",
@@ -202,7 +245,7 @@ def plot_lesion_experiments(metric='speed', units='cm/s', group_keys=None):
         err_style="bars",
         legend=False,
         linewidth=LINEWIDTH,
-        palette=flatui
+        palette=flatui,
     )
     sns.scatterplot(
         data=df_test_contrast,
@@ -210,15 +253,15 @@ def plot_lesion_experiments(metric='speed', units='cm/s', group_keys=None):
         y="metric value",
         hue="experimental group",
         legend=False,
-        edgecolor='w',
-        alpha=0.,
-        palette=flatui
+        edgecolor="w",
+        alpha=0.0,
+        palette=flatui,
     )
 
     ax3.set(xlabel="trial number", ylabel=f"{metric} ({units})")
 
     ax4 = plt.subplot(224)
-    ax4.set_title('test contrast trials escape % vs trial no.')
+    ax4.set_title("test contrast trials escape % vs trial no.")
     sns.lineplot(
         data=df_test_contrast,
         x="loom number",
@@ -227,7 +270,7 @@ def plot_lesion_experiments(metric='speed', units='cm/s', group_keys=None):
         err_style="bars",
         legend=False,
         linewidth=LINEWIDTH,
-        palette=flatui
+        palette=flatui,
     )
     ax4.set(xlabel="loom number", ylabel="escape (%)")
     return df_all

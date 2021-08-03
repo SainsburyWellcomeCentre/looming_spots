@@ -32,9 +32,9 @@ N_SAMPLES_AFTER = 400
 N_SAMPLES_TO_SHOW = N_SAMPLES_BEFORE + N_SAMPLES_AFTER
 
 
-HEAD_DIRECTORY = '/home/slenzi/winstor/margrie/glusterfs/imaging/l/loomer/'
-FIGURE_DIRECTORY = '~/lsie/docs/figures/'
-EXPERIMENTAL_RECORDS_PATH = '~/Downloads/updated_loom_sheet_format.csv'
+HEAD_DIRECTORY = "/home/slenzi/winstor/margrie/glusterfs/imaging/l/loomer/"
+FIGURE_DIRECTORY = "~/lsie/docs/figures/"
+EXPERIMENTAL_RECORDS_PATH = "~/Downloads/updated_loom_sheet_format.csv"
 RAW_DATA_DIRECTORY = os.path.join(HEAD_DIRECTORY, "raw_data")
 PROCESSED_DATA_DIRECTORY = os.path.join(HEAD_DIRECTORY, "processed_data")
 

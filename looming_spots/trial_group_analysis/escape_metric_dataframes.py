@@ -34,7 +34,9 @@ def get_behaviour_metric_dataframe(mtgs, metric, test_type):
         )
         event_metric_dict.setdefault("metric", [metric] * len(trials))
         event_metric_dict.setdefault("contrast", [t.contrast for t in trials])
-        event_metric_dict.setdefault("escape", [t.classify_escape() for t in trials])
+        event_metric_dict.setdefault(
+            "escape", [t.classify_escape() for t in trials]
+        )
         metric_df = pd.DataFrame.from_dict(event_metric_dict)
         all_df = all_df.append(metric_df, ignore_index=True)
     return all_df
@@ -65,7 +67,9 @@ def get_escape_metric_df_trials(
     )
     event_metric_dict.setdefault("metric", [metric] * len(trials))
     event_metric_dict.setdefault("contrast", [t.contrast for t in trials])
-    event_metric_dict.setdefault("escape", [t.classify_escape() for t in trials])
+    event_metric_dict.setdefault(
+        "escape", [t.classify_escape() for t in trials]
+    )
     metric_df = pd.DataFrame.from_dict(event_metric_dict)
     all_df = all_df.append(metric_df, ignore_index=True)
     return all_df
@@ -90,14 +94,18 @@ def get_behaviour_metrics_df(mids, group_label, metrics):
     return all_df
 
 
-def get_behaviour_metrics_dataframe(mtgs, metrics, test_type, experimental_group_label):
+def get_behaviour_metrics_dataframe(
+    mtgs, metrics, test_type, experimental_group_label
+):
     all_df = pd.DataFrame()
     for mtg in mtgs:
         trials = get_trials(mtg, test_type)
         event_metric_dict = get_base_df_dict(mtg, test_type, trials)
 
         add_all_metrics(event_metric_dict, metrics, trials)
-        event_metric_dict.setdefault('experimental group', [experimental_group_label]*len(trials))
+        event_metric_dict.setdefault(
+            "experimental group", [experimental_group_label] * len(trials)
+        )
         metric_df = pd.DataFrame.from_dict(event_metric_dict)
         all_df = all_df.append(metric_df, ignore_index=True)
     return all_df
@@ -116,11 +124,11 @@ def get_base_df_dict(mtg, test_type, trials):
     event_metric_dict.setdefault(
         "loom number", [t.loom_trial_idx for t in trials]
     )
-    event_metric_dict.setdefault(
-        "test type", [test_type] * len(trials)
-    )
+    event_metric_dict.setdefault("test type", [test_type] * len(trials))
     event_metric_dict.setdefault("contrast", [t.contrast for t in trials])
-    event_metric_dict.setdefault("escape", [t.classify_escape() for t in trials])
+    event_metric_dict.setdefault(
+        "escape", [t.classify_escape() for t in trials]
+    )
     return event_metric_dict
 
 
@@ -153,12 +161,11 @@ def get_track_dataframe(mtgs, test_type):
             track_dict = {}
             x = t.normalised_x_track[:N_SAMPLES_TO_SHOW]
             y = t.normalised_x_track[:N_SAMPLES_TO_SHOW]
-            track_dict.setdefault('x', x)
-            track_dict.setdefault('y', x)
-            track_dict.setdefault('timepoint', np.arange(len(x)))
-            track_dict.setdefault('loom number', [t.loom_trial_idx]*len(x))
-            track_dict.setdefault('mid', [mtg.mouse_id]*len(x))
+            track_dict.setdefault("x", x)
+            track_dict.setdefault("y", x)
+            track_dict.setdefault("timepoint", np.arange(len(x)))
+            track_dict.setdefault("loom number", [t.loom_trial_idx] * len(x))
+            track_dict.setdefault("mid", [mtg.mouse_id] * len(x))
             metric_df = pd.DataFrame.from_dict(track_dict)
             all_df = all_df.append(metric_df, ignore_index=True)
     return all_df
-

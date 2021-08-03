@@ -22,16 +22,14 @@ def get_all_context_combos(df):
             exclude_pre_tests_df["test_type"] == "post_test"
         ]
 
-        lsie_in_context_df = lsie_df[
-            lsie_df.isin([lsie_context])["context"]
-        ]
+        lsie_in_context_df = lsie_df[lsie_df.isin([lsie_context])["context"]]
         post_tests_in_context_df = post_test_df[
             post_test_df.isin([post_test_context])["context"]
         ]
 
-        mids_in_group = set(
-            lsie_in_context_df["mouse_id"]
-        ).intersection(post_tests_in_context_df["mouse_id"])
+        mids_in_group = set(lsie_in_context_df["mouse_id"]).intersection(
+            post_tests_in_context_df["mouse_id"]
+        )
 
         results_dict.setdefault(
             "".join([lsie_context, post_test_context]), mids_in_group

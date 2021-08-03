@@ -1,15 +1,37 @@
-
 import numpy as np
 import seaborn as sns
 from cached_property import cached_property
 from looming_spots.analyse.escape_classification import classify_escape
-from looming_spots.analyse.tracks import projective_transform_tracks, downsample_track, \
-    normalised_speed_from_track, smooth_track, smooth_speed_from_track, get_peak_speed, smooth_acceleration_from_track, \
-    latency_peak_detect_s, time_in_shelter, time_to_shelter, track_in_standard_space, get_tracking_method, \
-    load_box_corner_coordinates
-from looming_spots.constants import FRAME_RATE, ARENA_SIZE_CM, LOOMING_STIMULUS_ONSET, END_OF_CLASSIFICATION_WINDOW, \
-    N_SAMPLES_TO_SHOW, N_SAMPLES_BEFORE,ARENA_LENGTH_PX, ARENA_WIDTH_PX
-from looming_spots.util.plotting import get_x_length, convert_y_axis, convert_x_axis
+from looming_spots.analyse.tracks import (
+    projective_transform_tracks,
+    downsample_track,
+    normalised_speed_from_track,
+    smooth_track,
+    smooth_speed_from_track,
+    get_peak_speed,
+    smooth_acceleration_from_track,
+    latency_peak_detect_s,
+    time_in_shelter,
+    time_to_shelter,
+    track_in_standard_space,
+    get_tracking_method,
+    load_box_corner_coordinates,
+)
+from looming_spots.constants import (
+    FRAME_RATE,
+    ARENA_SIZE_CM,
+    LOOMING_STIMULUS_ONSET,
+    END_OF_CLASSIFICATION_WINDOW,
+    N_SAMPLES_TO_SHOW,
+    N_SAMPLES_BEFORE,
+    ARENA_LENGTH_PX,
+    ARENA_WIDTH_PX,
+)
+from looming_spots.util.plotting import (
+    get_x_length,
+    convert_y_axis,
+    convert_x_axis,
+)
 from matplotlib import pyplot as plt
 from scipy import signal
 
@@ -57,7 +79,13 @@ class Track(object):
 
     @cached_property
     def track_in_standard_space(self):
-        return track_in_standard_space(self.path, self.tracking_method, self.start, self.end, loom_folder=self.folder)
+        return track_in_standard_space(
+            self.path,
+            self.tracking_method,
+            self.start,
+            self.end,
+            loom_folder=self.folder,
+        )
 
     def load_box_corner_coordinates(self):
         """
@@ -75,14 +103,18 @@ class Track(object):
         :return:
         """
 
-        new_track_x, new_track_y = projective_transform_tracks(Xin, Yin, self.load_box_corner_coordinates())
+        new_track_x, new_track_y = projective_transform_tracks(
+            Xin, Yin, self.load_box_corner_coordinates()
+        )
         return new_track_x, new_track_y
 
     @property
     def normalised_x_track(self, target_frame_rate=30):
         normalised_track = 1 - (self.x / ARENA_LENGTH_PX)
         if self.frame_rate != target_frame_rate:
-            normalised_track = downsample_track(normalised_track, self.frame_rate)
+            normalised_track = downsample_track(
+                normalised_track, self.frame_rate
+            )
         return normalised_track
 
     @property
@@ -93,7 +125,9 @@ class Track(object):
     def normalised_y_track(self, target_frame_rate=30):
         normalised_track = (self.y / ARENA_WIDTH_PX) * 0.4
         if self.frame_rate != target_frame_rate:
-            normalised_track = downsample_track(normalised_track, self.frame_rate)
+            normalised_track = downsample_track(
+                normalised_track, self.frame_rate
+            )
         return normalised_track
 
     @property
@@ -160,9 +194,7 @@ class Track(object):
         return self.reaction_time() / FRAME_RATE
 
     @property
-    def smoothed_x_acceleration(
-        self
-    ):
+    def smoothed_x_acceleration(self):
         return smooth_acceleration_from_track(self.normalised_x_track)
 
     def latency(self):

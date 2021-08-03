@@ -62,7 +62,7 @@ class TrackingImageProvider(QQuickImageProvider):
         """
         Gets the qSize as a tuple of (width, height) (for openCV which flips x and y dimensions)
         If the input size is invalid it defaults to (512, 512)
-        
+
         :param QSize qSize: The QT size object to convert
         :returns: size
         :rtype: tuple
@@ -74,7 +74,7 @@ class TrackingImageProvider(QQuickImageProvider):
     def getRndmImg(self, size):
         """
         Generates a random image of size
-        
+
         :param tuple size: The desired output image size
         :returns: The image
         """
@@ -179,7 +179,7 @@ class PyplotImageProvider(TrackingImageProvider):
     def getBaseImg(self, size):
         """
         The method common to requestPixmap() and requestImage() to get the image from the graph before formatting
-        
+
         :param tuple size: The desired image size
         :returns: the output image
         :rtype: QImage

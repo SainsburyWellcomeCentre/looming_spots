@@ -39,9 +39,7 @@ class DetectionInterface(QObject):
         :param str image_provider_name:
         """
         QObject.__init__(self, parent)
-        self.app = (
-            app
-        )  # necessary to avoid QPixmap bug: must construct a QGuiApplication before
+        self.app = app  # necessary to avoid QPixmap bug: must construct a QGuiApplication before
         self.ctx = context
         self.win = parent
         self.display_name = display_name

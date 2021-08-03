@@ -36,6 +36,7 @@ def find_pd_calibration_crossings(ai, threshold=0.4):
     loom_ends = np.where(loom_downs)[0]
     return loom_starts, loom_ends
 
+
 psychopy_directory = "/home/slenzi/spine_shares/loomer/srv/glusterfs/imaging/l/loomer/raw_data/calibration_psychtoolbox_-1_1_contrast_steps/20190613_09_09_04/"
 psychtoolbox_directory = "/home/slenzi/spine_shares/loomer/srv/glusterfs/imaging/l/loomer/raw_data/calibration_psychtoolbox_-1_1_contrast_steps/20190613_11_02_06/"
 

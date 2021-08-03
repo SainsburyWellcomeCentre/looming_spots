@@ -253,7 +253,13 @@ def detect_trace(
 
     half_rises = find_events_half_rises(trace, events_start, peaks_pos)
 
-    trace, delta_wave, events_start, half_rises, peaks_pos = remove_refractory_period(
+    (
+        trace,
+        delta_wave,
+        events_start,
+        half_rises,
+        peaks_pos,
+    ) = remove_refractory_period(
         trace,
         delta_wave,
         events_start,

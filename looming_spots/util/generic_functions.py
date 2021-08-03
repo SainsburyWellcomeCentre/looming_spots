@@ -12,7 +12,10 @@ def sort_by(list_to_sort, list_to_sort_by, descend=True):
     """
 
     sorted_lists = [
-        (cid, did) for did, cid in sorted(zip(list_to_sort_by, list_to_sort), key=lambda x: x[0])
+        (cid, did)
+        for did, cid in sorted(
+            zip(list_to_sort_by, list_to_sort), key=lambda x: x[0]
+        )
     ]
     if descend:
         sorted_lists = sorted_lists[::-1]
@@ -44,4 +47,4 @@ def is_datetime(string):
 def chunks(l, n):
     """Yield successive n-sized chunks from l."""
     for i in range(0, len(l), n):
-        yield l[i: i + n]
+        yield l[i : i + n]

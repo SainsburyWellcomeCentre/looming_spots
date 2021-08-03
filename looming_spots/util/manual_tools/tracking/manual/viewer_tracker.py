@@ -173,7 +173,7 @@ class TrackViewer(object):
 
     def add_track(self):
         idx = min(self.frame_idx + 1, len(self.tracks) - 1)
-        self.line_obj, = self.ax.plot(
+        (self.line_obj,) = self.ax.plot(
             self.tracks[0][:idx], self.tracks[1][:idx]
         )
 

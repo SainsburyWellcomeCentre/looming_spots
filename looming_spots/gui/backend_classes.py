@@ -47,9 +47,7 @@ class LoomTrialGroupBackend(QObject):
         :param parent: the parent window
         """
         QObject.__init__(self, parent)
-        self.app = (
-            app
-        )  # necessary to avoid QPixmap bug: Must construct a QGuiApplication before
+        self.app = app  # necessary to avoid QPixmap bug: Must construct a QGuiApplication before
         self.win = parent
         self.ctx = context
 
@@ -153,8 +151,10 @@ class LoomTrialGroupBackend(QObject):
     @pyqtSlot()
     def filter_data(self):
         self.reset_db()
-        relevant_mouse_ids = experimental_log.get_mouse_ids_with_test_combination(
-            self.data, self.test_phases, self.exclude_test_phases
+        relevant_mouse_ids = (
+            experimental_log.get_mouse_ids_with_test_combination(
+                self.data, self.test_phases, self.exclude_test_phases
+            )
         )
         self.data = self.data[self.data.mouse_id.isin(relevant_mouse_ids)]
 
