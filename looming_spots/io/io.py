@@ -10,7 +10,6 @@ from looming_spots.constants import (
     RAW_DATA_DIRECTORY,
     PROCESSED_DATA_DIRECTORY,
     AUDITORY_STIMULUS_CHANNEL_ADDED_DATE,
-    OLD_RAW_DIRECTORY,
 )
 from looming_spots import exceptions
 
