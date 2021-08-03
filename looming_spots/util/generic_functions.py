@@ -1,9 +1,5 @@
-import os
 from datetime import datetime
-import seaborn as sns
 import numpy as np
-
-from looming_spots import exceptions
 
 
 def sort_by(list_to_sort, list_to_sort_by, descend=True):
@@ -48,20 +44,4 @@ def is_datetime(string):
 def chunks(l, n):
     """Yield successive n-sized chunks from l."""
     for i in range(0, len(l), n):
-        yield l[i : i + n]
-
-
-def neaten_plots(axes, top=True, right=True, left=False, bottom=False):
-    for ax in axes:
-        sns.despine(ax=ax, top=top, right=right, left=left, bottom=bottom)
-
-
-def get_fpath(directory, extension):
-    for item in os.listdir(directory):
-        if extension in item:
-            return os.path.join(directory, item)
-
-    raise exceptions.FileNotPresentError(
-        "there is no file with extension: {}"
-        " in directory {}".format(extension, directory)
-    )
+        yield l[i: i + n]

@@ -1,5 +1,6 @@
 import matplotlib.colors
 import numpy as np
+import seaborn as sns
 from matplotlib import pyplot as plt, patches as patches
 
 from matplotlib.collections import LineCollection
@@ -194,3 +195,8 @@ def get_x_length(ax=None):
     line = ax.lines[0]
     xdata = line.get_xdata()
     return len(xdata)
+
+
+def neaten_plots(axes, top=True, right=True, left=False, bottom=False):
+    for ax in axes:
+        sns.despine(ax=ax, top=top, right=right, left=left, bottom=bottom)
