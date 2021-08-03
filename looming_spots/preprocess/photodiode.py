@@ -52,20 +52,7 @@ def get_test_loom_idx(
         return test_loom_idx * n_looms_per_stimulus
 
 
-def get_lsie_loom_idx(loom_idx, n_looms_per_stimulus=5):
-    if contains_lsie(loom_idx):
-        loom_burst_onsets = np.diff(loom_idx[::n_looms_per_stimulus])
-        min_ili = min(loom_burst_onsets)
-        loom_idx_lsie = np.where(loom_burst_onsets < min_ili + 150)[
-            0
-        ]  # FIXME: this value is chosen for.. reasons 25
-        loom_idx_lsie = np.concatenate(
-            [loom_idx_lsie, [max(loom_idx_lsie) + 1]]
-        )  # adds last loom as ILI will always be bigger
-        return loom_idx[loom_idx_lsie * n_looms_per_stimulus]
-
-
-def get_lsie_idx(idx, n_looms_per_stimulus=5):
+def get_lsie_loom_idx(idx, n_looms_per_stimulus=5):
     if contains_lsie(idx, n_looms_per_stimulus):
         onsets_diff = np.diff(idx[::n_looms_per_stimulus])
         min_ili = min(onsets_diff)

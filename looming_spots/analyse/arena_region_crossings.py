@@ -5,20 +5,20 @@ from looming_spots.constants import SHELTER_FRONT
 Functions for labeling mouse position and defining crossings from each region 
 into the others for analysis of responses to aversive stimuli.
 
- --------
-|        |
-|        |
-|   TZ   |
-|        |
+ ---------
+|         |
+|         |
+|    TZ   |
+|         |
 ------------ (30cm)
-|        |
-|        |
-| MIDDLE |
-|        |
+|         |
+|         |
+|  MIDDLE |
+|         |
 ------------ (10cm)
-|SHELTER |
-|        |
- --------
+| SHELTER |
+|         |
+ ---------
 
 """
 
@@ -83,22 +83,7 @@ def get_next_entry_from_track(
     )
 
 
-def get_all_entries_from_track(normalised_x_track):
-
-    shelter_boundary = 0.2
-    tz_boundary = 0.6
-    positions = {
-        "shelter": normalised_x_track < shelter_boundary,
-        "middle": np.logical_and(
-            (tz_boundary > normalised_x_track),
-            (normalised_x_track > shelter_boundary),
-        ),
-        "tz": normalised_x_track > tz_boundary,
-    }
-    return positions
-
-
-def entry_bools(normalised_x_track):
+def arena_entry_bools_dictionary(normalised_x_track):
     shelter_boundary = SHELTER_FRONT
     tz_boundary = 0.6
     positions = {
@@ -112,8 +97,13 @@ def entry_bools(normalised_x_track):
     return positions
 
 
-def get_all_entries(normalised_x_track):
-    entries = entry_bools(normalised_x_track)
+def get_all_tz_entries(normalised_x_track):
+    """
+    Finds the sample idx where the threat zone (TZ) is entered by the mouse.
+    :param normalised_x_track:
+    :return:
+    """
+    entries = arena_entry_bools_dictionary(normalised_x_track)
     shelter_entries = np.where(np.diff(entries['shelter'].astype(int)) == 1)[0]
     tz_entries = np.where(np.diff(entries['tz'].astype(int)) == 1)[0]
     middle_entries=np.where(np.diff(entries['middle'].astype(int)) == 1)[0]

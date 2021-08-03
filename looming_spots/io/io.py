@@ -16,7 +16,7 @@ from looming_spots import exceptions
 
 """
 
-for all functions relating to moving raw data and processed files around
+For all functions relating to moving raw data and processed files around
 
 """
 
@@ -131,7 +131,7 @@ def get_clock_ups(clock, threshold=2.5):
 
 def get_all_tracks(raw_directory=RAW_DATA_DIRECTORY, dry=False):
     """
-    this just allows dlc tracks to be copied over to processed directory after runnning
+    this just allows dlc tracks to be copied over to processed directory after running
     deprecated, use rsync function
 
     :param raw_directory:

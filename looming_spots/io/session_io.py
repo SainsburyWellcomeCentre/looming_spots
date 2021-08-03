@@ -7,7 +7,6 @@ from shutil import copyfile
 import numpy as np
 from datetime import datetime
 
-import scipy
 from cached_property import cached_property
 
 import looming_spots.io.io
@@ -17,7 +16,6 @@ from looming_spots.analyse.tracks import get_tracking_method
 from looming_spots.constants import (
     AUDITORY_STIMULUS_CHANNEL_ADDED_DATE,
     PROCESSED_DATA_DIRECTORY,
-    CONTEXT_B_SPOT_POSITION,
 )
 
 from looming_spots.db import trial
@@ -28,6 +26,15 @@ from photometry import demodulation, load
 
 
 class Session(object):
+
+    """
+    The Session class aims to load data that has been acquired in a series of recording sessions and provide
+    a simple means to read and access this data, trials are generated from this data and have access to the data
+    provided.
+
+
+
+    """
     def __init__(
         self,
         dt,
@@ -47,7 +54,12 @@ class Session(object):
 
     @property
     def frame_rate(self):
+        """
+        The camera frame rate is controlled by a clock TTL pulse that is recorded along with all the other data, and this
+        clock can be used to infer the frame rate used.
 
+        :return:
+        """
         p = pathlib.Path(self.path)
         frame_rate_file_exists = len(list(p.glob('frame_rate.npy'))) == 1
 
@@ -73,9 +85,21 @@ class Session(object):
         return len(self.data["photodiode"])
 
     def __lt__(self, other):
+        """
+        Allows sorting trials chronologically
+
+        :param other:
+        :return:
+        """
         return self.dt < other.dt
 
     def __gt__(self, other):
+        """
+        Allows sorting trials chronologically
+
+        :param other:
+        :return:
+        """
         return self.dt > other.dt
 
     def __add__(self, a):
@@ -188,25 +212,6 @@ class Session(object):
             return [t for t in self.trials if "test" in t.trial_type]
 
         return [t for t in self.trials if t.trial_type == key]
-
-    @property
-    def contrast_protocol(self):  # TEST: FIXME:
-        pd = self.photodiode_trace
-        n_samples = 500
-        pre_start = self.trials[0].sample_number - 600
-        pre_end = pre_start + n_samples
-        post_start = self.trials[0].sample_number + 500
-        post_end = post_start + n_samples
-
-        baseline_before_protocol = np.median(pd[pre_start:pre_end])
-        baseline_during_protocol = np.median(pd[post_start:post_end])
-
-        if (
-            baseline_before_protocol - baseline_during_protocol > 0.01
-        ):  # FIXME: hard code
-            return "gradient"
-        else:
-            return "constant"
 
     @property
     def trials_results(self):
@@ -340,10 +345,10 @@ class Session(object):
     def lsie_idx(self):
         if self.contains_auditory():
             if photodiode.contains_lsie(self.auditory_idx, 1):
-                return photodiode.get_lsie_idx(self.auditory_idx, 1)
+                return photodiode.get_lsie_loom_idx(self.auditory_idx, 1)
 
         if photodiode.contains_lsie(self.loom_idx, 5):
-            return photodiode.get_lsie_idx(self.loom_idx, 5)
+            return photodiode.get_lsie_loom_idx(self.loom_idx, 5)
 
     @property
     def lsie_loom_idx(self):

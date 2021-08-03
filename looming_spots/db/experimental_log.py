@@ -4,7 +4,7 @@ import pandas as pd
 import numpy as np
 
 from looming_spots.db import loom_trial_group
-from looming_spots.constants import FILE_PATH
+from looming_spots.constants import EXPERIMENTAL_RECORDS_PATH
 
 
 """
@@ -14,14 +14,14 @@ in each experimentally defined group. Usually by keywords defined in the spreads
 """
 
 
-def load_df(file_path=FILE_PATH):
+def load_df(file_path=EXPERIMENTAL_RECORDS_PATH):
     df = pd.read_csv(file_path)
     df = df[~df["exclude"]]
     return df
 
 
 def get_mouse_ids_in_experiment(experiment_key):
-    df = load_df(FILE_PATH)
+    df = load_df(EXPERIMENTAL_RECORDS_PATH)
     exp_df = get_experiment_subset_df(df, experiment_key)
     mouse_ids = get_mouse_ids(exp_df)
     return list(mouse_ids)
