@@ -25,5 +25,6 @@ setup(
         "scikit-image",
         "opencv",
         "tables",
+        "more_itertools",
     ],
 )
