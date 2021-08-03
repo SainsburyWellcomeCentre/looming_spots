@@ -22,7 +22,7 @@ from looming_spots.db import trial
 from looming_spots.exceptions import LoomsNotTrackedError, MouseNotFoundError
 from looming_spots.preprocess import photodiode
 from looming_spots.util import generic_functions
-from photometry import demodulation, load
+from looming_spots.io import load
 
 
 class Session(object):
@@ -274,16 +274,6 @@ class Session(object):
         else:
             ad = self.data["auditory_stimulus"]
         return ad
-
-    def load_demodulated_photometry(self):
-        pd, _, auditory, photometry, led211, led531 = load.load_all_channels_raw(
-            self.path
-        )
-        dm_signal, dm_background = demodulation.demodulate(
-            photometry, led211, led531
-        )
-
-        return dm_signal, dm_background
 
     @cached_property
     def signal(self):

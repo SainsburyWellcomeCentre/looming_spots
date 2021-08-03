@@ -178,3 +178,48 @@ def find_nearest_pd_up_from_frame_number(
     raw_pd_ups, raw_pd_downs = find_pd_threshold_crossings(pd)
     start_p = frame_number * sampling_rate / FRAME_RATE
     return raw_pd_ups[np.argmin(abs(raw_pd_ups - start_p))]
+
+
+def manually_correct_ai(directory, start, end):
+    """
+    This is useful when there are clear errors in the photodiode (e.g. if the photodiode is removed during the experiment
+    and allows the user to replace chunks of the processed photodiode trace with the median baseline so it doesn't
+    interfere with stimulus detection
+
+    :param directory:
+    :param start:
+    :param end:
+    :return:
+    """
+    ai = load_pd_on_clock_ups(directory)
+    ai[start:end] = np.median(ai)
+    save_path = os.path.join(directory, "AI_corrected")
+    np.save(save_path, ai)
+
+
+def auto_fix_ai(
+    directory, n_samples_to_replace=500, screen_off_threshold=0.02
+):
+    """
+    Automatically attempts to correct photodiode errors, but safer to use manually_correct_ai
+
+    :param directory:
+    :param n_samples_to_replace:
+    :param screen_off_threshold:
+    :return:
+    """
+
+    ai = load_pd_on_clock_ups(directory)
+    screen_off_locs = np.where(ai < screen_off_threshold)[
+        0
+    ]  # TODO: remove hard var
+
+    if len(screen_off_locs) == 0:
+        return
+
+    start = screen_off_locs[0]
+    end = start + n_samples_to_replace
+    ai[start:end] = np.median(ai)
+    save_path = os.path.join(directory, "AI_corrected")
+    np.save(save_path, ai)
+    auto_fix_ai(directory, n_samples_to_replace=n_samples_to_replace)

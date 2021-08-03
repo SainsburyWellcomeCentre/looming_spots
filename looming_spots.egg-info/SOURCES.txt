@@ -2,9 +2,7 @@ README.md
 setup.py
 looming_spots/__init__.py
 looming_spots/constants.py
-looming_spots/crickets.py
 looming_spots/exceptions.py
-looming_spots/run_crickets.py
 looming_spots.egg-info/PKG-INFO
 looming_spots.egg-info/SOURCES.txt
 looming_spots.egg-info/dependency_links.txt
@@ -14,7 +12,6 @@ looming_spots/analyse/__init__.py
 looming_spots/analyse/arena_region_crossings.py
 looming_spots/analyse/escape_classification.py
 looming_spots/analyse/tracks.py
-looming_spots/analyse/util.py
 looming_spots/db/__init__.py
 looming_spots/db/experimental_log.py
 looming_spots/db/loom_trial_group.py
@@ -26,6 +23,7 @@ looming_spots/gui/gui.py
 looming_spots/gui/image_providers.py
 looming_spots/io/__init__.py
 looming_spots/io/io.py
+looming_spots/io/load.py
 looming_spots/io/session_io.py
 looming_spots/preprocess/__init__.py
 looming_spots/preprocess/calibrate_pd.py

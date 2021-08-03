@@ -20,5 +20,11 @@ setup(
         "scikit-video",
         "pingouin",
         "nptdms",
+        "cached-property",
+        "tqdm",
+        "scikit-image",
+        "opencv",
+        "tables",
+
     ],
 )

@@ -2,7 +2,6 @@ import os
 import subprocess
 from datetime import datetime
 from pathlib import Path
-from shutil import copyfile
 import numpy as np
 from nptdms import TdmsFile
 
@@ -24,45 +23,18 @@ def sync_raw_and_processed_data(
     raw_directory=RAW_DATA_DIRECTORY,
     processed_directory=PROCESSED_DATA_DIRECTORY,
 ):
+    """
+    Runs rsync command from python to copy across necessary data from raw to processed directories. May require
+    modification for use on Windows. Tested on Linux.
+
+    :param raw_directory:
+    :param processed_directory:
+    :return:
+    """
     cmd = "rsync -tvr --chmod=D2775,F664 --exclude='*.avi' --exclude='*.imec*' --exclude='.mp4' {}/* {}".format(
         raw_directory, processed_directory
     )
     subprocess.call(cmd, shell=True)
-
-
-def sync_raw_spine_and_winstor(
-    raw_directory=OLD_RAW_DIRECTORY, processed_directory=RAW_DATA_DIRECTORY
-):
-    cmd = "rsync -tvr --chmod=D2775,F664 {}/* {}".format(
-        raw_directory, processed_directory
-    )
-    subprocess.call(cmd, shell=True)
-
-
-def manually_correct_ai(directory, start, end):
-    ai = load_pd_on_clock_ups(directory)
-    ai[start:end] = np.median(ai)
-    save_path = os.path.join(directory, "AI_corrected")
-    np.save(save_path, ai)
-
-
-def auto_fix_ai(
-    directory, n_samples_to_replace=500, screen_off_threshold=0.02
-):
-    ai = load_pd_on_clock_ups(directory)
-    screen_off_locs = np.where(ai < screen_off_threshold)[
-        0
-    ]  # TODO: remove hard var
-
-    if len(screen_off_locs) == 0:
-        return
-
-    start = screen_off_locs[0]
-    end = start + n_samples_to_replace
-    ai[start:end] = np.median(ai)
-    save_path = os.path.join(directory, "AI_corrected")
-    np.save(save_path, ai)
-    auto_fix_ai(directory, n_samples_to_replace=n_samples_to_replace)
 
 
 def load_pd_and_clock_raw(directory):  # TODO: raw loading should be entirely extracted to load module
@@ -126,26 +98,3 @@ def get_clock_ups(clock, threshold=2.5):
     clock_on = (clock > threshold).astype(int)
     clock_ups = np.where(np.diff(clock_on) == 1)[0]
     return clock_ups
-
-
-def get_all_tracks(raw_directory=RAW_DATA_DIRECTORY, dry=False):
-    """
-    this just allows dlc tracks to be copied over to processed directory after running
-    deprecated, use rsync function
-
-    :param raw_directory:
-    :param dry:
-    :return:
-    """
-    p = Path(raw_directory)
-    track_paths = p.rglob("*tracks.npy")
-    for track_path in track_paths:
-        old_path = str(track_path)
-        mouse_id = old_path.split("/")[-3]
-        date = old_path.split("/")[-2]
-        fname = old_path.split("/")[-1]
-        new_path = f"{PROCESSED_DATA_DIRECTORY}/{mouse_id}/{date}/{fname}"
-        if not os.path.isfile(new_path):
-            print(f"copying {old_path} to {new_path}")
-            if not dry:
-                copyfile(old_path, new_path)

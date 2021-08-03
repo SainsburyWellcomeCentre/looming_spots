@@ -39,4 +39,9 @@ RAW_DATA_DIRECTORY = os.path.join(HEAD_DIRECTORY, "raw_data")
 PROCESSED_DATA_DIRECTORY = os.path.join(HEAD_DIRECTORY, "processed_data")
 
 
-
+ORDERED_ACQUISITION_CHANNEL_LABELS = [
+    "photodiode",
+    "clock",
+    "auditory_stimulus",
+]
+PROCESSED_OUTPUT_VARIABLE_LABELS = []

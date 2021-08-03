@@ -1,6 +1,6 @@
 from looming_spots.constants import (
     CLASSIFICATION_WINDOW_END,
-    SPEED_THRESHOLD,)
+    SPEED_THRESHOLD, FRAME_RATE)
 
 from looming_spots.analyse.tracks import n_samples_to_reach_shelter, get_peak_speed
 
