@@ -166,7 +166,7 @@ class LoomTrial(object):
 
     @property
     def track(self):
-        return Track(self.folder, self.session.path,self.start, self.end)
+        return Track(self.folder, self.session.path, self.start, self.end, self.frame_rate)
 
     def stimulus_number(self):
         if self.stimulus_type == "loom":

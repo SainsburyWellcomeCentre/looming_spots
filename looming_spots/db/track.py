@@ -15,9 +15,9 @@ from scipy import signal
 
 
 class Track(object):
-    def __init__(self, folder, path, start, end):
+    def __init__(self, folder, path, start, end, frame_rate):
         self.folder = folder
-        self.frame_rate = FRAME_RATE
+        self.frame_rate = frame_rate
         self.path = path
         self.start = start
         self.end = end
