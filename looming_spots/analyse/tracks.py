@@ -24,6 +24,15 @@ def load_raw_track(session_directory, name, start, end, loom_folder=None):
 
 
 def normalised_x_track(x, frame_rate=30, target_frame_rate=30):
+    """
+    Positional traces are reported in pixels, this function normalises x traces into values between 0 and 1 for later
+    conversion to real world units.
+
+    :param x:
+    :param frame_rate:
+    :param target_frame_rate:
+    :return:
+    """
     normalised_track = 1 - (x / ARENA_LENGTH_PX)
     if frame_rate != target_frame_rate:
         normalised_track = downsample_track(normalised_track, frame_rate)
@@ -31,6 +40,15 @@ def normalised_x_track(x, frame_rate=30, target_frame_rate=30):
 
 
 def normalised_y_track(y, frame_rate=30, target_frame_rate=30):
+    """
+    Positional traces are reported in pixels, this function normalises y traces into values between 0 and 1 for later
+    conversion to real world units. Since the y range is from 0 - 0.4 everything is scaled down for the y-position.
+
+    :param y:
+    :param frame_rate:
+    :param target_frame_rate:
+    :return:
+    """
     normalised_track = (y / ARENA_WIDTH_PX) * 0.4
     if frame_rate != target_frame_rate:
         normalised_track = downsample_track(normalised_track, frame_rate)
@@ -38,6 +56,15 @@ def normalised_y_track(y, frame_rate=30, target_frame_rate=30):
 
 
 def load_box_corner_coordinates(session_directory):
+
+    """
+    Loads box corner coordinates that have been manually determined using the box_corner_gui. See projective transform
+    for details on the coordinate order.
+
+    :param session_directory:
+    :return:
+    """
+
     box_path = pathlib.Path(session_directory).glob('box_corner_coordinates.npy')
     if len(list(box_path)) == 0:
         print('no box coordinates found...')
@@ -47,6 +74,19 @@ def load_box_corner_coordinates(session_directory):
 
 
 def track_in_standard_space(session_directory, tracking_method, start, end, loom_folder=None):
+    """
+    This function loads positional xy traces in standard space. For manual tracks and dlc tracks, these have been
+    generated using videos that were transformed using the same projective transform approach. However, for
+    older data, and cricket data rather than re-transforming all videos we simply transform the tracks themselves.
+
+    :param session_directory:
+    :param tracking_method:
+    :param start:
+    :param end:
+    :param loom_folder:
+    :return: x and y positional traces
+    """
+
     p = pathlib.Path(session_directory)
     lab5 = p / '5_label'
 
@@ -98,6 +138,12 @@ def get_tracking_method(session_directory):
 
 
 def latency_peak_detect(normalised_x_track, n_stds=2.5):
+    """
+    Calculates the onset, in samples, of escape using the normalised positional x-trace.
+
+    :param normalised_x_track:
+    :return:
+    """
     speed = -smooth_speed_from_track(normalised_x_track)[N_SAMPLES_BEFORE:]
     std = np.nanstd(speed[:N_SAMPLES_TO_SHOW])
     all_peak_starts = signal.find_peaks(speed, std * n_stds, width=1)[1]['left_ips']
@@ -106,6 +152,12 @@ def latency_peak_detect(normalised_x_track, n_stds=2.5):
 
 
 def latency_peak_detect_s(normalised_x_track):
+    """
+    Calculates the onset, in seconds, of escape using the normalised positional x-trace.
+
+    :param normalised_x_track:
+    :return:
+    """
     latency_pd = latency_peak_detect(normalised_x_track)
     if latency_pd is not None:
         latency_pd -= N_SAMPLES_BEFORE
@@ -113,6 +165,14 @@ def latency_peak_detect_s(normalised_x_track):
 
 
 def time_to_shelter(normalised_x_track):
+    """
+    Calculates the time, in seconds, between stimulus onset and arrival at the shelter,
+    using the normalised positional x-trace.
+
+    :param normalised_x_track:
+    :return:
+    """
+
     smoothed_track = smooth_track(normalised_x_track)
     n_samples_to_shelter = arena_region_crossings.get_next_entry_from_track(
         smoothed_track,
@@ -127,6 +187,13 @@ def time_to_shelter(normalised_x_track):
 
 
 def time_in_shelter(normalised_x_track):
+    """
+   Calculates  the time, in seconds, between arrival at shelter and emerging from it,
+    using the normalised positional x-trace.
+
+    :param normalised_x_track:
+    :return:
+    """
     smoothed_x_track = smooth_track(normalised_x_track)
 
     start = n_samples_to_reach_shelter(smoothed_x_track)
@@ -141,6 +208,14 @@ def time_in_shelter(normalised_x_track):
 
 
 def n_samples_to_reach_shelter(normalised_x_track):
+
+    """
+    Calculates the number of samples between stimulus onset and arrival at the shelter,
+    using the normalised positional x-trace.
+
+    :param normalised_x_track:
+    :return:
+    """
     smoothed_x_track = smooth_track(normalised_x_track)
     n_samples = arena_region_crossings.get_next_entry_from_track(
         smoothed_x_track,
@@ -152,6 +227,12 @@ def n_samples_to_reach_shelter(normalised_x_track):
 
 
 def n_samples_to_tz_reentry(self):
+    """
+    Calculates the number of samples between stimulus onset and next tz entry, using the normalised positional x-trace.
+
+    :param normalised_x_track:
+    :return:
+    """
     return arena_region_crossings.get_next_entry_from_track(
         self.smoothed_x_track,
         "tz",
@@ -161,6 +242,14 @@ def n_samples_to_tz_reentry(self):
 
 
 def downsample_track(normalised_track, frame_rate):
+    """
+    Downsamples tracks acquired at >30Hz to allow the display and comparison o escape trajectories from data acquired
+    at different frame rates.
+
+    :param normalised_track:
+    :param frame_rate:
+    :return: downsampled normalised track
+    """
     n_points_ori = len(normalised_track)
     n_points_new = int(n_points_ori * (FRAME_RATE / frame_rate))
     track_timebase = (np.arange(len(normalised_track))) / frame_rate
@@ -190,6 +279,14 @@ def smooth_acceleration_from_track(normalised_track):
 
 
 def get_peak_speed(normalised_x_track, return_loc=False):
+
+    """
+    Calculates the peak speed (towards shelter) reached in the analysis window following presentation of a stimulus.
+    :param normalised_x_track:
+    :param return_loc:
+    :return:
+    """
+
     peak_speed, arg_peak_speed = get_peak_speed_and_latency(
         normalised_x_track
     )
@@ -228,6 +325,33 @@ def get_peak_speed_and_latency(normalised_track):
 def projective_transform_tracks(Xin, Yin,
                                 observed_box_corner_coordinates,
                                 target_box_corner_coordinates=BOX_CORNER_COORDINATES):
+
+    """
+    To correct for camera angle artifacts, coordinates of the arena and its known real geometry are used to
+    get a projective transform that can be applied to positional tracks or raw videos.
+
+
+        f------------------h         b--------------d
+       /                  /          |              |
+      /                  /           |              |
+     /                  /            |              |
+    e------------------g             a--------------c
+
+    target_box_corner_coordinates = [a=[0, 240],
+                                     b=[0, 0],
+                                     c=[600, 240],
+                                     d=[600, 0]]
+
+    observed_box_corner_coordinates = [e=[ 19.59140375, 296.09195599],
+                                       f=[ 64.97987079, 124.3052263],
+                                       g=[628.02667714, 284.60120484],
+                                       h=[596.42711148, 102.47279911]]
+    :param Xin:
+    :param Yin:
+    :param observed_box_corner_coordinates:
+    :param target_box_corner_coordinates:
+    :return: x and y positional traces transformed into standard space
+    """
     p = get_inverse_projective_transform(dest=observed_box_corner_coordinates,
                                          src=np.array(target_box_corner_coordinates),
                                          )

@@ -15,6 +15,13 @@ from scipy import signal
 
 
 class Track(object):
+    """
+    The Track class handles everything to do with positional x-y tracks. Tracks have been designed to belong to
+    instances of Trial. All track loading is done here, and tracks are limited based on the start and end of the trial
+    the Trial frame rate and paths to the processed data.
+
+    """
+
     def __init__(self, folder, path, start, end, frame_rate):
         self.folder = folder
         self.frame_rate = frame_rate
@@ -39,6 +46,13 @@ class Track(object):
 
     @property
     def tracking_method(self):
+        """
+        At different stages of the project, tracking was performed differently owing to either logistical constraints
+        or due to different experimental needs (e.g. more tracking labels). This tracking method simply returns which
+        tracking method was used to generate the tracks for a given trial.
+        :return: tracking_method key
+        """
+
         return get_tracking_method(self.path)
 
     @cached_property
@@ -46,9 +60,21 @@ class Track(object):
         return track_in_standard_space(self.path, self.tracking_method, self.start, self.end, loom_folder=self.folder)
 
     def load_box_corner_coordinates(self):
-        load_box_corner_coordinates(self.path)
+        """
+        Gets the coordinates of the arena box for this trial/track.
+        :return:
+        """
+        return load_box_corner_coordinates(self.path)
 
     def projective_transform_tracks(self, Xin, Yin):
+        """
+        To correct for camera angle artifacts, coordinates of the arena and its known real geometry are used to
+        get a projective transform that can be applied to positional tracks or raw videos.
+        :param Xin:
+        :param Yin:
+        :return:
+        """
+
         new_track_x, new_track_y = projective_transform_tracks(Xin, Yin, self.load_box_corner_coordinates())
         return new_track_x, new_track_y
 
