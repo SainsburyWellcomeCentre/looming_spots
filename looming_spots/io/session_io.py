@@ -4,12 +4,12 @@ import warnings
 from pathlib import Path
 from shutil import copyfile
 
+import looming_spots.io.load
 import numpy as np
 from datetime import datetime
 
 from cached_property import cached_property
 
-import looming_spots.io.io
 import looming_spots.util
 from looming_spots.analyse import tracks
 from looming_spots.analyse.tracks import get_tracking_method
@@ -67,7 +67,7 @@ class Session(object):
         else:
             if "AI.tdms" in os.listdir(self.path):
                 clock = self.get_clock_raw()
-                clock_ups = looming_spots.io.io.get_clock_ups(clock)
+                clock_ups = looming_spots.io.load.get_clock_ups(clock)
                 if np.nanmedian(np.diff(clock_ups)) == 333:
                     frame_rate = 30
                 elif np.nanmedian(np.diff(clock_ups)) == 200:
@@ -161,7 +161,7 @@ class Session(object):
             return True
 
         if recording_date > AUDITORY_STIMULUS_CHANNEL_ADDED_DATE:
-            ad = looming_spots.io.io.load_auditory_on_clock_ups(self.path)
+            ad = looming_spots.io.load.load_auditory_on_clock_ups(self.path)
             if (ad > 0.7).any():
                 return True
 
@@ -267,19 +267,19 @@ class Session(object):
     @property
     def photodiode_trace(self, raw=False):
         if raw:
-            pd, clock = looming_spots.io.io.load_pd_and_clock_raw(self.path)
+            pd, clock = looming_spots.io.load.load_pd_and_clock_raw(self.path)
         else:
             pd = self.data["photodiode"]
         return pd
 
     def get_clock_raw(self):
-        _, clock, _ = looming_spots.io.io.load_pd_and_clock_raw(self.path)
+        _, clock, _ = looming_spots.io.load.load_pd_and_clock_raw(self.path)
         return clock
 
     @property
     def auditory_trace(self, raw=False):
         if raw:
-            ad = looming_spots.io.io.load_auditory_on_clock_ups(self.path)
+            ad = looming_spots.io.load.load_auditory_on_clock_ups(self.path)
         else:
             ad = self.data["auditory_stimulus"]
         return ad
@@ -371,7 +371,7 @@ class Session(object):
             t.extract_video()
 
     def contains_visual(self):
-        pd = looming_spots.io.io.load_pd_on_clock_ups(self.path)
+        pd = looming_spots.io.load.load_pd_on_clock_ups(self.path)
         if (pd > 0.5).any():
             return True
 

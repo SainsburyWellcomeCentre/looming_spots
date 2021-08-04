@@ -9,7 +9,6 @@ import skvideo
 import skvideo.io
 import pims
 
-import looming_spots.preprocess
 from looming_spots.constants import LOOM_ONSETS
 
 

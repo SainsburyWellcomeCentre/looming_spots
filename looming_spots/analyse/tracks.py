@@ -99,7 +99,7 @@ def track_in_standard_space(
     session_directory, tracking_method, start, end, loom_folder=None
 ):
     """
-    This function loads positional xy traces in standard space. For manual tracks and dlc tracks, these have been
+    This function loads positional xy traces in standard space. For manual_tracking tracks and dlc tracks, these have been
     generated using videos that were transformed using the same projective transform approach. However, for
     older data, and cricket data rather than re-transforming all videos we simply transform the tracks themselves.
 
@@ -114,7 +114,7 @@ def track_in_standard_space(
     p = pathlib.Path(session_directory)
     lab5 = p / "5_label"
 
-    if tracking_method == "manual":
+    if tracking_method == "manual_tracking":
         print("loading manually tracked")
         x, y = load_raw_track(p, "{}_manual.npy", start, end)
 
@@ -148,7 +148,7 @@ def get_tracking_method(session_directory):
     lab5 = p / "5_label"
 
     if "x_manual.npy" in os.listdir(str(p)):
-        method = "manual"
+        method = "manual_tracking"
 
     elif "dlc_x_tracks.npy" in os.listdir(str(p)):
         method = "dlc_1_label"

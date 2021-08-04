@@ -23,7 +23,7 @@ def digit_present(string):
 
 class Viewer(object):
     """
-    This class allows browsing short videos to build reference frames manually. It allows the manual selection of left
+    This class allows browsing short videos to build reference frames manually. It allows the manual_tracking selection of left
     and right frames. 'left key': sets the index for the frame containing an empty left hand side of the arena, whereas
     'right key': sets the index of the right. 'Enter': triggers the writing of these indices and video paths to a
     text file called Metadata.txt, and also saves the composite frame. If there are a series of videos that change

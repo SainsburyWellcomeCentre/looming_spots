@@ -1,14 +1,15 @@
 import os
+
+import looming_spots.io.load
 import numpy as np
 import matplotlib.pyplot as plt
 
-import looming_spots.io.io
 from looming_spots.io.photodiode import filter_pd
-from looming_spots.io.io import load_pd_on_clock_ups
+from looming_spots.io.load import load_pd_on_clock_ups
 
 
 def get_calibration_curve(pd_directory):
-    pd = looming_spots.io.io.load_pd_on_clock_ups(pd_directory)
+    pd = looming_spots.io.load.load_pd_on_clock_ups(pd_directory)
     starts, ends = get_calibration_starts_ends(pd_directory)
     pd_vals = []
     for start, end in zip(starts, ends):

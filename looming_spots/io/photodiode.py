@@ -6,11 +6,7 @@ import scipy.signal
 import looming_spots.util.video_processing
 from looming_spots.constants import FRAME_RATE
 
-from looming_spots.io.io import (
-    load_pd_on_clock_ups,
-    load_auditory_on_clock_ups,
-    load_pd_and_clock_raw,
-)
+from looming_spots.io.load import load_pd_and_clock_raw, load_pd_on_clock_ups, load_auditory_on_clock_ups
 from looming_spots.exceptions import PdTooShortError
 
 

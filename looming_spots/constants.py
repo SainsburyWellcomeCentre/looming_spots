@@ -1,4 +1,5 @@
 import os
+import pathlib
 from datetime import datetime
 
 
@@ -6,6 +7,8 @@ FRAME_RATE = 30
 VIDEO_SHAPE = (480, 640)
 ARENA_SIZE_CM = 50
 SHELTER_FRONT = 0.2
+SHELTER_SIZE_CM = 10
+
 ARENA_WIDTH_PX = 240
 ARENA_LENGTH_PX = 600
 BOX_CORNER_COORDINATES = [[0, 240], [0, 0], [600, 240], [600, 0]]
@@ -37,11 +40,14 @@ N_SAMPLES_AFTER = 400
 N_SAMPLES_TO_SHOW = N_SAMPLES_BEFORE + N_SAMPLES_AFTER
 
 
-HEAD_DIRECTORY = "/home/slenzi/winstor/margrie/glusterfs/imaging/l/loomer/"
-FIGURE_DIRECTORY = "~/lsie/docs/figures/"
+HEAD_DIRECTORY = pathlib.Path("/home/slenzi/winstor/margrie/glusterfs/imaging/l/loomer/")
 EXPERIMENTAL_RECORDS_PATH = "~/Downloads/updated_loom_sheet_format.csv"
-RAW_DATA_DIRECTORY = os.path.join(HEAD_DIRECTORY, "raw_data")
-PROCESSED_DATA_DIRECTORY = os.path.join(HEAD_DIRECTORY, "processed_data")
+RAW_DATA_DIRECTORY = HEAD_DIRECTORY / "raw_data"
+PROCESSED_DATA_DIRECTORY = HEAD_DIRECTORY / "processed_data"
+
+FIGURE_DIRECTORY = HEAD_DIRECTORY / "figures"
+DF_PATH = HEAD_DIRECTORY / "cricket_dfs"
+TRANSFORMED_DF_PATH = HEAD_DIRECTORY / "transformed_cricket_paths"
 
 
 ORDERED_ACQUISITION_CHANNEL_LABELS = [
