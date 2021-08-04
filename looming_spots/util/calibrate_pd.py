@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 import looming_spots.io.io
-from looming_spots.preprocess.photodiode import filter_pd
+from looming_spots.io.photodiode import filter_pd
 from looming_spots.io.io import load_pd_on_clock_ups
 
 

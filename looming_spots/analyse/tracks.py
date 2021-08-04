@@ -15,7 +15,7 @@ from looming_spots.constants import (
     SHELTER_FRONT,
     ARENA_LENGTH_PX,
     ARENA_WIDTH_PX,
-)
+    LOOM_ONSETS_S)
 from looming_spots.util.transformations import (
     get_inverse_projective_transform,
     get_box_coordinates_from_file,
@@ -394,3 +394,19 @@ def projective_transform_tracks(
         new_track_x.append(inverse_mapped[0])
         new_track_y.append(inverse_mapped[1])
     return new_track_x, new_track_y
+
+
+def get_loom_number_from_latency(latency):
+    """
+    Returns the loom index of the most recent loom before escape onset.
+
+    :param latency:
+    :return:
+    """
+    if latency is None:
+        return np.nan
+
+    dt = latency - LOOM_ONSETS_S
+    idx = np.where(dt < 0)[0]
+    loom_idx = idx[0] if len(idx) > 0 else 5
+    return loom_idx

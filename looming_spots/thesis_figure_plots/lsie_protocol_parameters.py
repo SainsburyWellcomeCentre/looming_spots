@@ -1,7 +1,7 @@
 from looming_spots.trial_group_analysis.escape_metric_dataframes import (
     get_behaviour_metric_dataframe,
 )
-from looming_spots.db import experimental_log, loom_trial_group
+from looming_spots.db import loom_trial_group, experimental_log
 import pandas as pd
 
 

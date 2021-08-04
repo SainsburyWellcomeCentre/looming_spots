@@ -8,7 +8,7 @@ from looming_spots.trial_group_analysis.escape_metric_dataframes import (
 from looming_spots.trial_group_analysis.randomised_contrast_escape_curves import (
     get_contrast_escape_curve_from_group_label,
 )
-from looming_spots.db import experimental_log, loom_trial_group
+from looming_spots.db import loom_trial_group, experimental_log
 from looming_spots.db.loom_trial_group import (
     make_trial_heatmap_location_overlay,
 )

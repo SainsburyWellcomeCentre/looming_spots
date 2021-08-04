@@ -6,7 +6,7 @@ import seaborn as sns
 from looming_spots.trial_group_analysis.escape_metric_dataframes import (
     get_behaviour_metric_dataframe,
 )
-from looming_spots.db import experimental_log, loom_trial_group
+from looming_spots.db import loom_trial_group, experimental_log
 
 sns.set_style("whitegrid")
 LINEWIDTH = 3
@@ -59,7 +59,7 @@ GROUPS = {
         "1068090",
         "1068089",
     ]
-    + experimental_log.get_mouse_ids_in_experiment("d1MSN_caspase_lesion_TS"),
+               + experimental_log.get_mouse_ids_in_experiment("d1MSN_caspase_lesion_TS"),
     "naive_escape": experimental_log.get_mouse_ids_in_experiment(
         "naive_escape_in_A"
     ),

@@ -48,3 +48,8 @@ def chunks(l, n):
     """Yield successive n-sized chunks from l."""
     for i in range(0, len(l), n):
         yield l[i : i + n]
+
+
+def pad_track(this_track, n_points):
+    this_track = np.pad(this_track, (0, n_points - len(this_track)), 'constant', constant_values=(0, np.nan))
+    return this_track

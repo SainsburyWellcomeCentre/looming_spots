@@ -5,7 +5,6 @@ from matplotlib import pyplot as plt
 
 from looming_spots.db import loom_trial_group, experimental_log
 
-
 """
 
 functions relating to pseudorandom presentations of low-or-high contrast looms

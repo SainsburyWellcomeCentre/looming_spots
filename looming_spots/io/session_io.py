@@ -20,9 +20,8 @@ from looming_spots.constants import (
 
 from looming_spots.db import trial
 from looming_spots.exceptions import LoomsNotTrackedError, MouseNotFoundError
-from looming_spots.preprocess import photodiode
 from looming_spots.util import generic_functions
-from looming_spots.io import load
+from looming_spots.io import load, photodiode
 
 
 class Session(object):
