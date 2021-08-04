@@ -323,7 +323,7 @@ class Session(object):
         if self.contains_auditory():
             aud_idx_path = os.path.join(self.path, "auditory_starts.npy")
             if not os.path.isfile(aud_idx_path):
-                _ = photodiode.get_auditory_onsets_from_analog_input(
+                _ = photodiode.get_auditory_onsets_from_auditory_trace(
                     self.path, save=True
                 )
             return np.load(aud_idx_path)
@@ -351,7 +351,7 @@ class Session(object):
 
     @property
     def test_loom_idx(self):
-        return photodiode.get_manual_looms(self.loom_idx)
+        return photodiode.get_test_looms_from_loom_idx(self.loom_idx)
 
     @property
     def lsie_protocol_start(self):

@@ -4,38 +4,17 @@ import numpy as np
 import scipy.signal
 
 import looming_spots.util.video_processing
-from looming_spots.constants import FRAME_RATE
 
 from looming_spots.io.load import load_all_channels_on_clock_ups
 from looming_spots.exceptions import PdTooShortError
 
 
-def get_loom_idx_from_photodiode_trace(directory, save=True):
-    try:
-        data = load_all_channels_on_clock_ups(directory)
-        photodiode_trace = data['photodiode']
-        auditory_stimulus_trace = data['auditory']
-
-        print(len(photodiode_trace))
-        loom_starts, loom_ends = find_pd_threshold_crossings(photodiode_trace)
-
-    except looming_spots.util.video_processing.NoPdError as e:
-        loom_starts = []
-        loom_ends = []
-
-    except PdTooShortError as e:
-        loom_starts = []
-        loom_ends = []
-
-    if len(loom_starts) % 5 != 0 and (auditory_stimulus_trace < 1).all():
-        print(directory, len(loom_starts))
-        # auto_fix_ai(directory)
-        # raise LoomNumberError(Exception)
-
-    dest = os.path.join(directory, "loom_starts.npy")
-    if save:
-        np.save(dest, loom_starts)
-    return loom_starts, loom_ends
+def get_test_looms_from_loom_idx(loom_idx, n_looms_per_stimulus=5):
+    if not contains_lsie(loom_idx, n_looms_per_stimulus):
+        return loom_idx[::n_looms_per_stimulus]
+    else:
+        test_loom_idx = get_test_loom_idx(loom_idx, n_looms_per_stimulus)
+        return loom_idx[test_loom_idx]
 
 
 def get_test_loom_idx(
@@ -47,6 +26,35 @@ def get_test_loom_idx(
         print("min_ili: {min_ili}")
         test_loom_idx = np.where(loom_burst_onsets > min_ili + 200)[0] + 1
         return test_loom_idx * n_looms_per_stimulus
+
+
+def get_test_looms_from_photodiode_trace(directory):
+    loom_idx, _ = get_loom_idx_from_photodiode_trace(directory)
+    return get_test_looms_from_loom_idx(loom_idx)
+
+
+def get_loom_idx_from_photodiode_trace(directory, save=True):
+    try:
+        data = load_all_channels_on_clock_ups(directory)
+        photodiode_trace = data['photodiode']
+        print(len(photodiode_trace))
+
+        loom_starts, loom_ends = find_pd_threshold_crossings(photodiode_trace)
+
+    except looming_spots.util.video_processing.NoPdError as e:
+        print(e)
+        loom_starts = []
+        loom_ends = []
+
+    except PdTooShortError as e:
+        print(e)
+        loom_starts = []
+        loom_ends = []
+
+    dest = os.path.join(directory, "loom_starts.npy")
+    if save:
+        np.save(dest, loom_starts)
+    return loom_starts, loom_ends
 
 
 def get_lsie_loom_idx(idx, n_looms_per_stimulus=5):
@@ -116,11 +124,7 @@ def filter_pd(pd_trace, fs=10000):  # 10000
     return pd_trace
 
 
-def get_inter_loom_interval(loom_idx):
-    return (int(loom_idx[5]) - int(loom_idx[4])) / FRAME_RATE
-
-
-def get_auditory_onsets_from_analog_input(directory, save=True):
+def get_auditory_onsets_from_auditory_trace(directory, save=True):
     aud = load_all_channels_on_clock_ups(directory)['auditory']
     aud -= np.mean(aud)
 
@@ -140,25 +144,6 @@ def get_auditory_onsets_from_analog_input(directory, save=True):
     if save:
         np.save(dest, auditory_onsets)
     return auditory_onsets
-
-
-def get_visual_onsets_from_analog_input(directory):
-    photodiode_trace = load_all_channels_on_clock_ups(directory)['photodiode']
-    loom_starts, loom_ends = find_pd_threshold_crossings(photodiode_trace)
-    return loom_starts
-
-
-def get_manual_looms(loom_idx, n_looms_per_stimulus=5):
-    if not contains_lsie(loom_idx, n_looms_per_stimulus):
-        return loom_idx[::n_looms_per_stimulus]
-    else:
-        test_loom_idx = get_test_loom_idx(loom_idx, n_looms_per_stimulus)
-        return loom_idx[test_loom_idx]
-
-
-def get_manual_looms_raw(directory):
-    loom_idx, _ = get_loom_idx_from_photodiode_trace(directory)
-    return get_manual_looms(loom_idx)
 
 
 def manually_correct_ai(directory, start, end):
