@@ -12,7 +12,6 @@ from looming_spots.constants import (
     BOX_CORNER_COORDINATES,
     LOOMING_STIMULUS_ONSET,
     N_SAMPLES_TO_SHOW,
-    SHELTER_FRONT,
     ARENA_LENGTH_PX,
     ARENA_WIDTH_PX,
     LOOM_ONSETS_S,

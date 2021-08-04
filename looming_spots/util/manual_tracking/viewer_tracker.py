@@ -7,7 +7,7 @@ import pandas as pd
 import skvideo.io
 from cached_property import cached_property
 
-from looming_spots.preprocess.normalisation import load_raw_track
+from looming_spots.analyse.tracks import load_raw_track
 from looming_spots.util import video_processing
 
 N_FRAMES = 600
