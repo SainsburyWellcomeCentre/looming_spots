@@ -51,5 +51,10 @@ def chunks(l, n):
 
 
 def pad_track(this_track, n_points):
-    this_track = np.pad(this_track, (0, n_points - len(this_track)), 'constant', constant_values=(0, np.nan))
+    this_track = np.pad(
+        this_track,
+        (0, n_points - len(this_track)),
+        "constant",
+        constant_values=(0, np.nan),
+    )
     return this_track

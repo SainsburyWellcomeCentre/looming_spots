@@ -21,7 +21,10 @@ from looming_spots.constants import (
     N_SAMPLES_BEFORE,
     ARENA_LENGTH_PX,
     ARENA_WIDTH_PX,
-    ARENA_SIZE_CM, FRAME_RATE, TRACK_LENGTH)
+    ARENA_SIZE_CM,
+    FRAME_RATE,
+    TRACK_LENGTH,
+)
 
 from looming_spots.util import video_processing, plotting
 import pandas as pd
@@ -283,19 +286,33 @@ class LoomTrial(object):
 
     def to_df(self, group_id):
         n_points = TRACK_LENGTH
-        track = pad_track(ARENA_SIZE_CM * self.track.normalised_x_track[0:n_points], n_points)
-        unsmoothed_speed = pad_track(FRAME_RATE * ARENA_SIZE_CM * self.track.normalised_x_speed[0:n_points], n_points)
-        smoothed_speed = pad_track(FRAME_RATE * ARENA_SIZE_CM * self.track.smoothed_x_speed[0:n_points], n_points)
-        add_dict = {'group_id': group_id,
-                    'mouse_id': self.mouse_id,
-                    'track': [track],
-                    'speed': [smoothed_speed],
-                    'peak_speed': self.track.peak_speed(),
-                    'is_flee': self.track.is_escape(),
-                    'latency': self.track.latency(),
-                    'last_loom': get_loom_number_from_latency(self.track.latency()),
-                    'is_freeze': is_track_a_freeze(unsmoothed_speed),
-                    'time_to_shelter': self.track.time_to_shelter()}
+        track = pad_track(
+            ARENA_SIZE_CM * self.track.normalised_x_track[0:n_points], n_points
+        )
+        unsmoothed_speed = pad_track(
+            FRAME_RATE
+            * ARENA_SIZE_CM
+            * self.track.normalised_x_speed[0:n_points],
+            n_points,
+        )
+        smoothed_speed = pad_track(
+            FRAME_RATE
+            * ARENA_SIZE_CM
+            * self.track.smoothed_x_speed[0:n_points],
+            n_points,
+        )
+        add_dict = {
+            "group_id": group_id,
+            "mouse_id": self.mouse_id,
+            "track": [track],
+            "speed": [smoothed_speed],
+            "peak_speed": self.track.peak_speed(),
+            "is_flee": self.track.is_escape(),
+            "latency": self.track.latency(),
+            "last_loom": get_loom_number_from_latency(self.track.latency()),
+            "is_freeze": is_track_a_freeze(unsmoothed_speed),
+            "time_to_shelter": self.track.time_to_shelter(),
+        }
         this_trial_df = pd.DataFrame.from_dict(add_dict)
         return this_trial_df
 

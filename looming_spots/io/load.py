@@ -8,7 +8,8 @@ from looming_spots.constants import (
     ORDERED_ACQUISITION_CHANNEL_LABELS,
     PROCESSED_OUTPUT_VARIABLE_LABELS,
     RAW_DATA_DIRECTORY,
-    PROCESSED_DATA_DIRECTORY)
+    PROCESSED_DATA_DIRECTORY,
+)
 from nptdms import TdmsFile
 
 
@@ -90,7 +91,7 @@ def load_all_channels_on_clock_ups(directory):
         if "AI_corrected.npy" in os.listdir(directory):
             print("loading manually corrected photodiode trace")
             pd = np.load(os.path.join(directory, "AI_corrected.npy"))
-            processed_data_dict['photodiode'] = pd
+            processed_data_dict["photodiode"] = pd
         return processed_data_dict
 
 

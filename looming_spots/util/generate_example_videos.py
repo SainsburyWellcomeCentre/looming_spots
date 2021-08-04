@@ -3,7 +3,12 @@ import os
 import cv2
 import numpy as np
 from looming_spots.constants import LOOM_ONSETS
-from looming_spots.util.video_processing import load_video_from_path, crop_video, save_video, extract_video
+from looming_spots.util.video_processing import (
+    load_video_from_path,
+    crop_video,
+    save_video,
+    extract_video,
+)
 
 
 def plot_track_on_video(video, track):

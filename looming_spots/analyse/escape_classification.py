@@ -4,7 +4,9 @@ from looming_spots.constants import (
     CLASSIFICATION_WINDOW_END,
     SPEED_THRESHOLD,
     FRAME_RATE,
-    LOOMING_STIMULUS_ONSET, FREEZE_BUFFER_FRAMES)
+    LOOMING_STIMULUS_ONSET,
+    FREEZE_BUFFER_FRAMES,
+)
 
 from looming_spots.analyse.tracks import (
     n_samples_to_reach_shelter,
@@ -58,9 +60,11 @@ def is_track_a_freeze(unsmoothed_speed):
 
     onset = LOOMING_STIMULUS_ONSET + FREEZE_BUFFER_FRAMES
 
-    freeze_metric = \
-        np.percentile(unsmoothed_speed[onset:CLASSIFICATION_WINDOW_END], upper_percentile) - \
-        np.percentile(unsmoothed_speed[onset:CLASSIFICATION_WINDOW_END], lower_percentile)
+    freeze_metric = np.percentile(
+        unsmoothed_speed[onset:CLASSIFICATION_WINDOW_END], upper_percentile
+    ) - np.percentile(
+        unsmoothed_speed[onset:CLASSIFICATION_WINDOW_END], lower_percentile
+    )
 
     is_freeze = freeze_metric < freeze_metric_threshold
 

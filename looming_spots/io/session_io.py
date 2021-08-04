@@ -19,7 +19,10 @@ from looming_spots.constants import (
 )
 
 from looming_spots.db import trial
-from looming_spots.io.load import load_all_channels_on_clock_ups, load_all_channels_raw
+from looming_spots.io.load import (
+    load_all_channels_on_clock_ups,
+    load_all_channels_raw,
+)
 from looming_spots.exceptions import LoomsNotTrackedError, MouseNotFoundError
 from looming_spots.util import generic_functions
 from looming_spots.io import load, photodiode
@@ -162,7 +165,9 @@ class Session(object):
             return True
 
         if recording_date > AUDITORY_STIMULUS_CHANNEL_ADDED_DATE:
-            ad = looming_spots.io.load.load_all_channels_on_clock_ups(self.path)['auditory']
+            ad = looming_spots.io.load.load_all_channels_on_clock_ups(
+                self.path
+            )["auditory"]
             if (ad > 0.7).any():
                 return True
 
@@ -268,13 +273,13 @@ class Session(object):
     @property
     def photodiode_trace(self, raw=False):
         if raw:
-            pd = load_all_channels_raw(self.path)['photodiode']
+            pd = load_all_channels_raw(self.path)["photodiode"]
         else:
             pd = self.data["photodiode"]
         return pd
 
     def get_clock_raw(self):
-        return load_all_channels_raw(self.path)['clock']
+        return load_all_channels_raw(self.path)["clock"]
 
     @property
     def auditory_trace(self):
@@ -315,7 +320,9 @@ class Session(object):
     def loom_idx(self):
         loom_idx_path = os.path.join(self.path, "loom_starts.npy")
         if not os.path.isfile(loom_idx_path):
-            _ = photodiode.get_loom_idx_from_photodiode_trace(self.path, save=True)[0]
+            _ = photodiode.get_loom_idx_from_photodiode_trace(
+                self.path, save=True
+            )[0]
         return np.load(loom_idx_path)
 
     @cached_property
@@ -367,7 +374,9 @@ class Session(object):
             t.extract_video()
 
     def contains_visual(self):
-        photodiode_trace = load_all_channels_on_clock_ups(self.path)['photodiode']
+        photodiode_trace = load_all_channels_on_clock_ups(self.path)[
+            "photodiode"
+        ]
         if (photodiode_trace > 0.5).any():
             return True
 

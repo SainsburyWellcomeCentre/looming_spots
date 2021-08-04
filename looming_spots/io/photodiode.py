@@ -36,7 +36,7 @@ def get_test_looms_from_photodiode_trace(directory):
 def get_loom_idx_from_photodiode_trace(directory, save=True):
     try:
         data = load_all_channels_on_clock_ups(directory)
-        photodiode_trace = data['photodiode']
+        photodiode_trace = data["photodiode"]
         print(len(photodiode_trace))
 
         loom_starts, loom_ends = find_pd_threshold_crossings(photodiode_trace)
@@ -125,13 +125,13 @@ def filter_pd(pd_trace, fs=10000):  # 10000
 
 
 def get_auditory_onsets_from_auditory_trace(directory, save=True):
-    aud = load_all_channels_on_clock_ups(directory)['auditory']
+    aud = load_all_channels_on_clock_ups(directory)["auditory"]
     aud -= np.mean(aud)
 
     if not (aud > 0.7).any():
         auditory_onsets = []
     else:
-        aud_on = aud < - (2 * np.std(aud[:200]))
+        aud_on = aud < -(2 * np.std(aud[:200]))
         aud_diff = np.diff(np.where(aud_on)[0])
         auditory_onsets = np.concatenate(
             [
@@ -157,7 +157,7 @@ def manually_correct_ai(directory, start, end):
     :param end:
     :return:
     """
-    photodiode_trace = load_all_channels_on_clock_ups(directory)['photodiode']
+    photodiode_trace = load_all_channels_on_clock_ups(directory)["photodiode"]
     photodiode_trace[start:end] = np.median(photodiode_trace)
     save_path = os.path.join(directory, "AI_corrected")
     np.save(save_path, photodiode_trace)
@@ -175,7 +175,7 @@ def auto_fix_ai(
     :return:
     """
 
-    photodiode_trace = load_all_channels_on_clock_ups(directory)['photodiode']
+    photodiode_trace = load_all_channels_on_clock_ups(directory)["photodiode"]
     screen_off_locs = np.where(photodiode_trace < screen_off_threshold)[
         0
     ]  # TODO: remove hard var

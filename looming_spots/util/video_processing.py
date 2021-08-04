@@ -52,7 +52,7 @@ def crop_video(video, width, height, origin=(0, 0)):
 
 
 def compare_pd_and_video(directory):
-    photodiode_trace = load_all_channels_on_clock_ups(directory)['photodiode']
+    photodiode_trace = load_all_channels_on_clock_ups(directory)["photodiode"]
     n_samples_pd = len(photodiode_trace)
     video_path = os.path.join(directory, "camera.mp4")
     n_samples_video = len(pims.Video(video_path))

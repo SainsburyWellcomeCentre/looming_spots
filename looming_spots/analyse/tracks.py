@@ -15,7 +15,8 @@ from looming_spots.constants import (
     SHELTER_FRONT,
     ARENA_LENGTH_PX,
     ARENA_WIDTH_PX,
-    LOOM_ONSETS_S)
+    LOOM_ONSETS_S,
+)
 from looming_spots.util.transformations import (
     get_inverse_projective_transform,
     get_box_coordinates_from_file,
