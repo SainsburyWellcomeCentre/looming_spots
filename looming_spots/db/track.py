@@ -94,17 +94,17 @@ class Track(object):
         """
         return load_box_corner_coordinates(self.path)
 
-    def projective_transform_tracks(self, Xin, Yin):
+    def projective_transform_tracks(self, x_in, y_in):
         """
         To correct for camera angle artifacts, coordinates of the arena and its known real geometry are used to
         get a projective transform that can be applied to positional tracks or raw videos.
-        :param Xin:
-        :param Yin:
+        :param x_in:
+        :param y_in:
         :return:
         """
 
         new_track_x, new_track_y = projective_transform_tracks(
-            Xin, Yin, self.load_box_corner_coordinates()
+            x_in, y_in, self.load_box_corner_coordinates()
         )
         return new_track_x, new_track_y
 
@@ -178,7 +178,7 @@ class Track(object):
         vel_window = self.smoothed_x_speed[
             LOOMING_STIMULUS_ONSET:END_OF_CLASSIFICATION_WINDOW
         ]
-        acc_window[np.where(vel_window[:-1] > 0)] = np.nan  # TEST:
+        acc_window[np.where(vel_window[:-1] > 0)] = np.nan
         return acc_window
 
     def reaction_time(self):

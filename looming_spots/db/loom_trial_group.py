@@ -135,7 +135,7 @@ class MouseLoomTrialGroup(object):
         return np.concatenate([s.get_data(key)() for s in self.sessions])
 
     @cached_property
-    def sessions(self):  # TODO: weakref
+    def sessions(self):
         unlinked_sessions = looming_spots.io.session_io.load_sessions(
             self.mouse_id
         )

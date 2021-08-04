@@ -125,7 +125,7 @@ def filter_pd(pd_trace, fs=10000):  # 10000
 
 
 def get_auditory_onsets_from_auditory_trace(directory, save=True):
-    aud = load_all_channels_on_clock_ups(directory)["auditory"]
+    aud = load_all_channels_on_clock_ups(directory)["auditory_stimulus"]
     aud -= np.mean(aud)
 
     if not (aud > 0.7).any():

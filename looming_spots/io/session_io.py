@@ -167,13 +167,13 @@ class Session(object):
         if recording_date > AUDITORY_STIMULUS_CHANNEL_ADDED_DATE:
             ad = looming_spots.io.load.load_all_channels_on_clock_ups(
                 self.path
-            )["auditory"]
+            )["auditory_stimulus"]
             if (ad > 0.7).any():
                 return True
 
     @cached_property
     def trials(self):
-        visual_trials_idx = self.get_visual_trials_idx()
+        visual_trials_idx = self.get_looming_stimuli_test_trials_idx()
         auditory_trials_idx = self.get_auditory_trials_idx()
         visual_trials = self.initialise_trials(
             visual_trials_idx,
@@ -217,8 +217,14 @@ class Session(object):
                 return []
         return []
 
-    def get_trials(self, key):
+    def get_trials_of_protocol_type(self, key):
+        """
+        Returns trials grouped as either belonging to an LSIE protocol, or being a testing trial of some sort
+        to later be more specifically classified as a pre- or post- lsie testing trial.
 
+        :param key:
+        :return:
+        """
         if key == "test":
             return [t for t in self.trials if "test" in t.trial_type]
 
@@ -226,6 +232,10 @@ class Session(object):
 
     @property
     def trials_results(self):
+        """
+
+        :return:
+        """
         test_trials = [t for t in self.trials if "test" in t.trial_type]
         return np.array(
             [
@@ -240,11 +250,11 @@ class Session(object):
 
     @property
     def n_test_trials(self):
-        return len(self.get_trials("test"))
+        return len(self.get_trials_of_protocol_type("test"))
 
     @property
     def n_lsie_trials(self):
-        return len(self.get_trials("lsie"))
+        return len(self.get_trials_of_protocol_type("lsie"))
 
     def hours(self):
         return self.dt.hour + self.dt.minute / 60
@@ -260,7 +270,7 @@ class Session(object):
 
     @property
     def n_looms(self):
-        return len(self.loom_idx)
+        return len(self.looming_stimuli_idx)
 
     def get_reference_frame(self, idx=0):
         import skvideo.io
@@ -296,28 +306,15 @@ class Session(object):
             return self.data["background"]
 
     @cached_property
-    def fully_sampled_delta_f(self, filter_artifact_cutoff_samples=40000):
-        pd, clock, auditory, pmt, led211, led531 = load.load_all_channels_raw(
-            self.path
-        )
-
-        pmt[:filter_artifact_cutoff_samples] = np.median(pmt)
-        delta_f = demodulation.lerner_deisseroth_preprocess(
-            pmt, led211, led531
-        )
-        delta_f[:filter_artifact_cutoff_samples] = np.median(delta_f)
-        return delta_f, clock
-
-    @cached_property
     def data(self):
         return load.load_all_channels_on_clock_ups(self.path)
 
     @property
     def contains_lsie(self):
-        return photodiode.contains_lsie(self.loom_idx)
+        return photodiode.contains_lsie(self.looming_stimuli_idx)
 
     @cached_property
-    def loom_idx(self):
+    def looming_stimuli_idx(self):
         loom_idx_path = os.path.join(self.path, "loom_starts.npy")
         if not os.path.isfile(loom_idx_path):
             _ = photodiode.get_loom_idx_from_photodiode_trace(
@@ -326,7 +323,7 @@ class Session(object):
         return np.load(loom_idx_path)
 
     @cached_property
-    def auditory_idx(self):
+    def auditory_stimuli_idx(self):
         if self.contains_auditory():
             aud_idx_path = os.path.join(self.path, "auditory_starts.npy")
             if not os.path.isfile(aud_idx_path):
@@ -346,45 +343,45 @@ class Session(object):
     @property
     def lsie_idx(self):
         if self.contains_auditory():
-            if photodiode.contains_lsie(self.auditory_idx, 1):
-                return photodiode.get_lsie_loom_idx(self.auditory_idx, 1)
+            if photodiode.contains_lsie(self.auditory_stimuli_idx, 1):
+                return photodiode.get_lsie_loom_idx(self.auditory_stimuli_idx, 1)
 
-        if photodiode.contains_lsie(self.loom_idx, 5):
-            return photodiode.get_lsie_loom_idx(self.loom_idx, 5)
+        if photodiode.contains_lsie(self.looming_stimuli_idx, 5):
+            return photodiode.get_lsie_loom_idx(self.looming_stimuli_idx, 5)
 
     @property
     def lsie_loom_idx(self):
-        return photodiode.get_lsie_loom_idx(self.loom_idx)
+        return photodiode.get_lsie_loom_idx(self.looming_stimuli_idx)
 
     @property
     def test_loom_idx(self):
-        return photodiode.get_test_looms_from_loom_idx(self.loom_idx)
+        return photodiode.get_test_looms_from_loom_idx(self.looming_stimuli_idx)
 
     @property
     def lsie_protocol_start(self):
-        return photodiode.get_lsie_start(self.loom_idx)
+        return photodiode.get_lsie_start(self.looming_stimuli_idx)
 
     def test_loom_classification(self):  # TEST
         assert len(self.lsie_loom_idx) + len(self.test_loom_idx) == int(
-            len(self.loom_idx) / 5
+            len(self.looming_stimuli_idx) / 5
         )
 
-    def extract_trials(self):
+    def extract_peristimulus_videos_for_all_trials(self):
         for t in self.trials:
             t.extract_video()
 
-    def contains_visual(self):
+    def contains_visual_stimuli(self):
         photodiode_trace = load_all_channels_on_clock_ups(self.path)[
             "photodiode"
         ]
         if (photodiode_trace > 0.5).any():
             return True
 
-    def get_visual_trials_idx(self):
-        return self.loom_idx[::5]
+    def get_looming_stimuli_test_trials_idx(self):
+        return self.looming_stimuli_idx[::5]
 
     def get_auditory_trials_idx(self):
-        return self.auditory_idx
+        return self.auditory_stimuli_idx
 
     def get_data(self, key):
         data_func_dict = {
@@ -421,8 +418,8 @@ class Session(object):
         prev_samples = 0
 
         selection_dict = {
-            "loom_idx": self.loom_idx,
-            "auditory_idx": self.auditory_idx,
+            "loom_idx": self.looming_stimuli_idx,
+            "auditory_idx": self.auditory_stimuli_idx,
             "trials": self.trials,
         }
 

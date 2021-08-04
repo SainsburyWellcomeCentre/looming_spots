@@ -26,7 +26,7 @@ from looming_spots.constants import (
     TRACK_LENGTH,
 )
 
-from looming_spots.util import video_processing, plotting
+from looming_spots.util import plotting
 import pandas as pd
 
 
@@ -205,17 +205,17 @@ class LoomTrial(object):
 
     @property
     def loom_number(self):
-        if self.sample_number in self.session.loom_idx:
+        if self.sample_number in self.session.looming_stimuli_idx:
             return int(
-                np.where(self.session.loom_idx == self.sample_number)[0][0]
+                np.where(self.session.looming_stimuli_idx == self.sample_number)[0][0]
                 / N_LOOMS_PER_STIMULUS
             )
 
     @property
     def auditory_number(self):
-        if self.sample_number in self.session.auditory_idx:
+        if self.sample_number in self.session.auditory_stimuli_idx:
             return int(
-                np.where(self.session.auditory_idx == self.sample_number)[0][0]
+                np.where(self.session.auditory_stimuli_idx == self.sample_number)[0][0]
             )
 
     def get_stimulus_number(self):
@@ -238,11 +238,11 @@ class LoomTrial(object):
 
     def photodiode(self):
         auditory_signal = self.session.data["photodiode"]
-        return auditory_signal[self.start : self.end]
+        return auditory_signal[self.start: self.end]
 
     def auditory_data(self):
         auditory_signal = self.session.data["auditory_stimulus"]
-        return auditory_signal[self.start : self.end]
+        return auditory_signal[self.start: self.end]
 
     @property
     def time(self):
@@ -348,7 +348,7 @@ class VisualStimulusTrial(LoomTrial):
             width=width,
             height=height,
             origin=origin,
-            track=self.track_in_standard_space,
+            track=self.track.track_in_standard_space,
         )
 
     def get_video(self):
