@@ -284,7 +284,7 @@ class LoomTrial(object):
         x, y = self.mouse_location_at_stimulus_onset
         plt.plot(x, y, "o", color="k", markersize=20)
 
-    def to_df(self, group_id):
+    def to_df(self, group_id, extra_data=None):
         n_points = TRACK_LENGTH
         track = pad_track(
             ARENA_SIZE_CM * self.track.normalised_x_track[0:n_points], n_points
@@ -313,6 +313,11 @@ class LoomTrial(object):
             "is_freeze": is_track_a_freeze(unsmoothed_speed),
             "time_to_shelter": self.track.time_to_shelter(),
         }
+
+        if extra_data is not None:
+            for k, v in extra_data.items():
+                add_dict.setdefault(k, v)
+
         this_trial_df = pd.DataFrame.from_dict(add_dict)
         return this_trial_df
 
