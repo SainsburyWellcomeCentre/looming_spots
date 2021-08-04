@@ -344,7 +344,9 @@ class Session(object):
     def lsie_idx(self):
         if self.contains_auditory():
             if photodiode.contains_lsie(self.auditory_stimuli_idx, 1):
-                return photodiode.get_lsie_loom_idx(self.auditory_stimuli_idx, 1)
+                return photodiode.get_lsie_loom_idx(
+                    self.auditory_stimuli_idx, 1
+                )
 
         if photodiode.contains_lsie(self.looming_stimuli_idx, 5):
             return photodiode.get_lsie_loom_idx(self.looming_stimuli_idx, 5)
@@ -355,7 +357,9 @@ class Session(object):
 
     @property
     def test_loom_idx(self):
-        return photodiode.get_test_looms_from_loom_idx(self.looming_stimuli_idx)
+        return photodiode.get_test_looms_from_loom_idx(
+            self.looming_stimuli_idx
+        )
 
     @property
     def lsie_protocol_start(self):

@@ -14,7 +14,8 @@ from looming_spots.constants import (
     ARENA_LENGTH_PX,
     ARENA_WIDTH_PX,
     LOOM_ONSETS_S,
-    TRACK_LENGTH)
+    TRACK_LENGTH,
+)
 from looming_spots.util.transformations import (
     get_inverse_projective_transform,
     get_box_coordinates_from_file,

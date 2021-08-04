@@ -207,7 +207,9 @@ class LoomTrial(object):
     def loom_number(self):
         if self.sample_number in self.session.looming_stimuli_idx:
             return int(
-                np.where(self.session.looming_stimuli_idx == self.sample_number)[0][0]
+                np.where(
+                    self.session.looming_stimuli_idx == self.sample_number
+                )[0][0]
                 / N_LOOMS_PER_STIMULUS
             )
 
@@ -215,7 +217,9 @@ class LoomTrial(object):
     def auditory_number(self):
         if self.sample_number in self.session.auditory_stimuli_idx:
             return int(
-                np.where(self.session.auditory_stimuli_idx == self.sample_number)[0][0]
+                np.where(
+                    self.session.auditory_stimuli_idx == self.sample_number
+                )[0][0]
             )
 
     def get_stimulus_number(self):
@@ -238,11 +242,11 @@ class LoomTrial(object):
 
     def photodiode(self):
         auditory_signal = self.session.data["photodiode"]
-        return auditory_signal[self.start: self.end]
+        return auditory_signal[self.start : self.end]
 
     def auditory_data(self):
         auditory_signal = self.session.data["auditory_stimulus"]
-        return auditory_signal[self.start: self.end]
+        return auditory_signal[self.start : self.end]
 
     @property
     def time(self):
@@ -259,7 +263,10 @@ class LoomTrial(object):
     @property
     def mouse_location_at_stimulus_onset(self):
         x_track, y_track = self.track.track_in_standard_space
-        return x_track[LOOMING_STIMULUS_ONSET_SAMPLE], y_track[LOOMING_STIMULUS_ONSET_SAMPLE]
+        return (
+            x_track[LOOMING_STIMULUS_ONSET_SAMPLE],
+            y_track[LOOMING_STIMULUS_ONSET_SAMPLE],
+        )
 
     @staticmethod
     def round_timedelta(td):

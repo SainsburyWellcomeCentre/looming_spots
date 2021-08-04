@@ -183,6 +183,8 @@ class MouseLoomTrialGroup(object):
         mouse_df = pd.DataFrame()
         trials = self.get_trials_of_type(trial_type)
         for t in trials:
-            trial_df = t.to_df(group_id, extra_data={'loom_idx': self.get_loom_idx(t)})
+            trial_df = t.to_df(
+                group_id, extra_data={"loom_idx": self.get_loom_idx(t)}
+            )
             mouse_df = mouse_df.append(trial_df)
         return mouse_df

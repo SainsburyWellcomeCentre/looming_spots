@@ -25,7 +25,8 @@ from looming_spots.constants import (
     N_SAMPLES_BEFORE,
     ARENA_LENGTH_PX,
     ARENA_WIDTH_PX,
-    TRACK_LENGTH)
+    TRACK_LENGTH,
+)
 from looming_spots.util.plotting import (
     get_x_length,
     convert_y_axis,
@@ -172,11 +173,11 @@ class Track(object):
 
     def get_accelerations_to_shelter(self):
         acc_window = self.smoothed_x_acceleration[
-                     LOOMING_STIMULUS_ONSET_SAMPLE:END_OF_CLASSIFICATION_WINDOW
-                     ]
+            LOOMING_STIMULUS_ONSET_SAMPLE:END_OF_CLASSIFICATION_WINDOW
+        ]
         vel_window = self.smoothed_x_speed[
-                     LOOMING_STIMULUS_ONSET_SAMPLE:END_OF_CLASSIFICATION_WINDOW
-                     ]
+            LOOMING_STIMULUS_ONSET_SAMPLE:END_OF_CLASSIFICATION_WINDOW
+        ]
         acc_window[np.where(vel_window[:-1] > 0)] = np.nan
         return acc_window
 

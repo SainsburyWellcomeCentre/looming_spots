@@ -134,7 +134,9 @@ class TrackViewer(object):
         self.y_positions = np.zeros(len(self.video))
 
     def initialise_track_folders(self):
-        self.tracks = np.arange(0, TRACK_LENGTH, 1), np.arange(0, TRACK_LENGTH, 1)
+        self.tracks = np.arange(0, TRACK_LENGTH, 1), np.arange(
+            0, TRACK_LENGTH, 1
+        )
         if not os.path.isdir(self.directory):
             return "{} is not a valid path".format(self.directory)
 

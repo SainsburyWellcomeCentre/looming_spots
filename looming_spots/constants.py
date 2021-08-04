@@ -17,7 +17,9 @@ CLASSIFICATION_WINDOW_END = 350
 SPEED_THRESHOLD = -0.017 * FRAME_RATE * ARENA_SIZE_CM
 CLASSIFICATION_LATENCY = 5
 END_OF_CLASSIFICATION_WINDOW = 550
-FREEZE_BUFFER_FRAMES = 12  # number of frames after loom onset to ignore in classifying freeze
+FREEZE_BUFFER_FRAMES = (
+    12  # number of frames after loom onset to ignore in classifying freeze
+)
 
 
 LOOM_ONSETS = [200, 228, 256, 284, 312]
