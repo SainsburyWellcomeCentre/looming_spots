@@ -8,9 +8,8 @@ import skvideo.io
 from cached_property import cached_property
 
 from looming_spots.analyse.tracks import load_raw_track
+from looming_spots.constants import TRACK_LENGTH
 from looming_spots.util import video_processing
-
-N_FRAMES = 600
 
 
 def get_digit_from_string(string):
@@ -135,7 +134,7 @@ class TrackViewer(object):
         self.y_positions = np.zeros(len(self.video))
 
     def initialise_track_folders(self):
-        self.tracks = np.arange(0, N_FRAMES, 1), np.arange(0, N_FRAMES, 1)
+        self.tracks = np.arange(0, TRACK_LENGTH, 1), np.arange(0, TRACK_LENGTH, 1)
         if not os.path.isdir(self.directory):
             return "{} is not a valid path".format(self.directory)
 
@@ -161,7 +160,7 @@ class TrackViewer(object):
     def track_errors(self):
         # track_errors = tracks.get_failed_tracking_frames(self.track_path)
         # critical_track_errors = tracks.get_critical_frame_ids(track_errors)
-        return np.arange(0, N_FRAMES, 1)
+        return np.arange(0, TRACK_LENGTH, 1)
 
     def load_tracks(self):
         self.tracks = load_raw_track(self.track_path)
@@ -232,5 +231,5 @@ class TrackViewer(object):
 
     def create_tracks_df(self, path):
         d = {"x_position": self.tracks[0], "y_position": self.tracks[1]}
-        df = pd.DataFrame(d, index=np.arange(N_FRAMES))
+        df = pd.DataFrame(d, index=np.arange(TRACK_LENGTH))
         df.to_csv(path, sep="\t", index=False)
