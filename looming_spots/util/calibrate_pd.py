@@ -1,27 +1,26 @@
 import os
 
-import looming_spots.io.load
 import numpy as np
 import matplotlib.pyplot as plt
 
 from looming_spots.io.photodiode import filter_pd
-from looming_spots.io.load import load_pd_on_clock_ups
+from looming_spots.io.load import load_all_channels_on_clock_ups
 
 
 def get_calibration_curve(pd_directory):
-    pd = looming_spots.io.load.load_pd_on_clock_ups(pd_directory)
+    photodiode_trace = load_all_channels_on_clock_ups(pd_directory)['photodiode']
     starts, ends = get_calibration_starts_ends(pd_directory)
     pd_vals = []
     for start, end in zip(starts, ends):
-        pd_val = np.median(pd[start:end])
+        pd_val = np.median(photodiode_trace[start:end])
         pd_vals.append(pd_val)
 
-    return pd, starts, ends, pd_vals
+    return photodiode_trace, starts, ends, pd_vals
 
 
 def get_calibration_starts_ends(directory):
-    pd = load_pd_on_clock_ups(directory)
-    starts, ends = find_pd_calibration_crossings(pd, 0.9)
+    photodiode_trace = load_all_channels_on_clock_ups(directory)['photodiode']
+    starts, ends = find_pd_calibration_crossings(photodiode_trace, 0.9)
     return starts, ends
 
 

@@ -1,15 +1,14 @@
 import os
 import subprocess
-from pathlib import Path
 
 import numpy as np
 from datetime import datetime
 
-from looming_spots import exceptions
 from looming_spots.constants import (
     ORDERED_ACQUISITION_CHANNEL_LABELS,
     PROCESSED_OUTPUT_VARIABLE_LABELS,
-    AUDITORY_STIMULUS_CHANNEL_ADDED_DATE, RAW_DATA_DIRECTORY, PROCESSED_DATA_DIRECTORY)
+    RAW_DATA_DIRECTORY,
+    PROCESSED_DATA_DIRECTORY)
 from nptdms import TdmsFile
 
 
@@ -88,7 +87,10 @@ def load_all_channels_on_clock_ups(directory):
             )
 
         save_downsampled_data(directory, processed_data_dict)
-
+        if "AI_corrected.npy" in os.listdir(directory):
+            print("loading manually corrected photodiode trace")
+            pd = np.load(os.path.join(directory, "AI_corrected.npy"))
+            processed_data_dict['photodiode'] = pd
         return processed_data_dict
 
 
@@ -123,65 +125,6 @@ def get_clock_ups(clock, threshold=2.5):
     clock_on = (clock > threshold).astype(int)
     clock_ups = np.where(np.diff(clock_on) == 1)[0]
     return clock_ups
-
-
-def load_pd_and_clock_raw(
-    directory,
-):
-    if "AI.tdms" in os.listdir(directory):
-
-        path = os.path.join(directory, "AI.tdms")
-        tdms_file = TdmsFile(path)
-        all_channels = tdms_file.groups()[0].channels()
-        pd, clock, auditory, pmt, led211, led531 = (
-            c.data for c in all_channels
-        )
-        return pd, clock, auditory
-
-    else:
-        path = os.path.join(directory, "AI.bin")
-        raw_ai = np.fromfile(path, dtype="double")
-
-    recording_date = datetime.strptime(
-        os.path.split(directory)[-1], "%Y%m%d_%H_%M_%S"
-    )
-
-    if recording_date > AUDITORY_STIMULUS_CHANNEL_ADDED_DATE:
-        raw_ai = raw_ai.reshape(int(raw_ai.shape[0] / 3), 3)
-        pd = raw_ai[:, 0]
-        clock = raw_ai[:, 1]
-        auditory = raw_ai[:, 2]
-        return pd, clock, auditory
-
-    raw_ai = raw_ai.reshape(int(raw_ai.shape[0] / 2), 2)
-    pd = raw_ai[:, 0]
-    clock = raw_ai[:, 1]
-    return pd, clock, []  # FIXME: hack
-
-
-def load_pd_on_clock_ups(directory, pd_threshold=2.5):
-    if "AI_corrected.npy" in os.listdir(directory):
-        print("loading corrected/downsampled ai")
-        path = os.path.join(directory, "AI_corrected.npy")
-        downsampled_processed_ai = np.load(path)
-        return downsampled_processed_ai
-    else:
-        pd, clock, auditory = load_pd_and_clock_raw(directory)
-        clock_ups = get_clock_ups(clock, pd_threshold)
-        if len(clock_ups) < 12:
-            raise exceptions.PdTooShortError()
-        return pd[clock_ups]
-
-
-def load_auditory_on_clock_ups(directory, pd_threshold=2.5):
-    auditory_path = Path(directory) / "auditory_stimulus.npy"
-    if not os.path.isfile(str(auditory_path)):
-        pd, clock, auditory = load_pd_and_clock_raw(directory)
-        clock_ups = get_clock_ups(clock, pd_threshold)
-        np.save(str(auditory_path), auditory[clock_ups])
-        return auditory[clock_ups]
-    else:
-        return np.load(str(auditory_path))
 
 
 def sync_raw_and_processed_data(

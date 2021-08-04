@@ -6,17 +6,19 @@ import scipy.signal
 import looming_spots.util.video_processing
 from looming_spots.constants import FRAME_RATE
 
-from looming_spots.io.load import load_pd_and_clock_raw, load_pd_on_clock_ups, load_auditory_on_clock_ups
+from looming_spots.io.load import load_all_channels_on_clock_ups
 from looming_spots.exceptions import PdTooShortError
 
 
-def get_loom_idx_from_raw(directory, save=True):
+def get_loom_idx_from_photodiode_trace(directory, save=True):
     try:
-        # convert_videos.compare_pd_and_video(directory)
-        ai = load_pd_on_clock_ups(directory)
-        print(len(ai))
-        aud = load_auditory_on_clock_ups(directory)
-        loom_starts, loom_ends = find_pd_threshold_crossings(ai)
+        data = load_all_channels_on_clock_ups(directory)
+        photodiode_trace = data['photodiode']
+        auditory_stimulus_trace = data['auditory']
+
+        print(len(photodiode_trace))
+        loom_starts, loom_ends = find_pd_threshold_crossings(photodiode_trace)
+
     except looming_spots.util.video_processing.NoPdError as e:
         loom_starts = []
         loom_ends = []
@@ -25,7 +27,7 @@ def get_loom_idx_from_raw(directory, save=True):
         loom_starts = []
         loom_ends = []
 
-    if len(loom_starts) % 5 != 0 and (aud < 1).all():
+    if len(loom_starts) % 5 != 0 and (auditory_stimulus_trace < 1).all():
         print(directory, len(loom_starts))
         # auto_fix_ai(directory)
         # raise LoomNumberError(Exception)
@@ -119,7 +121,7 @@ def get_inter_loom_interval(loom_idx):
 
 
 def get_auditory_onsets_from_analog_input(directory, save=True):
-    aud = load_auditory_on_clock_ups(directory)
+    aud = load_all_channels_on_clock_ups(directory)['auditory']
     aud -= np.mean(aud)
 
     if not (aud > 0.7).any():
@@ -141,8 +143,8 @@ def get_auditory_onsets_from_analog_input(directory, save=True):
 
 
 def get_visual_onsets_from_analog_input(directory):
-    ai = load_pd_on_clock_ups(directory)
-    loom_starts, loom_ends = find_pd_threshold_crossings(ai)
+    photodiode_trace = load_all_channels_on_clock_ups(directory)['photodiode']
+    loom_starts, loom_ends = find_pd_threshold_crossings(photodiode_trace)
     return loom_starts
 
 
@@ -155,17 +157,8 @@ def get_manual_looms(loom_idx, n_looms_per_stimulus=5):
 
 
 def get_manual_looms_raw(directory):
-    loom_idx, _ = get_loom_idx_from_raw(directory)
+    loom_idx, _ = get_loom_idx_from_photodiode_trace(directory)
     return get_manual_looms(loom_idx)
-
-
-def find_nearest_pd_up_from_frame_number(
-    directory, frame_number, sampling_rate=10000
-):
-    pd, _, _ = load_pd_and_clock_raw(directory)
-    raw_pd_ups, raw_pd_downs = find_pd_threshold_crossings(pd)
-    start_p = frame_number * sampling_rate / FRAME_RATE
-    return raw_pd_ups[np.argmin(abs(raw_pd_ups - start_p))]
 
 
 def manually_correct_ai(directory, start, end):
@@ -179,10 +172,10 @@ def manually_correct_ai(directory, start, end):
     :param end:
     :return:
     """
-    ai = load_pd_on_clock_ups(directory)
-    ai[start:end] = np.median(ai)
+    photodiode_trace = load_all_channels_on_clock_ups(directory)['photodiode']
+    photodiode_trace[start:end] = np.median(photodiode_trace)
     save_path = os.path.join(directory, "AI_corrected")
-    np.save(save_path, ai)
+    np.save(save_path, photodiode_trace)
 
 
 def auto_fix_ai(
@@ -197,8 +190,8 @@ def auto_fix_ai(
     :return:
     """
 
-    ai = load_pd_on_clock_ups(directory)
-    screen_off_locs = np.where(ai < screen_off_threshold)[
+    photodiode_trace = load_all_channels_on_clock_ups(directory)['photodiode']
+    screen_off_locs = np.where(photodiode_trace < screen_off_threshold)[
         0
     ]  # TODO: remove hard var
 
@@ -207,7 +200,7 @@ def auto_fix_ai(
 
     start = screen_off_locs[0]
     end = start + n_samples_to_replace
-    ai[start:end] = np.median(ai)
+    photodiode_trace[start:end] = np.median(photodiode_trace)
     save_path = os.path.join(directory, "AI_corrected")
-    np.save(save_path, ai)
+    np.save(save_path, photodiode_trace)
     auto_fix_ai(directory, n_samples_to_replace=n_samples_to_replace)
