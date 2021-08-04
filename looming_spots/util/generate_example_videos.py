@@ -11,7 +11,7 @@ from looming_spots.util.video_processing import (
 )
 
 
-def plot_track_on_video(video, track):
+def add_track_overlay_to_video(video, track):
     new_video = np.empty_like(video)
     for i, (frame, radius) in enumerate(zip(video, track)):
         cv2.polylines(frame, track[:600], False)
@@ -20,7 +20,7 @@ def plot_track_on_video(video, track):
     return new_video
 
 
-def loom_radius_profile(n_frames):  # TODO: make this using proper equations
+def loom_radius_profile(n_frames):  # TODO: make with proper equations
     radius_profile = np.zeros(n_frames)
     for onset in LOOM_ONSETS:
         onset += 1

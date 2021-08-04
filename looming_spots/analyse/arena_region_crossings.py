@@ -1,5 +1,5 @@
 import numpy as np
-from looming_spots.constants import SHELTER_FRONT
+from looming_spots.constants import NORMALISED_SHELTER_FRONT
 
 """
 Functions for labeling mouse position and defining crossings from each region 
@@ -84,7 +84,7 @@ def get_next_entry_from_track(
 
 
 def arena_entry_bools_dictionary(normalised_x_track):
-    shelter_boundary = SHELTER_FRONT
+    shelter_boundary = NORMALISED_SHELTER_FRONT
     tz_boundary = 0.6
     positions = {
         "shelter": normalised_x_track < shelter_boundary,

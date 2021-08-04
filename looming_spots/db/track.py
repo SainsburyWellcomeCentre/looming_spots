@@ -20,13 +20,12 @@ from looming_spots.analyse.tracks import (
 from looming_spots.constants import (
     FRAME_RATE,
     ARENA_SIZE_CM,
-    LOOMING_STIMULUS_ONSET,
+    LOOMING_STIMULUS_ONSET_SAMPLE,
     END_OF_CLASSIFICATION_WINDOW,
-    N_SAMPLES_TO_SHOW,
     N_SAMPLES_BEFORE,
     ARENA_LENGTH_PX,
     ARENA_WIDTH_PX,
-)
+    TRACK_LENGTH)
 from looming_spots.util.plotting import (
     get_x_length,
     convert_y_axis,
@@ -165,7 +164,7 @@ class Track(object):
         acc_window = self.get_accelerations_to_shelter()
         return int(
             np.where(acc_window == np.nanmin(acc_window))[0]
-            + LOOMING_STIMULUS_ONSET
+            + LOOMING_STIMULUS_ONSET_SAMPLE
         )
 
     def peak_speed(self, return_loc=False):
@@ -173,11 +172,11 @@ class Track(object):
 
     def get_accelerations_to_shelter(self):
         acc_window = self.smoothed_x_acceleration[
-            LOOMING_STIMULUS_ONSET:END_OF_CLASSIFICATION_WINDOW
-        ]
+                     LOOMING_STIMULUS_ONSET_SAMPLE:END_OF_CLASSIFICATION_WINDOW
+                     ]
         vel_window = self.smoothed_x_speed[
-            LOOMING_STIMULUS_ONSET:END_OF_CLASSIFICATION_WINDOW
-        ]
+                     LOOMING_STIMULUS_ONSET_SAMPLE:END_OF_CLASSIFICATION_WINDOW
+                     ]
         acc_window[np.where(vel_window[:-1] > 0)] = np.nan
         return acc_window
 
@@ -209,7 +208,7 @@ class Track(object):
     def time_to_shelter(self):
         return time_to_shelter(self.normalised_x_track)
 
-    def plot(self, ax=None, color=None, n_samples_to_show=N_SAMPLES_TO_SHOW):
+    def plot(self, ax=None, color=None, n_samples_to_show=TRACK_LENGTH):
         if ax is None:
             ax = plt.gca()
         else:

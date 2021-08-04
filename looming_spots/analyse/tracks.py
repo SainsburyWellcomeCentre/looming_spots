@@ -10,12 +10,11 @@ from looming_spots.constants import (
     CLASSIFICATION_WINDOW_END,
     ARENA_SIZE_CM,
     BOX_CORNER_COORDINATES,
-    LOOMING_STIMULUS_ONSET,
-    N_SAMPLES_TO_SHOW,
+    LOOMING_STIMULUS_ONSET_SAMPLE,
     ARENA_LENGTH_PX,
     ARENA_WIDTH_PX,
     LOOM_ONSETS_S,
-)
+    TRACK_LENGTH)
 from looming_spots.util.transformations import (
     get_inverse_projective_transform,
     get_box_coordinates_from_file,
@@ -173,7 +172,7 @@ def latency_peak_detect(normalised_x_track, n_stds=2.5):
     :return:
     """
     speed = -smooth_speed_from_track(normalised_x_track)[N_SAMPLES_BEFORE:]
-    std = np.nanstd(speed[:N_SAMPLES_TO_SHOW])
+    std = np.nanstd(speed[:TRACK_LENGTH])
     all_peak_starts = signal.find_peaks(speed, std * n_stds, width=1)[1][
         "left_ips"
     ]
@@ -208,7 +207,7 @@ def time_to_shelter(normalised_x_track):
         smoothed_track,
         "shelter",
         "middle",
-        LOOMING_STIMULUS_ONSET,
+        LOOMING_STIMULUS_ONSET_SAMPLE,
     )
     if n_samples_to_shelter is None:
         return n_samples_to_shelter
@@ -251,7 +250,7 @@ def n_samples_to_reach_shelter(normalised_x_track):
         smoothed_x_track,
         "shelter",
         "middle",
-        LOOMING_STIMULUS_ONSET,
+        LOOMING_STIMULUS_ONSET_SAMPLE,
     )
     return n_samples
 
@@ -264,7 +263,7 @@ def n_samples_to_tz_reentry(self):
     :return:
     """
     return arena_region_crossings.get_next_entry_from_track(
-        self.smoothed_x_track, "tz", "middle", LOOMING_STIMULUS_ONSET
+        self.smoothed_x_track, "tz", "middle", LOOMING_STIMULUS_ONSET_SAMPLE
     )
 
 

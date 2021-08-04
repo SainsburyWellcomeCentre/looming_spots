@@ -49,14 +49,12 @@ def get_first_and_last_likely_frame(
 ):
     body_part = extracted_tracks[body_part_label]
     mask = body_part["likelihood"] == 1
-    definite_cricket_appearances = np.where(mask)[0]
     for i in range(len(mask)):
         end = min(i + n_samples, len(mask))
         window = mask[i:end]
         if np.mean(window) == 1:
             cricket_entry = i
             return cricket_entry, cricket_entry + 90000
-    # return cricket_entry, definite_cricket_appearances[-1]
 
 
 def get_median_position_from_labels(

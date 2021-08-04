@@ -16,7 +16,7 @@ from datetime import timedelta
 import looming_spots.util.video_processing
 
 from looming_spots.constants import (
-    LOOMING_STIMULUS_ONSET,
+    LOOMING_STIMULUS_ONSET_SAMPLE,
     N_LOOMS_PER_STIMULUS,
     N_SAMPLES_BEFORE,
     ARENA_LENGTH_PX,
@@ -259,7 +259,7 @@ class LoomTrial(object):
     @property
     def mouse_location_at_stimulus_onset(self):
         x_track, y_track = self.track.track_in_standard_space
-        return x_track[LOOMING_STIMULUS_ONSET], y_track[LOOMING_STIMULUS_ONSET]
+        return x_track[LOOMING_STIMULUS_ONSET_SAMPLE], y_track[LOOMING_STIMULUS_ONSET_SAMPLE]
 
     @staticmethod
     def round_timedelta(td):
