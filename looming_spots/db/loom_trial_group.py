@@ -75,7 +75,7 @@ class MouseLoomTrialGroup(object):
     @cached_property
     def all_trials(
         self,
-    ):  # TODO: this can probably be achieved more elegantly e.g. weakref
+    ):  # TODO: reimplement without linked list e.g. weakref
         print(self.mouse_id)
 
         unlinked_trials = sorted(
@@ -178,13 +178,6 @@ class MouseLoomTrialGroup(object):
         return self.n_flees(trial_type) / (
             len(self.n_non_flees(trial_type)) + self.n_flees(trial_type)
         )
-
-    def get_metric_data(self, metric, trial_type="pre_test", limit=3):
-        metric_values = []
-        for i, t in enumerate(self.get_trials_of_type(trial_type)[0:limit]):
-            metric_value = t.metric_functions[metric]()
-            metric_values.append(metric_value)
-        return metric_values
 
     def to_df(self, group_id, trial_type="pre_test"):
         mouse_df = pd.DataFrame()

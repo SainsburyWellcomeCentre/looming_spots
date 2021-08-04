@@ -2,10 +2,6 @@ class LoomException(Exception):
     pass
 
 
-class FileNotPresentError(LoomException):
-    pass
-
-
 class LoomsNotTrackedError(Exception):
     def __init__(self, msg):
         print(
@@ -16,10 +12,6 @@ class LoomsNotTrackedError(Exception):
 
 
 class PdTooShortError(ValueError):
-    pass
-
-
-class LoomNumberError(Exception):
     pass
 
 
