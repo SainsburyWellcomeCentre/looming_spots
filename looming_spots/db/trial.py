@@ -1,6 +1,7 @@
 import os
 import pathlib
 
+import looming_spots.util.generate_example_videos
 import numpy as np
 import matplotlib.pyplot as plt
 import pims
@@ -225,7 +226,7 @@ class LoomTrial(object):
         if not overwrite:
             if os.path.isfile(self.video_path):
                 return "video already exists... skipping"
-        looming_spots.util.video_processing.extract_loom_video_trial(
+        looming_spots.util.generate_example_videos.extract_loom_video_trial(
             self.processed_video_path(),
             str(pathlib.Path(self.directory) / self.video_name),
             self.sample_number,
@@ -324,7 +325,7 @@ class VisualStimulusTrial(LoomTrial):
         path_in = str(pathlib.Path(self.directory) / self.video_name)
         path_out = "_overlay.".join(path_in.split("."))
 
-        video_processing.loom_superimposed_video(
+        looming_spots.util.generate_example_videos.loom_superimposed_video(
             path_in,
             path_out,
             width=width,

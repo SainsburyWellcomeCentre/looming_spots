@@ -131,7 +131,7 @@ def get_auditory_onsets_from_auditory_trace(directory, save=True):
     if not (aud > 0.7).any():
         auditory_onsets = []
     else:
-        aud_on = aud < -(2 * np.std(aud[:200]))
+        aud_on = aud < - (2 * np.std(aud[:200]))
         aud_diff = np.diff(np.where(aud_on)[0])
         auditory_onsets = np.concatenate(
             [
