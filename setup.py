@@ -23,7 +23,7 @@ setup(
         "cached-property",
         "tqdm",
         "scikit-image",
-        "opencv",
+        "opencv-python",
         "tables",
         "more_itertools",
     ],

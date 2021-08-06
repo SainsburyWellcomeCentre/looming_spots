@@ -8,3 +8,9 @@ pims
 scikit-video
 pingouin
 nptdms
+cached-property
+tqdm
+scikit-image
+opencv-python
+tables
+more_itertools
