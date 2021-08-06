@@ -18,12 +18,10 @@ looming_spots/db/experimental_log.py
 looming_spots/db/loom_trial_group.py
 looming_spots/db/track.py
 looming_spots/db/trial.py
-looming_spots/gui/backend_classes.py
 looming_spots/io/__init__.py
 looming_spots/io/load.py
 looming_spots/io/photodiode.py
 looming_spots/io/session_io.py
-looming_spots/thesis_figure_plots/lsie_protocol_parameters.py
 looming_spots/tracking_dlc/__init__.py
 looming_spots/tracking_dlc/constants.py
 looming_spots/tracking_dlc/process_DLC_output.py

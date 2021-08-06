@@ -319,6 +319,8 @@ class LoomTrial(object):
             "last_loom": get_loom_number_from_latency(self.track.latency()),
             "is_freeze": is_track_a_freeze(unsmoothed_speed),
             "time_to_shelter": self.track.time_to_shelter(),
+            "contrast": self.contrast,
+            "loom_number": self.loom_number,
         }
 
         if extra_data is not None:

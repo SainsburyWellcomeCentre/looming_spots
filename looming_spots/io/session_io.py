@@ -78,6 +78,8 @@ class Session(object):
                     frame_rate = 50
                 elif np.nanmedian(np.diff(clock_ups)) == 100:
                     frame_rate = 100
+                else:
+                    frame_rate = 30
             else:
                 frame_rate = 30
             np.save(str(p / "frame_rate.npy"), frame_rate)
