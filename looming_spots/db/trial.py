@@ -280,6 +280,26 @@ class LoomTrial(object):
         df -= np.median(df[176:200])
         return df
 
+    def integral_downsampled(self):
+
+        SAMPLING = self.frame_rate
+        end_sample = self.frame_rate*5
+        df = self.delta_f()
+
+        mask = np.full(len(df), np.nan)
+        integral = [
+            np.trapz(
+                df[LOOMING_STIMULUS_ONSET_SAMPLE: LOOMING_STIMULUS_ONSET_SAMPLE + x],
+                dx=1 / SAMPLING,
+            )
+            for x in range(end_sample)
+        ]
+
+        mask[
+        LOOMING_STIMULUS_ONSET_SAMPLE : (LOOMING_STIMULUS_ONSET_SAMPLE + end_sample)
+        ] = integral
+        return mask
+
     def plot_stimulus(self):
         ax = plt.gca()
         if self.stimulus_type == "auditory":
@@ -327,6 +347,7 @@ class LoomTrial(object):
             "contrast": self.contrast,
             "loom_number": self.get_loom_trial_idx(),
             "delta_f": [self.delta_f()],
+            "delta_f_integral": [self.integral_downsampled()],
         }
 
         if extra_data is not None:
