@@ -275,6 +275,11 @@ class LoomTrial(object):
         else:
             return td
 
+    def delta_f(self):
+        df = self.session.data["delta_f"][self.start : self.end][:TRACK_LENGTH]
+        df -= np.median(df[176:200])
+        return df
+
     def plot_stimulus(self):
         ax = plt.gca()
         if self.stimulus_type == "auditory":
