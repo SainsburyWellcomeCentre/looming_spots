@@ -320,7 +320,7 @@ class LoomTrial(object):
             "is_freeze": is_track_a_freeze(unsmoothed_speed),
             "time_to_shelter": self.track.time_to_shelter(),
             "contrast": self.contrast,
-            "loom_number": self.loom_number,
+            "loom_number": self.get_loom_trial_idx(),
         }
 
         if extra_data is not None:
