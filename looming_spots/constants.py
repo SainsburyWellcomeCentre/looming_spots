@@ -55,5 +55,14 @@ ORDERED_ACQUISITION_CHANNEL_LABELS = [
     "photodiode",
     "clock",
     "auditory_stimulus",
+    "photodetector",
+    "led211",
+    "led531",
 ]
-PROCESSED_OUTPUT_VARIABLE_LABELS = []
+
+PROCESSED_OUTPUT_VARIABLE_LABELS = [
+    "signal",
+    "background",
+    "bg_fit",
+    "delta_f",
+]
