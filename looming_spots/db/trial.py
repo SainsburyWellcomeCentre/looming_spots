@@ -326,6 +326,7 @@ class LoomTrial(object):
             "time_to_shelter": self.track.time_to_shelter(),
             "contrast": self.contrast,
             "loom_number": self.get_loom_trial_idx(),
+            "delta_f": [self.delta_f()],
         }
 
         if extra_data is not None:
