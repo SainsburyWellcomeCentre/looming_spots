@@ -6,6 +6,7 @@ import scipy.io
 from cached_property import cached_property
 
 import looming_spots.io.session_io
+#from looming_spots.analyse.photometry_example_traces import get_normalisation_factor
 from looming_spots.util.generic_functions import flatten_list
 
 
@@ -40,6 +41,8 @@ class MouseLoomTrialGroup(object):
 
         self.set_loom_trial_idx()
         self.set_auditory_trial_idx()
+        self.set_normalisation_factors()
+        self.set_avg_pretest_latencies()
 
     def set_loom_trial_idx(self):
         for i, t in enumerate(self.loom_trials()):
@@ -149,11 +152,11 @@ class MouseLoomTrialGroup(object):
     def lsie_trials(self):
         return [t for t in self.all_trials if t.get_trial_type() == "lsie"]
 
-    def get_trials_of_type(self, key, limit=3):
+    def get_trials_of_type(self, key, n_trials=3):
         if key == "pre_test":
-            return self.pre_test_trials()[0:limit]
+            return self.pre_test_trials()[0:n_trials]
         elif key == "post_test":
-            return self.post_test_trials()[0:limit]
+            return self.post_test_trials()[0:n_trials]
         elif key == "lsie":
             return self.lsie_trials()
         else:
@@ -179,12 +182,54 @@ class MouseLoomTrialGroup(object):
             len(self.n_non_flees(trial_type)) + self.n_flees(trial_type)
         )
 
-    def to_df(self, group_id, trial_type="pre_test"):
+    def to_df(self, group_id, trial_type="pre_test", extra_data=None, n_trials=3):
+
+        if extra_data is None:
+            extra_data = {}
+
         mouse_df = pd.DataFrame()
-        trials = self.get_trials_of_type(trial_type)
+        trials = self.get_trials_of_type(trial_type, n_trials=n_trials)
+        delta_f_norm_factor = get_normalisation_factor(self)
         for t in trials:
+            extra_data.setdefault("loom_idx", self.get_loom_idx(t))
+            extra_data.setdefault("delta_f_norm_factor", delta_f_norm_factor)
             trial_df = t.to_df(
-                group_id, extra_data={"loom_idx": self.get_loom_idx(t)}
+                group_id, extra_data=extra_data
             )
             mouse_df = mouse_df.append(trial_df)
+        mouse_df['normalised_delta_f_0.5s'] = mouse_df['delta_f_0.5s'] / mouse_df['delta_f_norm_factor']
+
         return mouse_df
+
+    def normalisation_factor_metric(self):
+        return get_normalisation_factor(self)
+
+    def normalisation_factor_raw(self):
+        return get_raw_normalisation_factor(self)
+
+    def set_normalisation_factors(self):
+        normalisation_factor = self.normalisation_factor_raw()
+        [t.set_delta_f_norm_factor(normalisation_factor) for t in self.loom_trials()]
+
+    def set_avg_pretest_latencies(self):
+        avg_latency = np.mean([t.track.latency_in_samples() for t in self.pre_test_trials()[:3]])
+        [t.set_avg_pretest_latency(avg_latency) for t in self.loom_trials()]
+
+
+def get_raw_normalisation_factor(mtg):
+    return max([max(t.delta_f()) for t in mtg.loom_trials()])
+
+
+def get_normalisation_factor(mtg, timepoint=215):
+
+    normalising_factor = max(
+        [
+            np.nanmax(
+                [
+                    t.integral_escape_metric(int(timepoint))
+                    for t in mtg.loom_trials()[:30]
+                ]
+            )
+        ]
+    )
+    return normalising_factor

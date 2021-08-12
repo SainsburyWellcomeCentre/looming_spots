@@ -66,3 +66,5 @@ PROCESSED_OUTPUT_VARIABLE_LABELS = [
     "bg_fit",
     "delta_f",
 ]
+
+flatui = ["#9b59b6", "#3498db", "#95a5a6"]

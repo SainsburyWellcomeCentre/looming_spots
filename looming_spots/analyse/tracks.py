@@ -165,7 +165,7 @@ def get_tracking_method(session_directory):
     return method
 
 
-def latency_peak_detect(normalised_x_track, n_stds=2.5):
+def latency_peak_detect(normalised_x_track, n_stds=2.0):  # 2.5
     """
     Calculates the onset, in samples, of escape using the normalised positional x-trace.
 
@@ -188,10 +188,15 @@ def latency_peak_detect_s(normalised_x_track):
     :param normalised_x_track:
     :return:
     """
-    latency_pd = latency_peak_detect(normalised_x_track)
+    latency_pd = latency_peak_detect_samples(normalised_x_track)
     if latency_pd is not None:
         latency_pd -= N_SAMPLES_BEFORE
         return latency_pd / FRAME_RATE
+
+
+def latency_peak_detect_samples(normalised_x_track):
+    latency_pd = latency_peak_detect(normalised_x_track)
+    return latency_pd
 
 
 def time_to_shelter(normalised_x_track):

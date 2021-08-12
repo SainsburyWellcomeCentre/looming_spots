@@ -16,7 +16,7 @@ from looming_spots.analyse.tracks import (
     track_in_standard_space,
     get_tracking_method,
     load_box_corner_coordinates,
-)
+    latency_peak_detect_samples)
 from looming_spots.constants import (
     FRAME_RATE,
     ARENA_SIZE_CM,
@@ -199,6 +199,9 @@ class Track(object):
 
     def latency(self):
         return latency_peak_detect_s(self.normalised_x_track)
+
+    def latency_in_samples(self):
+        return latency_peak_detect_samples(self.normalised_x_track)
 
     def time_in_safety_zone(self):
         return time_in_shelter(self.normalised_x_track)

@@ -1,5 +1,6 @@
 import os
 import pathlib
+import warnings
 
 import looming_spots.util.generate_example_videos
 import numpy as np
@@ -86,6 +87,9 @@ class LoomTrial(object):
 
         self.start = max(self.sample_number - self.n_samples_before, 0)
         self.end = self.get_end()
+        self.additional_labels = {}
+        self.delta_f_norm_factor = 1
+        self.avg_pretest_latency = None
 
     def get_end(self):
         if self.next_trial is not None:
@@ -278,7 +282,7 @@ class LoomTrial(object):
     def delta_f(self):
         df = self.session.data["delta_f"][self.start : self.end][:TRACK_LENGTH]
         df -= np.median(df[176:200])
-        return df
+        return df / self.delta_f_norm_factor
 
     def integral_downsampled(self):
 
@@ -316,7 +320,30 @@ class LoomTrial(object):
         x, y = self.mouse_location_at_stimulus_onset
         plt.plot(x, y, "o", color="k", markersize=20)
 
+    def integral_escape_metric(self, timepoint=None):
+        if timepoint is not None:
+            return self.integral_downsampled()[int(timepoint)]
+        else:
+            try:
+                return self.integral_downsampled()[
+                    self.estimate_latency(False)
+                ]
+            except Exception as e:
+                warnings.warn("returning NaN for escape metric")
+                return np.nan
+
     def to_df(self, group_id, extra_data=None):
+        add_dict = self.data()
+        add_dict.setdefault('group_id', group_id)
+
+        if extra_data is not None:
+            for k, v in extra_data.items():
+                add_dict.setdefault(k, v)
+
+        this_trial_df = pd.DataFrame.from_dict(add_dict)
+        return this_trial_df
+
+    def data(self):
         n_points = TRACK_LENGTH
         track = pad_track(
             ARENA_SIZE_CM * self.track.normalised_x_track[0:n_points], n_points
@@ -334,13 +361,13 @@ class LoomTrial(object):
             n_points,
         )
         add_dict = {
-            "group_id": group_id,
             "mouse_id": self.mouse_id,
             "track": [track],
             "speed": [smoothed_speed],
             "peak_speed": self.track.peak_speed(),
             "is_flee": self.track.is_escape(),
             "latency": self.track.latency(),
+            "latency_in_samples": self.track.latency_in_samples(),
             "last_loom": get_loom_number_from_latency(self.track.latency()),
             "is_freeze": is_track_a_freeze(unsmoothed_speed),
             "time_to_shelter": self.track.time_to_shelter(),
@@ -348,14 +375,17 @@ class LoomTrial(object):
             "loom_number": self.get_loom_trial_idx(),
             "delta_f": [self.delta_f()],
             "delta_f_integral": [self.integral_downsampled()],
+            "delta_f_0.5s": self.integral_escape_metric(215),
+            "delta_f_integral_analysis_metric": self.integral_escape_metric(self.avg_pretest_latency),
+            "test_type": self.get_trial_type(),
         }
+        return add_dict
 
-        if extra_data is not None:
-            for k, v in extra_data.items():
-                add_dict.setdefault(k, v)
+    def set_delta_f_norm_factor(self, factor):
+        self.delta_f_norm_factor = factor
 
-        this_trial_df = pd.DataFrame.from_dict(add_dict)
-        return this_trial_df
+    def set_avg_pretest_latency(self, latency):
+        self.avg_pretest_latency = latency
 
 
 class VisualStimulusTrial(LoomTrial):
