@@ -6,7 +6,6 @@ import scipy.io
 from cached_property import cached_property
 
 import looming_spots.io.session_io
-#from looming_spots.analyse.photometry_example_traces import get_normalisation_factor
 from looming_spots.util.generic_functions import flatten_list
 
 
@@ -26,7 +25,7 @@ class MouseLoomTrialGroup(object):
 
     """
 
-    def __init__(self, mouse_id, exp_key=None):
+    def __init__(self, mouse_id, exp_key=None, photometry=False):
 
         self.mouse_id = mouse_id
         if exp_key is not None:
@@ -41,8 +40,12 @@ class MouseLoomTrialGroup(object):
 
         self.set_loom_trial_idx()
         self.set_auditory_trial_idx()
-        self.set_normalisation_factors()
-        self.set_avg_pretest_latencies()
+        self.photometry = photometry
+
+        if self.photometry:
+            self.set_normalisation_factors()
+            self.set_avg_pretest_latencies()
+            self.set_integral_normalisation_factors()
 
     def set_loom_trial_idx(self):
         for i, t in enumerate(self.loom_trials()):
@@ -86,7 +89,7 @@ class MouseLoomTrialGroup(object):
                 [
                     s.trials
                     for s in looming_spots.io.session_io.load_sessions(
-                        self.mouse_id,
+                        self.mouse_id
                     )
                 ]
             )
@@ -190,11 +193,14 @@ class MouseLoomTrialGroup(object):
         mouse_df = pd.DataFrame()
         trials = self.get_trials_of_type(trial_type, n_trials=n_trials)
         delta_f_norm_factor = get_normalisation_factor(self)
+        delta_f_integral_norm_factor = self.get_metric_normalising_factor()
         for t in trials:
             extra_data.setdefault("loom_idx", self.get_loom_idx(t))
             extra_data.setdefault("delta_f_norm_factor", delta_f_norm_factor)
+            extra_data.setdefault("delta_f_integral_norm_factor", delta_f_integral_norm_factor)
+
             trial_df = t.to_df(
-                group_id, extra_data=extra_data
+                group_id, extra_data=extra_data, photometry=self.photometry
             )
             mouse_df = mouse_df.append(trial_df)
         mouse_df['normalised_delta_f_0.5s'] = mouse_df['delta_f_0.5s'] / mouse_df['delta_f_norm_factor']
@@ -215,9 +221,21 @@ class MouseLoomTrialGroup(object):
         avg_latency = np.mean([t.track.latency_in_samples() for t in self.pre_test_trials()[:3]])
         [t.set_avg_pretest_latency(avg_latency) for t in self.loom_trials()]
 
+    def set_integral_normalisation_factors(self):
+        normalisation_factor = self.get_metric_normalising_factor()
+        [t.set_integral_norm_factor(normalisation_factor) for t in self.loom_trials()]
+
+    def get_metric_normalising_factor(self):
+        return max([t.integral_escape_metric(t.avg_pretest_latency) for t in self.loom_trials()[:30]])
+
 
 def get_raw_normalisation_factor(mtg):
-    return max([max(t.delta_f()) for t in mtg.loom_trials()])
+    all_peak_df_values = []
+    for t in mtg.loom_trials():
+        if t.delta_f() is not None:
+            all_peak_df_values.append(max(t.delta_f()))
+    if all_peak_df_values:
+        return max(all_peak_df_values)
 
 
 def get_normalisation_factor(mtg, timepoint=215):

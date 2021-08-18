@@ -41,7 +41,7 @@ def get_average_deltaf_trace_first_loom_by_contrast(
     contrast_curve_mids=snl_contrast_curve_mids, n_samples=150, start=200
 ):
     mtgs = [
-        loom_trial_group.MouseLoomTrialGroup(mid)
+        loom_trial_group.MouseLoomTrialGroup(mid, photometry=True)
         for mid in contrast_curve_mids
     ]
     df_all = pd.DataFrame()
@@ -70,7 +70,7 @@ def get_average_deltaf_integral_trace_first_loom_by_contrast(
     contrast_curve_mids=snl_contrast_curve_mids, n_samples=150, start=200
 ):
     mtgs = [
-        loom_trial_group.MouseLoomTrialGroup(mid)
+        loom_trial_group.MouseLoomTrialGroup(mid, photometry=True)
         for mid in contrast_curve_mids
     ]
     df_all = pd.DataFrame()
@@ -99,7 +99,7 @@ def get_average_deltaf_integral_trace_first_loom_by_contrast(
 def load_snl_photometry_data():
 
     df = pd.DataFrame()
-    mtgs = [loom_trial_group.MouseLoomTrialGroup(mid) for mid in snl_contrast_curve_mids]
+    mtgs = [loom_trial_group.MouseLoomTrialGroup(mid, photometry=True) for mid in snl_contrast_curve_mids]
 
     for mtg in mtgs:
         df = df.append(mtg.to_df('snl_photometry_variable_contrast', n_trials=18), ignore_index=True)

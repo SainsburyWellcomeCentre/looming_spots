@@ -88,8 +88,10 @@ class LoomTrial(object):
         self.start = max(self.sample_number - self.n_samples_before, 0)
         self.end = self.get_end()
         self.additional_labels = {}
-        self.delta_f_norm_factor = 1
+
         self.avg_pretest_latency = None
+        self.delta_f_norm_factor = 1
+        self.integral_norm_factor = 1
 
     def get_end(self):
         if self.next_trial is not None:
@@ -280,9 +282,13 @@ class LoomTrial(object):
             return td
 
     def delta_f(self):
-        df = self.session.data["delta_f"][self.start : self.end][:TRACK_LENGTH]
-        df -= np.median(df[176:200])
-        return df / self.delta_f_norm_factor
+        try:
+            df = self.session.data["delta_f"][self.start : self.end][:TRACK_LENGTH]
+            df -= np.median(df[176:200])
+            return df / self.delta_f_norm_factor
+        except Exception as e:
+            print(e)
+            return None
 
     def integral_downsampled(self):
 
@@ -321,19 +327,23 @@ class LoomTrial(object):
         plt.plot(x, y, "o", color="k", markersize=20)
 
     def integral_escape_metric(self, timepoint=None):
+        integral = self.integral_downsampled()
+
         if timepoint is not None:
-            return self.integral_downsampled()[int(timepoint)]
+            if timepoint > len(integral):
+                return np.nan
+            return integral[int(timepoint)]
         else:
             try:
-                return self.integral_downsampled()[
+                return integral[
                     self.estimate_latency(False)
                 ]
             except Exception as e:
                 warnings.warn("returning NaN for escape metric")
                 return np.nan
 
-    def to_df(self, group_id, extra_data=None):
-        add_dict = self.data()
+    def to_df(self, group_id, extra_data=None, photometry=False):
+        add_dict = self.data(photometry)
         add_dict.setdefault('group_id', group_id)
 
         if extra_data is not None:
@@ -343,7 +353,7 @@ class LoomTrial(object):
         this_trial_df = pd.DataFrame.from_dict(add_dict)
         return this_trial_df
 
-    def data(self):
+    def data(self, photometry=False):
         n_points = TRACK_LENGTH
         track = pad_track(
             ARENA_SIZE_CM * self.track.normalised_x_track[0:n_points], n_points
@@ -373,12 +383,19 @@ class LoomTrial(object):
             "time_to_shelter": self.track.time_to_shelter(),
             "contrast": self.contrast,
             "loom_number": self.get_loom_trial_idx(),
-            "delta_f": [self.delta_f()],
-            "delta_f_integral": [self.integral_downsampled()],
-            "delta_f_0.5s": self.integral_escape_metric(215),
-            "delta_f_integral_analysis_metric": self.integral_escape_metric(self.avg_pretest_latency),
             "test_type": self.get_trial_type(),
+
         }
+
+        if photometry:
+            add_dict.setdefault("delta_f", [self.delta_f()])
+            add_dict.setdefault("delta_f_integral", [self.integral_downsampled()])
+            add_dict.setdefault("delta_f_0.5s", [self.integral_escape_metric(215)])
+            add_dict.setdefault("delta_f_integral_analysis_metric",
+                                self.integral_escape_metric(self.avg_pretest_latency))
+            add_dict.setdefault("normed_delta_f_integral_analysis_metric",
+                                self.integral_escape_metric(self.avg_pretest_latency) / self.integral_norm_factor)
+
         return add_dict
 
     def set_delta_f_norm_factor(self, factor):
@@ -386,6 +403,9 @@ class LoomTrial(object):
 
     def set_avg_pretest_latency(self, latency):
         self.avg_pretest_latency = latency
+
+    def set_integral_norm_factor(self, factor):
+        self.integral_norm_factor = factor
 
 
 class VisualStimulusTrial(LoomTrial):
@@ -404,6 +424,7 @@ class VisualStimulusTrial(LoomTrial):
             trial_type,
             stimulus_type,
             trial_video_fname="{}{}.mp4",
+
         )
 
     def make_loom_superimposed_video(
@@ -440,7 +461,7 @@ class AuditoryStimulusTrial(LoomTrial):
         stimulus_type="auditory",
     ):
         super().__init__(
-            session, directory, sample_number, trial_type, stimulus_type
+            session, directory, sample_number, trial_type, stimulus_type,
         )
 
     def make_stimulus_superimposed_video(
