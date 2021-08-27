@@ -1,5 +1,6 @@
 import os
 import re
+import pathlib
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -165,7 +166,8 @@ class TrackViewer(object):
         return np.arange(0, TRACK_LENGTH, 1)
 
     def load_tracks(self):
-        self.tracks = load_raw_track(self.track_path)
+        p=pathlib.Path(self.track_path).parent
+        self.tracks = load_raw_track(str(p), '', 0, 600,loom_folder=self.track_path)
 
     def update_track(self):
         print("Track updating with frame %s" % self.frame_idx)
