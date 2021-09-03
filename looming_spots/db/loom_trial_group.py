@@ -6,6 +6,7 @@ import scipy.io
 from cached_property import cached_property
 
 import looming_spots.io.session_io
+from looming_spots.analyse.arena_region_crossings import get_all_tz_entries
 from looming_spots.analyse.tracks import normalised_x_track
 from looming_spots.util.generic_functions import flatten_list
 
