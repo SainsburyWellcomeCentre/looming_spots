@@ -6,6 +6,7 @@ import scipy.io
 from cached_property import cached_property
 
 import looming_spots.io.session_io
+from looming_spots.analyse.tracks import normalised_x_track
 from looming_spots.util.generic_functions import flatten_list
 
 
@@ -188,3 +189,20 @@ class MouseLoomTrialGroup(object):
             )
             mouse_df = mouse_df.append(trial_df)
         return mouse_df
+
+    def get_first_7min_normalised_x_track(self):
+        session, first_test_trial = get_test_session(self)
+        track = session.track()[0][:first_test_trial.sample_number]
+        return normalised_x_track(track)
+
+    def get_first_7min_all_tz_entries(self):
+        track = self.get_first_7min_normalised_x_track()
+        entries = get_all_tz_entries(track)
+        return entries
+
+
+def get_test_session(mtg):
+    first_test_trial = mtg.post_test_trials()[0]
+    session = first_test_trial.session
+    return session, first_test_trial
+
