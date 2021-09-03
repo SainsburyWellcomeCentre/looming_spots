@@ -233,17 +233,17 @@ class MouseLoomTrialGroup(object):
 
     def get_first_7min_normalised_x_track(self):
         session, first_test_trial = get_test_session(self)
-        track = session.track()[:first_test_trial.sample_number]
+        track = session.track()[0][:first_test_trial.sample_number]
         return normalised_x_track(track)
 
-    def get_first_7min_all_tz_entries(self, track):
+    def get_first_7min_all_tz_entries(self):
         track = self.get_first_7min_normalised_x_track()
         entries = get_all_tz_entries(track)
         return entries
 
 
 def get_test_session(mtg):
-    first_test_trial = mtg.get_trials_of_type('test')[0]
+    first_test_trial = mtg.post_test_trials()[0]
     session = first_test_trial.session
     return session, first_test_trial
 
