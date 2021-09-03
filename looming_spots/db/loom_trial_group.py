@@ -6,7 +6,10 @@ import scipy.io
 from cached_property import cached_property
 
 import looming_spots.io.session_io
+from looming_spots.analyse.arena_region_crossings import get_all_tz_entries
+from looming_spots.analyse.tracks import normalised_x_track
 from looming_spots.util.generic_functions import flatten_list
+
 
 
 class MouseLoomTrialGroup(object):
@@ -227,6 +230,22 @@ class MouseLoomTrialGroup(object):
 
     def get_metric_normalising_factor(self):
         return max([t.integral_escape_metric(t.avg_pretest_latency) for t in self.loom_trials()[:30]])
+
+    def get_first_7min_normalised_x_track(self):
+        session, first_test_trial = get_test_session(self)
+        track = session.track()[:first_test_trial.sample_number]
+        return normalised_x_track(track)
+
+    def get_first_7min_all_tz_entries(self, track):
+        track = self.get_first_7min_normalised_x_track()
+        entries = get_all_tz_entries(track)
+        return entries
+
+
+def get_test_session(mtg):
+    first_test_trial = mtg.get_trials_of_type('test')[0]
+    session = first_test_trial.session
+    return session, first_test_trial
 
 
 def get_raw_normalisation_factor(mtg):
