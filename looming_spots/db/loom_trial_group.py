@@ -201,9 +201,14 @@ class MouseLoomTrialGroup(object):
         entries = get_all_tz_entries(track)
         return entries
 
+    def get_first_test_trial(self):
+        for t in self.all_trials:
+            if t.get_trial_type() != 'lsie':
+                return t
+
 
 def get_test_session(mtg):
-    first_test_trial = mtg.post_test_trials()[0]
+    first_test_trial = mtg.get_first_test_trial()
     session = first_test_trial.session
     return session, first_test_trial
 
