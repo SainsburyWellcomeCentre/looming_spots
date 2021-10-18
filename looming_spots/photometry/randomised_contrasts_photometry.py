@@ -13,12 +13,12 @@ import numpy as np
 snl_contrast_curve_mids = ["898992", "916063", "921000", "907822"]
 
 
-def plot_first_loom_raw_signal(df=None, trace_type='raw'):
+def plot_first_loom_raw_signal(mouse_ids, df=None, trace_type='raw'):
     if df is None:
         if trace_type == 'raw':
-            df = get_average_deltaf_trace_first_loom_by_contrast()
+            df = get_average_deltaf_trace_first_loom_by_contrast(mouse_ids)
         elif trace_type == 'integral':
-            df = get_average_deltaf_integral_trace_first_loom_by_contrast()
+            df = get_average_deltaf_integral_trace_first_loom_by_contrast(mouse_ids)
 
     sns.set(style="whitegrid")
 
