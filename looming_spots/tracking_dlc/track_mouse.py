@@ -41,13 +41,13 @@ def save_npy_tracks(directory, config_path_label):
         np.save(mouse_positions_y_path, mouse_xy_tracks["y"])
 
 
-def track_mouse(mid, overwrite=False):
+def track_mouse(mid, config_path_label="bg_5_label_SL_new", overwrite=False):
     vpaths = get_video_paths_from_mouse_id(mid)
 
     for vpath in vpaths:
         track_5label.track_5_label(
             pathlib.Path(vpath),
-            config_path_label="bg_5_label_SL_new",
+            config_path_label=config_path_label,
             overwrite=overwrite,
         )
 
