@@ -95,36 +95,33 @@ def convert_to_mp4(
         convert_avi_to_mp4(avi_path)
 
 
-def convert_avi_to_mp4(avi_path):
-    mp4_path = avi_path[:-4] + ".mp4"
-    print("avi: {} mp4: {}".format(avi_path, mp4_path))
+def convert_avi_to_mp4(source, dest, overwrite=False):
+    if not dest.exists() or overwrite:
 
-    supported_platforms = ["linux", "windows"]
+        print(f"avi: {source} mp4: {dest}")
 
-    if sys.platform == "linux":
-        cmd = (
-            "ffmpeg -i {} -c:v mpeg4 -preset fast -crf 18 -b 5000k {}".format(
-                avi_path, mp4_path
+        supported_platforms = ["linux", "windows"]
+
+        if sys.platform == "linux":
+            cmd = (
+                f"ffmpeg -i {str(source)} -c:v mpeg4 -preset fast -crf 18 -b 5000k {str(dest)}"
             )
-        )
 
-    elif sys.platform == "windows":  # TEST: on windows
-        cmd = (
-            "ffmpeg -i {} -c:v mpeg4 -preset fast -crf 18 -b 5000k {}".format(
-                avi_path, mp4_path
-            ).split(" ")
-        )
+        elif sys.platform == "windows":  # TEST: on windows
+            cmd = (
+                f"ffmpeg -i {str(source)} -c:v mpeg4 -preset fast -crf 18 -b 5000k {str(dest)}".split(" ")
+            )
 
-    else:
-        raise (
-            OSError(
-                "platform {} not recognised, expected one of {}".format(
-                    sys.platform, supported_platforms
+        else:
+            raise (
+                OSError(
+                    f"platform {sys.platform} not recognised, expected one of {supported_platforms}"
                 )
             )
-        )
 
-    subprocess.check_call([cmd], shell=True)
+        subprocess.check_call([cmd], shell=True)
+    else:
+        print(f"file exists at {dest} and overwrite set to false... skipping...")
 
 
 def extract_video(fin_path, fout_path, start, end):
