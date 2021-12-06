@@ -14,7 +14,7 @@ from nptdms import TdmsFile
 
 
 if "photodetector" in ORDERED_ACQUISITION_CHANNEL_LABELS:
-    from photometry import demodulation
+    from looming_spots.photometry import demodulation
 
 
 def load_all_channels_raw(
