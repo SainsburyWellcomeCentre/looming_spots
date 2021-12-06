@@ -38,11 +38,11 @@ N_SAMPLES_BEFORE = 200
 N_SAMPLES_AFTER = 400
 TRACK_LENGTH = N_SAMPLES_BEFORE + N_SAMPLES_AFTER
 
-DLC_DIRECTORY = "/home/slenzi/winstor/margrie/slenzi/dlc/"
+ROOT = pathlib.Path("/home/slenzi/")
+DLC_DIRECTORY = ROOT / "winstor/margrie/slenzi/dlc/"
 
-HEAD_DIRECTORY = pathlib.Path(
-    "/home/slenzi/winstor/margrie/glusterfs/imaging/l/loomer/"
-)
+HEAD_DIRECTORY = ROOT / "/winstor/margrie/glusterfs/imaging/l/loomer/"
+
 EXPERIMENTAL_RECORDS_PATH = "~/Downloads/updated_loom_sheet_format.csv"
 RAW_DATA_DIRECTORY = HEAD_DIRECTORY / "raw_data"
 PROCESSED_DATA_DIRECTORY = HEAD_DIRECTORY / "processed_data"

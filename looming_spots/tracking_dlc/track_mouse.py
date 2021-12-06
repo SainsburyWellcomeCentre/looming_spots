@@ -147,9 +147,13 @@ def dlc_track_video(
     save_npy_tracks(directory, config_dict)
 
 
-if __name__ == "__main__":
+def main(mouse_ids):
+    for mouse_id in mouse_ids:
+        process_mouse(mouse_id, overwrite=True, label_video=False)
 
-    mids = ["1097643"]
-    for mid in mids:
-        process_mouse(mid, overwrite=True, label_video=False)
+
+if __name__ == "__main__":
+    main(["1097643"])
+
+
 

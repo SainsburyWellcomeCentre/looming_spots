@@ -232,7 +232,7 @@ class LoomTrial(object):
         return self.stimulus_number()
 
     def processed_video_path(self):
-        return list(pathlib.Path(self.directory).glob("cam_transform*.mp4"))[0]
+        return list(pathlib.Path(self.directory).glob("camera*.mp4"))[0]
 
     def extract_video(self, overwrite=False):
         print("extracting")
