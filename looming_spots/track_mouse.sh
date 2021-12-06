@@ -24,4 +24,4 @@ conda activate dlc_tf
 export DLClight=True
 
 echo "Running dlc_tracking"
-python ~/looming_spots/tracking_dlc/track_mouse.py $mouse_id
+python ~/code/python/looming_spots/tracking_dlc/track_mouse.py $mouse_id
