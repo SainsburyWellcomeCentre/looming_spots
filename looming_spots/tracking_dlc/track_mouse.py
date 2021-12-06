@@ -63,8 +63,8 @@ def process_mouse(m_id: str,
                   ):
 
     sync_raw_and_processed_data(mouse_id=m_id)
-    raw_mouse_path = RAW_DATA_DIRECTORY / m_id
-    processed_mouse_path = PROCESSED_DATA_DIRECTORY / m_id
+    raw_mouse_path = RAW_DATA_DIRECTORY / str(m_id)
+    processed_mouse_path = PROCESSED_DATA_DIRECTORY / str(m_id)
 
     raw_paths = get_paths(raw_mouse_path,
                           video_file_name=video_file_name,
