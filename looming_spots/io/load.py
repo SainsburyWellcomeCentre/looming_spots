@@ -144,5 +144,6 @@ def sync_raw_and_processed_data(
     if mouse_id is not None:
         raw_directory = raw_directory / mouse_id
         processed_directory = processed_directory / mouse_id
+    print(raw_directory, processed_directory)
     cmd = f"rsync -tvr --chmod=D2775,F664 --exclude='*.avi' --exclude='*.imec*' --exclude='.mp4' {raw_directory}/* {processed_directory}"
     subprocess.call(cmd, shell=True)
