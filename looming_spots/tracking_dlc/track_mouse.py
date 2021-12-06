@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+import fire
 
 import deeplabcut
 
@@ -147,13 +148,12 @@ def dlc_track_video(
     save_npy_tracks(directory, config_dict)
 
 
-def main(mouse_ids):
-    for mouse_id in mouse_ids:
-        process_mouse(mouse_id, overwrite=True, label_video=False)
+def main():
+    fire.Fire(process_mouse)
 
 
 if __name__ == "__main__":
-    main(["1097643"])
+    main()
 
 
 
