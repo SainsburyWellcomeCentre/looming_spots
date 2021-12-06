@@ -1,4 +1,3 @@
-import os
 import subprocess
 import sys
 
@@ -7,8 +6,6 @@ import numpy as np
 import skvideo
 import skvideo.io
 import pims
-
-from looming_spots.io.load import load_all_channels_on_clock_ups
 
 
 def load_video_from_path(vid_path):
@@ -47,55 +44,11 @@ def crop_video(video, width, height, origin=(0, 0)):
     )
 
     for i, frame in enumerate(video):
-        new_video[i, :, :] = frame[origin[1] : height, origin[0] : width]
+        new_video[i, :, :] = frame[origin[1]: height, origin[0]: width]
     return new_video
 
 
-def compare_pd_and_video(directory):
-    photodiode_trace = load_all_channels_on_clock_ups(directory)["photodiode"]
-    n_samples_pd = len(photodiode_trace)
-    video_path = os.path.join(directory, "camera.mp4")
-    n_samples_video = len(pims.Video(video_path))
-
-    print(
-        "pd found {} samples, there are {} frames in the video".format(
-            n_samples_pd, n_samples_video
-        )
-    )
-
-    if n_samples_pd != n_samples_video:
-        if n_samples_pd == 0:
-            raise NoPdError
-        n_samples_ratio = round(n_samples_pd / n_samples_video, 2)
-        if n_samples_ratio.is_integer():
-            print("downsampling by factor {}".format(n_samples_ratio))
-            print(n_samples_pd, n_samples_video, n_samples_ratio)
-            downsampled_ai = photodiode_trace[:: int(n_samples_ratio)]
-            save_path = os.path.join(directory, "AI_corrected")
-            np.save(save_path, downsampled_ai)
-
-
-def convert_to_mp4(
-    name, directory, remove_avi=False
-):  # TODO: remove duplication
-    mp4_path = os.path.join(directory, name[:-4] + ".mp4")
-    avi_path = os.path.join(directory, name)
-    if os.path.isfile(mp4_path):
-        print("{} already exists".format(mp4_path))
-        if remove_avi:  # TEST this
-            if os.path.isfile(avi_path):
-                print(
-                    "{} present in processed data, deleting...".format(
-                        avi_path
-                    )
-                )
-                os.remove(avi_path)
-    else:
-        print("Creating: " + mp4_path)
-        convert_avi_to_mp4(avi_path)
-
-
-def convert_avi_to_mp4(source, dest, overwrite=False):
+def convert_avi_to_mp4(source, dest, overwrite=False, crf=18):
     if not dest.exists() or overwrite:
 
         print(f"avi: {source} mp4: {dest}")
@@ -104,12 +57,12 @@ def convert_avi_to_mp4(source, dest, overwrite=False):
 
         if sys.platform == "linux":
             cmd = (
-                f"ffmpeg -i {str(source)} -c:v mpeg4 -preset fast -crf 18 -b 5000k {str(dest)}"
+                f"ffmpeg -i {str(source)} -c:v mpeg4 -preset veryfast -crf {crf} -b 5000k {str(dest)}"
             )
 
         elif sys.platform == "windows":  # TEST: on windows
             cmd = (
-                f"ffmpeg -i {str(source)} -c:v mpeg4 -preset fast -crf 18 -b 5000k {str(dest)}".split(" ")
+                f"ffmpeg -i {str(source)} -c:v mpeg4 -preset veryfast -crf {crf} -b 5000k {str(dest)}".split(" ")
             )
 
         else:
@@ -119,7 +72,7 @@ def convert_avi_to_mp4(source, dest, overwrite=False):
                 )
             )
 
-        subprocess.check_call([cmd], shell=True)
+        subprocess.check_call(cmd, shell=True)
     else:
         print(f"file exists at {dest} and overwrite set to false... skipping...")
 

@@ -38,6 +38,7 @@ N_SAMPLES_BEFORE = 200
 N_SAMPLES_AFTER = 400
 TRACK_LENGTH = N_SAMPLES_BEFORE + N_SAMPLES_AFTER
 
+DLC_DIRECTORY = "/home/slenzi/winstor/margrie/slenzi/dlc/"
 
 HEAD_DIRECTORY = pathlib.Path(
     "/home/slenzi/winstor/margrie/glusterfs/imaging/l/loomer/"

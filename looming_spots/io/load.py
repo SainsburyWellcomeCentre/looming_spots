@@ -131,6 +131,7 @@ def get_clock_ups(clock, threshold=2.5):
 def sync_raw_and_processed_data(
     raw_directory=RAW_DATA_DIRECTORY,
     processed_directory=PROCESSED_DATA_DIRECTORY,
+    mouse_id=None,
 ):
     """
     Runs rsync command from python to copy across necessary data from raw to processed directories. May require
@@ -140,7 +141,8 @@ def sync_raw_and_processed_data(
     :param processed_directory:
     :return:
     """
-    cmd = "rsync -tvr --chmod=D2775,F664 --exclude='*.avi' --exclude='*.imec*' --exclude='.mp4' {}/* {}".format(
-        raw_directory, processed_directory
-    )
+    if mouse_id is not None:
+        raw_directory = raw_directory / mouse_id
+        processed_directory = processed_directory / mouse_id
+    cmd = f"rsync -tvr --chmod=D2775,F664 --exclude='*.avi' --exclude='*.imec*' --exclude='.mp4' {raw_directory}/* {processed_directory}"
     subprocess.call(cmd, shell=True)

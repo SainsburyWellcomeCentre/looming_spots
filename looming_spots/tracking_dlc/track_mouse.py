@@ -4,10 +4,11 @@ from pathlib import Path
 import deeplabcut
 
 from looming_spots.constants import RAW_DATA_DIRECTORY, PROCESSED_DATA_DIRECTORY
-from looming_spots.tracking_dlc import track_5label, process_DLC_output
+from looming_spots.io.load import sync_raw_and_processed_data
+from looming_spots.tracking_dlc import process_DLC_output
 import pathlib
 import numpy as np
-from looming_spots.tracking_dlc.constants import DLC_FNAMES, CONFIG_PATHS
+from looming_spots.tracking_dlc.dlc_configs import steves_5_label
 from looming_spots.util import video_processing
 
 
@@ -17,8 +18,8 @@ def get_video_paths_from_mouse_id(mid):
     return [str(v) for v in vpaths]
 
 
-def get_tracks_path(directory, config_path_label, get_all_paths=False):
-    fname = DLC_FNAMES[config_path_label]
+def get_tracks_path(directory, config_dict, get_all_paths=False):
+    fname = config_dict['DLC_fname']
     h5_files = list(directory.glob(f"{fname}"))
 
     if h5_files:
@@ -32,13 +33,13 @@ def get_tracks_path(directory, config_path_label, get_all_paths=False):
     return None
 
 
-def save_npy_tracks(directory, config_path_label):
-    tracks_path = get_tracks_path(directory, config_path_label)
+def save_npy_tracks(directory, config_dict):
+    tracks_path = get_tracks_path(directory, config_dict)
     print(tracks_path)
     if tracks_path is not None:
         print(f"saving tracks to {tracks_path}")
         mouse_xy_tracks = process_DLC_output.process_DLC_output(
-            str(tracks_path), config_path_label
+            str(tracks_path), config_dict
         )
         mouse_positions_x_path = str(tracks_path.parent / "dlc_x_tracks.npy")
         mouse_positions_y_path = str(tracks_path.parent / "dlc_y_tracks.npy")
@@ -51,42 +52,63 @@ def get_paths(source_path, video_file_name='camera', video_fmt='avi'):
     return source_path.rglob(f'*{video_file_name}.{video_fmt}')
 
 
-def process_mouse(m_id, config_path_label='bg_5_label', overwrite=False, video_file_name='camera', input_video_fmt='avi', output_video_fmt='mp4'):
+def process_mouse(m_id,
+                  config_dict=steves_5_label,
+                  overwrite=False,
+                  video_file_name='camera',
+                  input_video_fmt='avi',
+                  output_video_fmt='mp4',
+                  label_video=False,
+                  ):
+
+    sync_raw_and_processed_data(mouse_id=m_id)
     raw_mouse_path = RAW_DATA_DIRECTORY / m_id
     processed_mouse_path = PROCESSED_DATA_DIRECTORY / m_id
 
-    raw_paths = get_paths(raw_mouse_path, video_file_name=video_file_name, video_fmt=input_video_fmt)
+    raw_paths = get_paths(raw_mouse_path,
+                          video_file_name=video_file_name,
+                          video_fmt=input_video_fmt)
 
     for path in list(raw_paths):
-        video_processing.convert_avi_to_mp4(path, dest=Path(str(path).replace('raw_data', 'processed_data')))
+        video_processing.convert_avi_to_mp4(
+                                            path,
+                                            dest=Path(str(path).replace('raw_data',
+                                                                        'processed_data').replace(input_video_fmt,
+                                                                                                  output_video_fmt)
+                                                      )
+                                            )
 
-    processed_paths = get_paths(processed_mouse_path, video_file_name=video_file_name, video_fmt=output_video_fmt)
+    processed_paths = get_paths(
+                                processed_mouse_path,
+                                video_file_name=video_file_name,
+                                video_fmt=output_video_fmt
+                                )
 
     for path in list(processed_paths):
         dlc_track_video(
-            pathlib.Path(str(path)),
-            config_path_label=config_path_label,
-            overwrite=overwrite,
-        )
+                        pathlib.Path(str(path)),
+                        config_dict=config_dict,
+                        overwrite=overwrite,
+                        label_video=label_video,
+                        )
 
 
 def dlc_track_video(
-    vpath, config_path_label, label_video=False, overwrite=False
+    vpath, config_dict, label_video=False, overwrite=False
 ):
 
     directory = vpath.parent
     all_paths = get_tracks_path(
-        directory, config_path_label, get_all_paths=True
+        directory, config_dict, get_all_paths=True
     )
 
     if not os.path.isdir(directory):
         os.mkdir(str(directory))
 
-    config = CONFIG_PATHS[config_path_label]
-    tracks_path = get_tracks_path(directory, config_path_label)
+    tracks_path = get_tracks_path(directory, config_dict)
 
     if not os.path.isfile(str(tracks_path)):
-        deeplabcut.analyze_videos(config, [str(vpath)])
+        deeplabcut.analyze_videos(config_dict['config_path'], [str(vpath)])
 
     if overwrite:
 
@@ -95,16 +117,16 @@ def dlc_track_video(
                 print(f"deleting... {str(p)}")
                 os.remove(str(p))
 
-        deeplabcut.analyze_videos(config, [str(vpath)])
+        deeplabcut.analyze_videos(config_dict['config_path'], [str(vpath)])
 
-    deeplabcut.filterpredictions(config, [str(vpath)])
+    deeplabcut.filterpredictions(config_dict['config_path'], [str(vpath)])
 
-    tracks_path = get_tracks_path(vpath.parent, config_path_label)
+    tracks_path = get_tracks_path(vpath.parent, config_dict)
 
     if tracks_path is not None:
         print(f"valid track path {tracks_path} processing and output")
         mouse_xy_tracks = process_DLC_output.process_DLC_output(
-            tracks_path, config_path_label
+            tracks_path, config_dict
         )
 
         mouse_positions_x_path = directory / "dlc_x_tracks.npy"
@@ -118,16 +140,16 @@ def dlc_track_video(
         if label_video:
             print("creating labeled video")
             labelled_vid = deeplabcut.create_labeled_video(
-                config, [vpath], save_frames=True
+                config_dict['config_path'], [str(vpath)], save_frames=True
             )
             return mouse_xy_tracks, labelled_vid
 
-    save_npy_tracks(directory, config_path_label)
+    save_npy_tracks(directory, config_dict)
 
 
 if __name__ == "__main__":
 
     mids = ["1097643"]
     for mid in mids:
-        process_mouse(mid, overwrite=True)
+        process_mouse(mid, overwrite=True, label_video=False)
 

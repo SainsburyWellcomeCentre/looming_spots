@@ -34,7 +34,7 @@ def get_mtgs_in_experiment(experiment_key):
     ]
 
 
-def get_mouse_ids(df, ignore_future_experiments=True):
+def get_mouse_ids(df):
     df = df[df["result"] != "tbd"]
     mouse_ids = np.array(df["mouse_id"])
     mouse_ids = np.unique(mouse_ids)
@@ -44,14 +44,6 @@ def get_mouse_ids(df, ignore_future_experiments=True):
 def get_experiment_subset_df(df, experiment_key):
     exp_df = df[df["experiment"] == experiment_key]
     return exp_df
-
-
-def get_incomplete_experiments(df):
-    unfinished_experiment_df = df[df["result"] == "tbd"]
-    filtered_unfinished_experiment_df = unfinished_experiment_df[
-        ["mouse_id", "experiment", "test_date"]
-    ]
-    return filtered_unfinished_experiment_df
 
 
 def get_result_from_mouse_ids(mouse_ids, df):

@@ -1,13 +1,11 @@
 import numpy as np
 import pandas as pd
 
-from looming_spots.tracking_dlc.constants import BODYPART_LABELS
 
-
-def process_DLC_output(file_path, config_path_label):
+def process_DLC_output(file_path, config_dict):
     clean_data = load_clean_data(file_path)
     median_label_tracks = get_median_position_from_labels(
-        clean_data, config_path_label
+        clean_data, config_dict
     )
     return median_label_tracks
 
@@ -58,9 +56,9 @@ def get_first_and_last_likely_frame(
 
 
 def get_median_position_from_labels(
-    dlc_clean_data, config_path_label="one_label_transform"
+    dlc_clean_data, config_dict
 ):
-    body_part_labels = BODYPART_LABELS[config_path_label]
+    body_part_labels = config_dict['bodypart_labels']
     body_parts = {
         body_part_label: dlc_clean_data[body_part_label]
         for body_part_label in body_part_labels
