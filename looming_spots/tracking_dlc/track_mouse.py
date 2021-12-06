@@ -53,7 +53,7 @@ def get_paths(source_path, video_file_name='camera', video_fmt='avi'):
     return source_path.rglob(f'*{video_file_name}.{video_fmt}')
 
 
-def process_mouse(m_id,
+def process_mouse(m_id: str,
                   config_dict=steves_5_label,
                   overwrite=False,
                   video_file_name='camera',
