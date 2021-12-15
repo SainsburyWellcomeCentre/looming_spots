@@ -57,7 +57,7 @@ def convert_avi_to_mp4(source, dest, overwrite=False, crf=18):
 
         if sys.platform == "linux":
             cmd = (
-                f"ffmpeg -i {str(source)} -c:v mpeg4 -preset veryfast -crf {crf} -b 5000k {str(dest)}"
+                f"ffmpeg -i {str(source)} -c:v mpeg4 -preset veryfast -crf {crf} -b 5000k -c:v copy -c:a copy {str(dest)}"
             )
 
         elif sys.platform == "windows":  # TEST: on windows
