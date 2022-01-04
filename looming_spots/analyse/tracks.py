@@ -121,6 +121,12 @@ def track_in_standard_space(
     elif tracking_method == "dlc_1_label":
         print("loading tracking results")
         x, y = load_raw_track(p, "dlc_{}_tracks.npy", start, end)
+        x, y = projective_transform_tracks(
+            x,
+            y,
+            load_box_corner_coordinates(session_directory),
+            BOX_CORNER_COORDINATES,
+        )
 
     elif tracking_method == "dlc_5_label":
         print("loading 5 label tracking results")
@@ -138,6 +144,7 @@ def track_in_standard_space(
             BOX_CORNER_COORDINATES,
         )
     else:
+        print(f"tracking method {tracking_method} not available..")
         raise NotImplementedError()
 
     return np.array(x), np.array(y)

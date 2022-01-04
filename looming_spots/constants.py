@@ -41,7 +41,7 @@ TRACK_LENGTH = N_SAMPLES_BEFORE + N_SAMPLES_AFTER
 ROOT = pathlib.Path("/home/slenzi/")
 DLC_DIRECTORY = ROOT / "winstor/margrie/slenzi/dlc/"
 
-HEAD_DIRECTORY = ROOT / "/winstor/margrie/glusterfs/imaging/l/loomer/"
+HEAD_DIRECTORY = ROOT / "winstor/margrie/glusterfs/imaging/l/loomer/"
 
 EXPERIMENTAL_RECORDS_PATH = "~/Downloads/updated_loom_sheet_format.csv"
 RAW_DATA_DIRECTORY = HEAD_DIRECTORY / "raw_data"

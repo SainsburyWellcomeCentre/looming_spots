@@ -23,7 +23,7 @@ def load_all_channels_raw(
     if "AI.tdms" in os.listdir(directory):  # TODO: handle corrupt tdms files
         path = os.path.join(directory, "AI.tdms")
         tdms_file = TdmsFile(path)
-        all_channels = tdms_file.group_channels("acq_task")
+        all_channels = tdms_file.groups()[0].channels()
         return {key: c.data for c, key in zip(all_channels, data_labels)}
     elif "AI.bin" in os.listdir(directory):
         return load_from_ai_bin(directory)

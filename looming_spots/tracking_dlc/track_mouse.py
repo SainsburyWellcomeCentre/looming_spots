@@ -9,7 +9,7 @@ from looming_spots.io.load import sync_raw_and_processed_data
 from looming_spots.tracking_dlc import process_DLC_output
 import pathlib
 import numpy as np
-from looming_spots.tracking_dlc.dlc_configs import steves_5_label
+from looming_spots.tracking_dlc.dlc_configs import ears_and_body
 from looming_spots.util import video_processing
 
 
@@ -54,7 +54,7 @@ def get_paths(source_path, video_file_name='camera', video_fmt='avi'):
 
 
 def process_mouse(m_id: str,
-                  config_dict=steves_5_label,
+                  config_dict=ears_and_body,
                   overwrite=False,
                   video_file_name='camera',
                   input_video_fmt='avi',
@@ -149,7 +149,8 @@ def dlc_track_video(
 
 
 def main():
-    fire.Fire(process_mouse)
+    process_mouse('1097613', overwrite=False)
+    #fire.Fire(process_mouse)
 
 
 if __name__ == "__main__":
