@@ -52,8 +52,12 @@ def track_mouse(mid, overwrite=False):
         )
 
 
-if __name__ == "__main__":
-
-    mids = ["1114088", "1114089", "1114185", "1114186", "1114188", "1114189"]
+def main(mids):
     for mid in mids:
         track_mouse(mid, overwrite=True)
+
+
+if __name__ == "__main__":
+    main(
+         mids=[]
+         )

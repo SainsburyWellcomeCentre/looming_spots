@@ -1,6 +1,6 @@
 import os
 
-import cv2
+#import cv2
 import numpy as np
 from looming_spots.constants import LOOM_ONSETS
 from looming_spots.util.video_processing import (

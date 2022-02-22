@@ -2,7 +2,7 @@ import os
 import subprocess
 import sys
 
-import cv2
+#import cv2
 import numpy as np
 import skvideo
 import skvideo.io

@@ -72,8 +72,8 @@ class LoomTrial(object):
             self.stimulus_type, self.stimulus_number()
         )
         self.video_path = os.path.join(self.directory, self.video_name)
-        self.folder = os.path.join(
-            self.directory, f"{self.stimulus_type}{self.stimulus_number()}"
+        self.folder = pathlib.Path(os.path.join(
+            self.directory, f"{self.stimulus_type}{self.stimulus_number()}")
         )
 
         self.time_to_first_loom = None
