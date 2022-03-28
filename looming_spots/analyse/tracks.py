@@ -96,8 +96,7 @@ def load_box_corner_coordinates(session_directory):
 
 
 def track_in_standard_space(
-    session_directory, tracking_method, start, end, loom_folder=None
-):
+    session_directory, tracking_method, start, end, transformed, loom_folder=None, padding=None):
     """
     This function loads positional xy traces in standard space. For manual_tracking tracks and dlc tracks, these have been
     generated using videos that were transformed using the same projective transform approach. However, for
@@ -121,6 +120,8 @@ def track_in_standard_space(
     elif tracking_method == "dlc_1_label":
         print("loading tracking results")
         x, y = load_raw_track(p, "dlc_{}_tracks.npy", start, end)
+        x = np.array(x)
+        y = np.array(y)
 
     elif tracking_method == "dlc_5_label":
         print("loading 5 label tracking results")
@@ -139,7 +140,19 @@ def track_in_standard_space(
         )
     else:
         raise NotImplementedError()
-
+    print(f'transformed: {transformed}')
+    if not transformed and transformed is not None:
+        if padding:
+            x += padding
+            y += padding
+            print('padding...')
+        print('transforming...')
+        x, y = projective_transform_tracks(
+            x,
+            y,
+            load_box_corner_coordinates(session_directory),
+            BOX_CORNER_COORDINATES,
+        )
     return np.array(x), np.array(y)
 
 

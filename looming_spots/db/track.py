@@ -44,12 +44,14 @@ class Track(object):
 
     """
 
-    def __init__(self, folder, path, start, end, frame_rate):
+    def __init__(self, folder, path, start, end, frame_rate, transformed=None, padding=None):
         self.folder = folder
         self.frame_rate = frame_rate
         self.path = path
         self.start = start
         self.end = end
+        self.padding = padding
+        self.transformed = transformed
         self.x, self.y = self.track_in_standard_space
 
     @property
@@ -85,6 +87,8 @@ class Track(object):
             self.start,
             self.end,
             loom_folder=self.folder,
+            transformed=self.transformed,
+            padding=self.padding
         )
 
     def load_box_corner_coordinates(self):
