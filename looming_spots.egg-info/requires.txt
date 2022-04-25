@@ -1,0 +1,10 @@
+numpy
+configobj
+matplotlib
+seaborn
+scipy
+pandas
+pims
+scikit-video
+pingouin
+nptdms
