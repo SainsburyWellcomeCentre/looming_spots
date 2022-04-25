@@ -1,19 +1,16 @@
 import os
 import pathlib
 
-import looming_spots.util.generate_example_videos
 import numpy as np
 import matplotlib.pyplot as plt
 import pims
 from looming_spots.analyse.escape_classification import is_track_a_freeze
-from looming_spots.analyse.tracks import get_loom_number_from_latency
+from looming_spots.analyse.track_functions import get_most_recent_loom
 from looming_spots.db.track import Track
 from looming_spots.util.generic_functions import pad_track
 
 from matplotlib import patches
 from datetime import timedelta
-
-import looming_spots.util.video_processing
 
 from looming_spots.constants import (
     LOOMING_STIMULUS_ONSET,
@@ -33,7 +30,7 @@ import pandas as pd
 class LoomTrial(object):
 
     """
-    The aim of the LoomTrial class is to associate all trial-level metadata and data into one place.
+    LoomTrial associates trial-level metadata and data into one place.
     A trial is defined as a data window surrounding the presentation of a stimulus, as detected using a photodiode
     pulse presented in conjunction with a stimulus.
 
@@ -72,8 +69,10 @@ class LoomTrial(object):
             self.stimulus_type, self.stimulus_number()
         )
         self.video_path = os.path.join(self.directory, self.video_name)
-        self.folder = pathlib.Path(os.path.join(
-            self.directory, f"{self.stimulus_type}{self.stimulus_number()}")
+        self.folder = pathlib.Path(
+            os.path.join(
+                self.directory, f"{self.stimulus_type}{self.stimulus_number()}"
+            )
         )
 
         self.time_to_first_loom = None
@@ -118,31 +117,18 @@ class LoomTrial(object):
     def set_previous_trial(cls, self, other):
         setattr(self, "previous_trial", other)
 
-    def get_loom_trial_idx(self):
-        return self.loom_trial_idx
-
-    def get_auditory_trial_idx(self):
-        return self.auditory_trial_idx
-
-    def lsie_loom_after(self):
+    def lse_loom_after(self):
         current_trial = self
         while current_trial is not None:
-            if current_trial.trial_type == "lsie":
+            if current_trial.trial_type == "lse":
                 return True
             current_trial = current_trial.next_trial
 
-    def lsie_loom_before(self):
+    def lse_loom_before(self):
         current_trial = self
         while current_trial is not None:
-            if current_trial.trial_type == "lsie":
+            if current_trial.trial_type == "lse":
                 return True
-            current_trial = current_trial.previous_trial
-
-    def get_last_lsie_trial(self):
-        current_trial = self
-        while current_trial is not None:
-            if current_trial.trial_type == "lsie":
-                return current_trial
             current_trial = current_trial.previous_trial
 
     def set_contrast(self, contrast):
@@ -157,32 +143,14 @@ class LoomTrial(object):
         self.auditory_trial_idx = idx
         return self.auditory_trial_idx
 
-    def n_lsies(self):
-        current_trial = self.first_trial()
-        current_trial_type = current_trial.trial_type
-        n_lsie_protocols = 1 if current_trial_type == "lsie" else 0
-
-        while current_trial is not None:
-            if current_trial.trial_type != current_trial_type:
-                n_lsie_protocols += 1
-                current_trial_type = current_trial.trial_type
-            current_trial = current_trial.next_trial
-        return n_lsie_protocols
-
-    def first_trial(self):
-        current_trial = self
-        while current_trial.previous_trial is not None:
-            current_trial = current_trial.previous_trial
-        return current_trial
-
     def get_trial_type(self):
-        if self.trial_type == "lsie":
-            return "lsie"
-        elif self.lsie_loom_before() and self.lsie_loom_after():
-            return "post_test"  # TODO:'pre_and_post_test'
-        elif self.lsie_loom_after():
+        if self.trial_type == "lse":
+            return "lse"
+        elif self.lse_loom_before() and self.lse_loom_after():
+            return "post_test"
+        elif self.lse_loom_after():
             return "pre_test"
-        elif self.lsie_loom_before():
+        elif self.lse_loom_before():
             return "post_test"
         else:
             return "pre_test"
@@ -221,68 +189,16 @@ class LoomTrial(object):
     def get_stimulus_number(self):
         return self.stimulus_number()
 
-    def processed_video_path(self):
-        return list(pathlib.Path(self.directory).glob("cam_transform*.mp4"))[0]
-
-    def extract_video(self, overwrite=False):
-        print("extracting")
-        if not overwrite:
-            if os.path.isfile(self.video_path):
-                return "video already exists... skipping"
-        looming_spots.util.generate_example_videos.extract_loom_video_trial(
-            self.processed_video_path(),
-            str(pathlib.Path(self.directory) / self.video_name),
-            self.sample_number,
-            overwrite=overwrite,
-        )
-
-    def photodiode(self):
-        auditory_signal = self.session.data["photodiode"]
-        return auditory_signal[self.start: self.end]
-
-    def auditory_data(self):
-        auditory_signal = self.session.data["auditory_stimulus"]
-        return auditory_signal[self.start: self.end]
-
     @property
     def time(self):
-        return self.session.dt + timedelta(
-            0, int(self.sample_number / self.frame_rate)
-        )
-
-    def get_time(self):
-        return self.time
-
-    def time_in_safety_zone(self):
-        return self.track.time_in_safety_zone()
-
-    @property
-    def mouse_location_at_stimulus_onset(self):
-        x_track, y_track = self.track.track_in_standard_space
-        return x_track[LOOMING_STIMULUS_ONSET], y_track[LOOMING_STIMULUS_ONSET]
-
-    @staticmethod
-    def round_timedelta(td):
-        if td.seconds > 60 * 60 * 12:
-            return td + timedelta(1)
-        else:
-            return td
+        return self.session.dt + timedelta(0, int(self.sample_number / self.frame_rate))
 
     def plot_stimulus(self):
         ax = plt.gca()
         if self.stimulus_type == "auditory":
-            patch = patches.Rectangle(
-                (self.n_samples_before, -0.2), 190, 1.3, alpha=0.1, color="r"
-            )
-            ax.add_patch(patch)
+            plotting.plot_auditory_stimulus(self.n_samples_before)
         else:
             plotting.plot_looms_ax(ax)
-
-    def plot_mouse_location_at_stimulus_onset(self):
-        ref_frame = self.session.get_reference_frame(idx=self.sample_number)
-        plt.imshow(ref_frame)
-        x, y = self.mouse_location_at_stimulus_onset
-        plt.plot(x, y, "o", color="k", markersize=20)
 
     def to_df(self, group_id, extra_data=None):
         n_points = TRACK_LENGTH
@@ -290,15 +206,11 @@ class LoomTrial(object):
             ARENA_SIZE_CM * self.track.normalised_x_track[0:n_points], n_points
         )
         unsmoothed_speed = pad_track(
-            FRAME_RATE
-            * ARENA_SIZE_CM
-            * self.track.normalised_x_speed[0:n_points],
+            FRAME_RATE * ARENA_SIZE_CM * self.track.normalised_x_speed[0:n_points],
             n_points,
         )
         smoothed_speed = pad_track(
-            FRAME_RATE
-            * ARENA_SIZE_CM
-            * self.track.smoothed_x_speed[0:n_points],
+            FRAME_RATE * ARENA_SIZE_CM * self.track.smoothed_x_speed[0:n_points],
             n_points,
         )
         add_dict = {
@@ -309,7 +221,7 @@ class LoomTrial(object):
             "peak_speed": self.track.peak_speed(),
             "is_flee": self.track.is_escape(),
             "latency": self.track.latency(),
-            "last_loom": get_loom_number_from_latency(self.track.latency()),
+            "last_loom": get_most_recent_loom(self.track.latency()),
             "is_freeze": is_track_a_freeze(unsmoothed_speed),
             "time_to_shelter": self.track.time_to_shelter(),
         }
@@ -340,29 +252,6 @@ class VisualStimulusTrial(LoomTrial):
             trial_video_fname="{}{}.mp4",
         )
 
-    def make_loom_superimposed_video(
-        self, width=ARENA_LENGTH_PX, height=ARENA_WIDTH_PX, origin=(0, 40)
-    ):
-
-        path_in = str(pathlib.Path(self.directory) / self.video_name)
-        path_out = "_overlay.".join(path_in.split("."))
-
-        looming_spots.util.generate_example_videos.loom_superimposed_video(
-            path_in,
-            path_out,
-            width=width,
-            height=height,
-            origin=origin,
-            track=self.track.track_in_standard_space,
-        )
-
-    def get_video(self):
-        vid_path = pathlib.Path(
-            self.session.path.replace("processed", "raw")
-        ).joinpath("camera.avi")
-        vid = pims.Video(vid_path)
-        return vid[self.start : self.end]
-
 
 class AuditoryStimulusTrial(LoomTrial):
     def __init__(
@@ -373,11 +262,4 @@ class AuditoryStimulusTrial(LoomTrial):
         trial_type,
         stimulus_type="auditory",
     ):
-        super().__init__(
-            session, directory, sample_number, trial_type, stimulus_type
-        )
-
-    def make_stimulus_superimposed_video(
-        self, width=640, height=250, origin=(0, 40)
-    ):
-        raise NotImplementedError
+        super().__init__(session, directory, sample_number, trial_type, stimulus_type)

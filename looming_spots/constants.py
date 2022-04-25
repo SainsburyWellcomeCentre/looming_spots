@@ -4,10 +4,9 @@ from datetime import datetime
 
 
 FRAME_RATE = 30
-VIDEO_SHAPE = (480, 640)
+
 ARENA_SIZE_CM = 50
 SHELTER_FRONT = 0.2
-SHELTER_SIZE_CM = 10
 
 ARENA_WIDTH_PX = 240
 ARENA_LENGTH_PX = 600
@@ -17,9 +16,7 @@ CLASSIFICATION_WINDOW_END = 350
 SPEED_THRESHOLD = -0.017 * FRAME_RATE * ARENA_SIZE_CM
 CLASSIFICATION_LATENCY = 5
 END_OF_CLASSIFICATION_WINDOW = 550
-FREEZE_BUFFER_FRAMES = (
-    12  # number of frames after loom onset to ignore in classifying freeze
-)
+SAMPLES_TO_IGNORE_FREEZE_CLASSIFICATION = 12
 
 LOOM_ONSETS = [200, 228, 256, 284, 312]
 LOOMING_STIMULUS_ONSET = LOOM_ONSETS[0]
@@ -42,9 +39,7 @@ N_SAMPLES_AFTER = 400
 N_SAMPLES_TO_SHOW = N_SAMPLES_BEFORE + N_SAMPLES_AFTER
 
 
-HEAD_DIRECTORY = pathlib.Path(
-    "Z:\\margrie\\glusterfs\\imaging\\l\\loomer"
-)
+HEAD_DIRECTORY = pathlib.Path("Z:\\margrie\\glusterfs\\imaging\\l\\loomer")
 EXPERIMENTAL_RECORDS_PATH = "~/Downloads/updated_loom_sheet_format.csv"
 RAW_DATA_DIRECTORY = HEAD_DIRECTORY / "raw_data"
 PROCESSED_DATA_DIRECTORY = HEAD_DIRECTORY / "processed_data"

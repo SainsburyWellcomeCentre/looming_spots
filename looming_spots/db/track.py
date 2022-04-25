@@ -2,7 +2,9 @@ import numpy as np
 import seaborn as sns
 from cached_property import cached_property
 from looming_spots.analyse.escape_classification import classify_escape
-from looming_spots.analyse.tracks import (
+from looming_spots.analyse.track_functions import (
+    normalise_x_track,
+    normalise_y_track,
     projective_transform_tracks,
     downsample_track,
     normalised_speed_from_track,
@@ -11,6 +13,7 @@ from looming_spots.analyse.tracks import (
     get_peak_speed,
     smooth_acceleration_from_track,
     latency_peak_detect_s,
+    estimate_reaction_time,
     time_in_shelter,
     time_to_shelter,
     track_in_standard_space,
@@ -44,7 +47,9 @@ class Track(object):
 
     """
 
-    def __init__(self, folder, path, start, end, frame_rate, transformed=None, padding=None):
+    def __init__(
+        self, folder, path, start, end, frame_rate, transformed=None, padding=None
+    ):
         self.folder = folder
         self.frame_rate = frame_rate
         self.path = path
@@ -58,7 +63,6 @@ class Track(object):
     def metric_functions(self):
         func_dict = {
             "speed": self.peak_speed,
-            "acceleration": self.absolute_acceleration,
             "latency peak detect": self.latency,
             "reaction time": self.reaction_time_s,
             "time in safety zone": self.time_in_safety_zone,
@@ -88,7 +92,7 @@ class Track(object):
             self.end,
             loom_folder=self.folder,
             transformed=self.transformed,
-            padding=self.padding
+            padding=self.padding,
         )
 
     def load_box_corner_coordinates(self):
@@ -113,26 +117,16 @@ class Track(object):
         return new_track_x, new_track_y
 
     @property
-    def normalised_x_track(self, target_frame_rate=30):
-        normalised_track = 1 - (self.x / ARENA_LENGTH_PX)
-        if self.frame_rate != target_frame_rate:
-            normalised_track = downsample_track(
-                normalised_track, self.frame_rate
-            )
-        return normalised_track
+    def normalised_x_track(self, display_frame_rate=30):
+        return normalise_x_track(self.x, self.frame_rate, display_frame_rate)
 
     @property
     def x_track_real_units(self):
         return self.normalised_x_track * ARENA_SIZE_CM
 
     @property
-    def normalised_y_track(self, target_frame_rate=30):
-        normalised_track = (self.y / ARENA_WIDTH_PX) * 0.4
-        if self.frame_rate != target_frame_rate:
-            normalised_track = downsample_track(
-                normalised_track, self.frame_rate
-            )
-        return normalised_track
+    def normalised_y_track(self, display_frame_rate=30):
+        return normalise_y_track(self.y, display_frame_rate)
 
     @property
     def normalised_x_speed(self):
@@ -158,41 +152,11 @@ class Track(object):
         smoothed_y_speed = smooth_speed_from_track(self.normalised_y_track)
         return smoothed_y_speed
 
-    def absolute_acceleration(self):
-        return abs(self.peak_x_acc()) * FRAME_RATE * ARENA_SIZE_CM
-
-    def peak_x_acc(self):
-        acc_window = self.get_accelerations_to_shelter()
-        return np.nanmin(acc_window)
-
-    def peak_x_acc_idx(self):
-        acc_window = self.get_accelerations_to_shelter()
-        return int(
-            np.where(acc_window == np.nanmin(acc_window))[0]
-            + LOOMING_STIMULUS_ONSET
-        )
-
     def peak_speed(self, return_loc=False):
         return get_peak_speed(self.normalised_x_track, return_loc)
 
-    def get_accelerations_to_shelter(self):
-        acc_window = self.smoothed_x_acceleration[
-            LOOMING_STIMULUS_ONSET:END_OF_CLASSIFICATION_WINDOW
-        ]
-        vel_window = self.smoothed_x_speed[
-            LOOMING_STIMULUS_ONSET:END_OF_CLASSIFICATION_WINDOW
-        ]
-        acc_window[np.where(vel_window[:-1] > 0)] = np.nan
-        return acc_window
-
     def reaction_time(self):
-        n_stds = 1.2
-        acc = -self.smoothed_x_acceleration[N_SAMPLES_BEFORE:]
-        std = np.nanstd(acc)
-        start = signal.find_peaks(acc, std * n_stds)[0][0]
-        if start > 350:
-            start = np.nan
-        return start
+        return self.estimate_reaction_time(self.smoothed_x_acceleration())
 
     def reaction_time_s(self):
         return self.reaction_time() / FRAME_RATE

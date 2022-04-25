@@ -4,28 +4,28 @@ import warnings
 from pathlib import Path
 from shutil import copyfile
 
-import looming_spots.io.load
+import looming_spots.loom_io.load
 import numpy as np
 from datetime import datetime
 
 from cached_property import cached_property
 
 import looming_spots.util
-from looming_spots.analyse import tracks
-from looming_spots.analyse.tracks import get_tracking_method
+from looming_spots.analyse import track_functions
+from looming_spots.analyse.track_functions import get_tracking_method
 from looming_spots.constants import (
     AUDITORY_STIMULUS_CHANNEL_ADDED_DATE,
     PROCESSED_DATA_DIRECTORY,
 )
 
 from looming_spots.db import trial
-from looming_spots.io.load import (
+from looming_spots.loom_io.load import (
     load_all_channels_on_clock_ups,
     load_all_channels_raw,
 )
-from looming_spots.exceptions import LoomsNotTrackedError, MouseNotFoundError
+from looming_spots.exceptions import MouseNotFoundError
 from looming_spots.util import generic_functions
-from looming_spots.io import load, photodiode
+from looming_spots.loom_io import load, photodiode
 
 
 class Session(object):
@@ -44,14 +44,14 @@ class Session(object):
         dt,
         mouse_id=None,
         n_looms_to_view=0,
-        n_lsie_looms=120,
-        n_trials_to_consider=3,
+        n_lse_looms=120,
+        n_trials_to_include=3,
     ):
         self.dt = dt
         self.mouse_id = mouse_id
         self.n_looms_to_view = n_looms_to_view
-        self.n_lsie_looms = n_lsie_looms
-        self.n_trials_to_include = n_trials_to_consider
+        self.n_lse_looms = n_lse_looms
+        self.n_trials_to_include = n_trials_to_include
         self.next_session = None
         self.previous_session = None
 
@@ -71,7 +71,7 @@ class Session(object):
         else:
             if "AI.tdms" in os.listdir(self.path):
                 clock = self.get_clock_raw()
-                clock_ups = looming_spots.io.load.get_clock_ups(clock)
+                clock_ups = looming_spots.loom_io.load.get_clock_ups(clock)
                 if np.nanmedian(np.diff(clock_ups)) == 333:
                     frame_rate = 30
                 elif np.nanmedian(np.diff(clock_ups)) == 200:
@@ -109,8 +109,8 @@ class Session(object):
         for t in self.trials:
             t + a
 
-    def directory(self):
-        return os.path.join(PROCESSED_DATA_DIRECTORY, self.mouse_id)
+    # def directory(self):
+    #     return os.path.join(PROCESSED_DATA_DIRECTORY, self.mouse_id)
 
     @property
     def path(self):
@@ -123,33 +123,6 @@ class Session(object):
         return os.path.join(
             self.path.replace("processed_data", "raw_data"), "camera.avi"
         )
-
-    @property
-    def parent_path(self):
-        return os.path.split(self.path)[0]
-
-    @property
-    def loom_paths(self):
-        paths = []
-
-        if self.n_looms == 0:
-            print(f"no looms in {self.path}")
-            return []
-
-        for name in os.listdir(self.path):
-            loom_folder = os.path.join(self.path, name)
-            if os.path.isdir(loom_folder) and "loom" in name:
-                paths.append(loom_folder)
-
-        if len(paths) == 0:
-            raise LoomsNotTrackedError(self.path)
-
-        loom_indices = [int(path[-1]) for path in paths]
-        sorted_paths, idx = generic_functions.sort_by(
-            paths, loom_indices, descend=False
-        )
-
-        return sorted_paths
 
     def contains_auditory(self):
         aud_idx_path = os.path.join(self.path, "auditory_starts.npy")
@@ -165,9 +138,9 @@ class Session(object):
             return True
 
         if recording_date > AUDITORY_STIMULUS_CHANNEL_ADDED_DATE:
-            ad = looming_spots.io.load.load_all_channels_on_clock_ups(
-                self.path
-            )["auditory_stimulus"]
+            ad = looming_spots.loom_io.load.load_all_channels_on_clock_ups(self.path)[
+                "auditory_stimulus"
+            ]
             if (ad > 0.7).any():
                 return True
 
@@ -219,8 +192,8 @@ class Session(object):
 
     def get_trials_of_protocol_type(self, key):
         """
-        Returns trials grouped as either belonging to an LSIE protocol, or being a testing trial of some sort
-        to later be more specifically classified as a pre- or post- lsie testing trial.
+        Returns trials grouped as either belonging to an LSE protocol, or being a testing trial of some sort
+        to later be more specifically classified as a pre- or post- lse testing trial.
 
         :param key:
         :return:
@@ -238,10 +211,7 @@ class Session(object):
         """
         test_trials = [t for t in self.trials if "test" in t.trial_type]
         return np.array(
-            [
-                t.track.classify_escape()
-                for t in test_trials[: self.n_trials_to_include]
-            ]
+            [t.track.classify_escape() for t in test_trials[: self.n_trials_to_include]]
         )
 
     @property
@@ -253,32 +223,15 @@ class Session(object):
         return len(self.get_trials_of_protocol_type("test"))
 
     @property
-    def n_lsie_trials(self):
-        return len(self.get_trials_of_protocol_type("lsie"))
+    def n_lse_trials(self):
+        return len(self.get_trials_of_protocol_type("lse"))
 
     def hours(self):
         return self.dt.hour + self.dt.minute / 60
 
     @property
-    def n_flees(self):
-        return np.count_nonzero(self.trials_results)
-
-    @property
-    def n_non_flees(self):
-        n_trials = len(self.trials_results)
-        return n_trials - np.count_nonzero(self.trials_results)
-
-    @property
     def n_looms(self):
         return len(self.looming_stimuli_idx)
-
-    def get_reference_frame(self, idx=0):
-        import skvideo.io
-
-        vid = skvideo.io.vreader(self.video_path)
-        for i, frame in enumerate(vid):
-            if i == idx:
-                return frame
 
     @property
     def photodiode_trace(self, raw=False):
@@ -310,16 +263,14 @@ class Session(object):
         return load.load_all_channels_on_clock_ups(self.path)
 
     @property
-    def contains_lsie(self):
-        return photodiode.contains_lsie(self.looming_stimuli_idx)
+    def contains_lse(self):
+        return photodiode.contains_lse(self.looming_stimuli_idx)
 
     @cached_property
     def looming_stimuli_idx(self):
         loom_idx_path = os.path.join(self.path, "loom_starts.npy")
         if not os.path.isfile(loom_idx_path):
-            _ = photodiode.get_loom_idx_from_photodiode_trace(
-                self.path, save=True
-            )[0]
+            _ = photodiode.get_loom_idx_from_photodiode_trace(self.path, save=True)[0]
         return np.load(loom_idx_path)
 
     @cached_property
@@ -333,47 +284,41 @@ class Session(object):
             return np.load(aud_idx_path)
 
     def get_trial_type(self, onset_in_samples):
-        if self.lsie_idx is None:
+        if self.lse_idx is None:
             return "test"
-        elif onset_in_samples in self.lsie_idx:
-            return "lsie"
+        elif onset_in_samples in self.lse_idx:
+            return "lse"
         else:
             return "test"
 
     @property
-    def lsie_idx(self):
+    def lse_idx(self):
         if self.contains_auditory():
-            if photodiode.contains_lsie(self.auditory_stimuli_idx, 1):
-                return photodiode.get_lsie_loom_idx(self.auditory_stimuli_idx, 1)
+            if photodiode.contains_lse(self.auditory_stimuli_idx, 1):
+                return photodiode.get_lse_loom_idx(self.auditory_stimuli_idx, 1)
 
-        if photodiode.contains_lsie(self.looming_stimuli_idx, 5):
-            return photodiode.get_lsie_loom_idx(self.looming_stimuli_idx, 5)
+        if photodiode.contains_lse(self.looming_stimuli_idx, 5):
+            return photodiode.get_lse_loom_idx(self.looming_stimuli_idx, 5)
 
     @property
-    def lsie_loom_idx(self):
-        return photodiode.get_lsie_loom_idx(self.looming_stimuli_idx)
+    def lse_loom_idx(self):
+        return photodiode.get_lse_loom_idx(self.looming_stimuli_idx)
 
     @property
     def test_loom_idx(self):
         return photodiode.get_test_looms_from_loom_idx(self.looming_stimuli_idx)
 
     @property
-    def lsie_protocol_start(self):
-        return photodiode.get_lsie_start(self.looming_stimuli_idx)
+    def lse_protocol_start(self):
+        return photodiode.get_lse_start(self.looming_stimuli_idx)
 
     def test_loom_classification(self):  # TEST
-        assert len(self.lsie_loom_idx) + len(self.test_loom_idx) == int(
+        assert len(self.lse_loom_idx) + len(self.test_loom_idx) == int(
             len(self.looming_stimuli_idx) / 5
         )
 
-    def extract_peristimulus_videos_for_all_trials(self):
-        for t in self.trials:
-            t.extract_video()
-
     def contains_visual_stimuli(self):
-        photodiode_trace = load_all_channels_on_clock_ups(self.path)[
-            "photodiode"
-        ]
+        photodiode_trace = load_all_channels_on_clock_ups(self.path)["photodiode"]
         if (photodiode_trace > 0.5).any():
             return True
 

@@ -3,24 +3,20 @@ import os
 import numpy as np
 import scipy.signal
 
-import looming_spots.util.video_processing
-
-from looming_spots.io.load import load_all_channels_on_clock_ups
+from looming_spots.loom_io.load import load_all_channels_on_clock_ups
 from looming_spots.exceptions import PdTooShortError
 
 
 def get_test_looms_from_loom_idx(loom_idx, n_looms_per_stimulus=5):
-    if not contains_lsie(loom_idx, n_looms_per_stimulus):
+    if not contains_lse(loom_idx, n_looms_per_stimulus):
         return loom_idx[::n_looms_per_stimulus]
     else:
         test_loom_idx = get_test_loom_idx(loom_idx, n_looms_per_stimulus)
         return loom_idx[test_loom_idx]
 
 
-def get_test_loom_idx(
-    loom_idx, n_looms_per_stimulus=5
-):  # WARNING: THIS DOES NOT DO WHAT THE USER EXPECTS
-    if contains_lsie(loom_idx):
+def get_test_loom_idx(loom_idx, n_looms_per_stimulus=5):
+    if contains_lse(loom_idx):
         loom_burst_onsets = np.diff(loom_idx[::n_looms_per_stimulus])
         min_ili = min(loom_burst_onsets)
         print("min_ili: {min_ili}")
@@ -41,7 +37,7 @@ def get_loom_idx_from_photodiode_trace(directory, save=True):
 
         loom_starts, loom_ends = find_pd_threshold_crossings(photodiode_trace)
 
-    except looming_spots.util.video_processing.NoPdError as e:
+    except NoPdError as e:
         print(e)
         loom_starts = []
         loom_ends = []
@@ -57,24 +53,22 @@ def get_loom_idx_from_photodiode_trace(directory, save=True):
     return loom_starts, loom_ends
 
 
-def get_lsie_loom_idx(idx, n_looms_per_stimulus=5):
-    if contains_lsie(idx, n_looms_per_stimulus):
+def get_lse_loom_idx(idx, n_looms_per_stimulus=5):
+    if contains_lse(idx, n_looms_per_stimulus):
         onsets_diff = np.diff(idx[::n_looms_per_stimulus])
         min_ili = min(onsets_diff)
-        loom_idx_lsie = np.where(onsets_diff < min_ili + 150)[
-            0
-        ]  # FIXME: this value is chosen for.. reasons
+        loom_idx_lsie = np.where(onsets_diff < min_ili + 150)[0]
         loom_idx_lsie = np.concatenate(
             [loom_idx_lsie, [max(loom_idx_lsie) + 1]]
         )  # adds last loom as ILI will always be bigger
         return idx[loom_idx_lsie * n_looms_per_stimulus]
 
 
-def get_lsie_start(loom_idx, n_looms_per_stimulus=5):
-    return get_lsie_loom_idx(loom_idx, n_looms_per_stimulus)[0]
+def get_lse_start(loom_idx, n_looms_per_stimulus=5):
+    return get_lse_loom_idx(loom_idx, n_looms_per_stimulus)[0]
 
 
-def contains_lsie(loom_idx, n_looms_per_stimulus=5):
+def contains_lse(loom_idx, n_looms_per_stimulus=5):
     if not loom_idx.shape:
         return False
     ili = np.diff(np.diff(loom_idx[::n_looms_per_stimulus]))
@@ -146,46 +140,5 @@ def get_auditory_onsets_from_auditory_trace(directory, save=True):
     return auditory_onsets
 
 
-def manually_correct_ai(directory, start, end):
-    """
-    This is useful when there are clear errors in the photodiode (e.g. if the photodiode is removed during the experiment
-    and allows the user to replace chunks of the processed photodiode trace with the median baseline so it doesn't
-    interfere with stimulus detection
-
-    :param directory:
-    :param start:
-    :param end:
-    :return:
-    """
-    photodiode_trace = load_all_channels_on_clock_ups(directory)["photodiode"]
-    photodiode_trace[start:end] = np.median(photodiode_trace)
-    save_path = os.path.join(directory, "AI_corrected")
-    np.save(save_path, photodiode_trace)
-
-
-def auto_fix_ai(
-    directory, n_samples_to_replace=500, screen_off_threshold=0.02
-):
-    """
-    Automatically attempts to correct photodiode errors, but safer to use manually_correct_ai
-
-    :param directory:
-    :param n_samples_to_replace:
-    :param screen_off_threshold:
-    :return:
-    """
-
-    photodiode_trace = load_all_channels_on_clock_ups(directory)["photodiode"]
-    screen_off_locs = np.where(photodiode_trace < screen_off_threshold)[
-        0
-    ]  # TODO: remove hard var
-
-    if len(screen_off_locs) == 0:
-        return
-
-    start = screen_off_locs[0]
-    end = start + n_samples_to_replace
-    photodiode_trace[start:end] = np.median(photodiode_trace)
-    save_path = os.path.join(directory, "AI_corrected")
-    np.save(save_path, photodiode_trace)
-    auto_fix_ai(directory, n_samples_to_replace=n_samples_to_replace)
+class NoPdError(Exception):
+    pass

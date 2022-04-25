@@ -13,9 +13,7 @@ def sort_by(list_to_sort, list_to_sort_by, descend=True):
 
     sorted_lists = [
         (cid, did)
-        for did, cid in sorted(
-            zip(list_to_sort_by, list_to_sort), key=lambda x: x[0]
-        )
+        for did, cid in sorted(zip(list_to_sort_by, list_to_sort), key=lambda x: x[0])
     ]
     if descend:
         sorted_lists = sorted_lists[::-1]
@@ -42,12 +40,6 @@ def is_datetime(string):
     except ValueError:  # FIXME: custom exception required
         print("string is in not in date_time format: {}".format(string))
         return False
-
-
-def chunks(l, n):
-    """Yield successive n-sized chunks from l."""
-    for i in range(0, len(l), n):
-        yield l[i : i + n]
 
 
 def pad_track(this_track, n_points):

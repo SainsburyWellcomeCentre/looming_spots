@@ -5,10 +5,10 @@ from looming_spots.constants import (
     SPEED_THRESHOLD,
     FRAME_RATE,
     LOOMING_STIMULUS_ONSET,
-    FREEZE_BUFFER_FRAMES,
+    SAMPLES_TO_IGNORE_FREEZE_CLASSIFICATION,
 )
 
-from looming_spots.analyse.tracks import (
+from looming_spots.analyse.track_functions import (
     n_samples_to_reach_shelter,
     get_peak_speed,
 )
@@ -29,9 +29,7 @@ def classify_escape(normalised_x_track, speed_thresh=-SPEED_THRESHOLD):
     :return:
     """
 
-    peak_speed, arg_peak_speed = get_peak_speed(
-        normalised_x_track, return_loc=True
-    )
+    peak_speed, arg_peak_speed = get_peak_speed(normalised_x_track, return_loc=True)
     time_to_shelter = n_samples_to_reach_shelter(normalised_x_track)
 
     print(
@@ -58,7 +56,7 @@ def is_track_a_freeze(unsmoothed_speed):
     lower_percentile = 2.5
     freeze_metric_threshold = 2.5
 
-    onset = LOOMING_STIMULUS_ONSET + FREEZE_BUFFER_FRAMES
+    onset = LOOMING_STIMULUS_ONSET + SAMPLES_TO_IGNORE_FREEZE_CLASSIFICATION
 
     freeze_metric = np.percentile(
         unsmoothed_speed[onset:CLASSIFICATION_WINDOW_END], upper_percentile
@@ -69,7 +67,3 @@ def is_track_a_freeze(unsmoothed_speed):
     is_freeze = freeze_metric < freeze_metric_threshold
 
     return is_freeze
-
-
-def classify_response():
-    pass

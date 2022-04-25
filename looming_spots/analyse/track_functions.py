@@ -16,13 +16,14 @@ from looming_spots.constants import (
     ARENA_WIDTH_PX,
     LOOM_ONSETS_S,
 )
-from looming_spots.util.transformations import (
-    get_inverse_projective_transform,
-    get_box_coordinates_from_file,
-)
+
 from scipy.ndimage import gaussian_filter
 import pandas as pd
 from scipy import signal
+from looming_spots.util.transformations import (
+    get_box_coordinates_from_file,
+    get_inverse_projective_transform,
+)
 
 
 def load_raw_track(session_directory, name, start, end, loom_folder=None):
@@ -36,34 +37,34 @@ def load_raw_track(session_directory, name, start, end, loom_folder=None):
     return x, y
 
 
-def normalised_x_track(x, frame_rate=30, target_frame_rate=30):
+def normalise_x_track(x, frame_rate=30, display_frame_rate=30):
     """
     Positional traces are reported in pixels, this function normalises x traces into values between 0 and 1 for later
     conversion to real world units.
 
     :param x:
     :param frame_rate:
-    :param target_frame_rate:
+    :param display_frame_rate:
     :return:
     """
     normalised_track = 1 - (x / ARENA_LENGTH_PX)
-    if frame_rate != target_frame_rate:
+    if frame_rate != display_frame_rate:
         normalised_track = downsample_track(normalised_track, frame_rate)
     return normalised_track
 
 
-def normalised_y_track(y, frame_rate=30, target_frame_rate=30):
+def normalise_y_track(y, frame_rate=30, display_frame_rate=30):
     """
     Positional traces are reported in pixels, this function normalises y traces into values between 0 and 1 for later
     conversion to real world units. Since the y range is from 0 - 0.4 everything is scaled down for the y-position.
 
     :param y:
     :param frame_rate:
-    :param target_frame_rate:
+    :param display_frame_rate:
     :return:
     """
     normalised_track = (y / ARENA_WIDTH_PX) * 0.4
-    if frame_rate != target_frame_rate:
+    if frame_rate != display_frame_rate:
         normalised_track = downsample_track(normalised_track, frame_rate)
     return normalised_track
 
@@ -78,25 +79,24 @@ def load_box_corner_coordinates(session_directory):
     :return:
     """
 
-    box_path = pathlib.Path(session_directory).glob(
-        "box_corner_coordinates.npy"
-    )
+    box_path = pathlib.Path(session_directory).glob("box_corner_coordinates.npy")
     if len(list(box_path)) == 0:
         print("no box coordinates found...")
 
     return get_box_coordinates_from_file(
-        str(
-            list(
-                pathlib.Path(session_directory).glob(
-                    "box_corner_coordinates.npy"
-                )
-            )[0]
-        )
+        str(list(pathlib.Path(session_directory).glob("box_corner_coordinates.npy"))[0])
     )
 
 
 def track_in_standard_space(
-    session_directory, tracking_method, start, end, transformed, loom_folder=None, padding=None):
+    session_directory,
+    tracking_method,
+    start,
+    end,
+    transformed,
+    loom_folder=None,
+    padding=None,
+):
     """
     This function loads positional xy traces in standard space. For manual_tracking tracks and dlc tracks, these have been
     generated using videos that were transformed using the same projective transform approach. However, for
@@ -140,13 +140,13 @@ def track_in_standard_space(
         )
     else:
         raise NotImplementedError()
-    print(f'transformed: {transformed}')
+    print(f"transformed: {transformed}")
     if not transformed and transformed is not None:
         if padding:
             x += padding
             y += padding
-            print('padding...')
-        print('transforming...')
+            print("padding...")
+        print("transforming...")
         x, y = projective_transform_tracks(
             x,
             y,
@@ -187,9 +187,7 @@ def latency_peak_detect(normalised_x_track, n_stds=2.5):
     """
     speed = -smooth_speed_from_track(normalised_x_track)[N_SAMPLES_BEFORE:]
     std = np.nanstd(speed[:N_SAMPLES_TO_SHOW])
-    all_peak_starts = signal.find_peaks(speed, std * n_stds, width=1)[1][
-        "left_ips"
-    ]
+    all_peak_starts = signal.find_peaks(speed, std * n_stds, width=1)[1]["left_ips"]
     if len(all_peak_starts) > 0:
         return all_peak_starts[0] + 200
 
@@ -241,9 +239,7 @@ def time_in_shelter(normalised_x_track):
 
     start = n_samples_to_reach_shelter(smoothed_x_track)
     if start is None:
-        print(
-            "mouse never returns to shelter, not computing time to leave shelter"
-        )
+        print("mouse never returns to shelter, not computing time to leave shelter")
         return None
     return arena_region_crossings.get_next_entry_from_track(
         smoothed_x_track, "middle", "shelter", start
@@ -294,9 +290,7 @@ def downsample_track(normalised_track, frame_rate):
     n_points_new = int(n_points_ori * (FRAME_RATE / frame_rate))
     track_timebase = (np.arange(len(normalised_track))) / frame_rate
     new_timebase = (np.arange(n_points_new)) / FRAME_RATE
-    normalised_track = np.interp(
-        new_timebase, track_timebase, normalised_track
-    )
+    normalised_track = np.interp(new_timebase, track_timebase, normalised_track)
     return normalised_track
 
 
@@ -348,8 +342,10 @@ def load_track_csv(loom_folder):
 
 def get_peak_speed_and_latency(normalised_track):
     """
-    :return peak_speed:
-    :return arg_peak: the frame number of the peak speed
+    Calculates the peak speed (towards shelter) reached in the analysis window following presentation of a stimulus.
+    :param normalised_x_track:
+    :param return_loc:
+    :return:
     """
     filtered_track = gaussian_filter(normalised_track, 3)
     distances = np.diff(filtered_track)
@@ -371,7 +367,7 @@ def projective_transform_tracks(
 
     """
     To correct for camera angle artifacts, coordinates of the arena and its known real geometry are used to
-    get a projective transform that can be applied to positional tracks or raw videos.
+    get a projective transform that can be applied to positional tracks or raw images.
 
 
         x2y2-------------x4y4        b--------------d
@@ -409,7 +405,7 @@ def projective_transform_tracks(
     return new_track_x, new_track_y
 
 
-def get_loom_number_from_latency(latency):
+def get_most_recent_loom(latency):
     """
     Returns the loom index of the most recent loom before escape onset.
 
@@ -423,3 +419,13 @@ def get_loom_number_from_latency(latency):
     idx = np.where(dt < 0)[0]
     loom_idx = idx[0] if len(idx) > 0 else 5
     return loom_idx
+
+
+def estimate_reaction_time(smoothed_x_acceleration):
+    n_stds = 1.2
+    acc = -smoothed_x_acceleration[N_SAMPLES_BEFORE:]
+    std = np.nanstd(acc)
+    start = signal.find_peaks(acc, std * n_stds)[0][0]
+    if start > 350:
+        start = np.nan
+    return start
