@@ -1,4 +1,3 @@
-import numpy as np
 import seaborn as sns
 from cached_property import cached_property
 from looming_spots.analyse.escape_classification import classify_escape
@@ -6,14 +5,12 @@ from looming_spots.analyse.track_functions import (
     normalise_x_track,
     normalise_y_track,
     projective_transform_tracks,
-    downsample_track,
     normalised_speed_from_track,
     smooth_track,
     smooth_speed_from_track,
     get_peak_speed,
     smooth_acceleration_from_track,
     latency_peak_detect_s,
-    estimate_reaction_time,
     time_in_shelter,
     time_to_shelter,
     track_in_standard_space,
@@ -23,12 +20,7 @@ from looming_spots.analyse.track_functions import (
 from looming_spots.constants import (
     FRAME_RATE,
     ARENA_SIZE_CM,
-    LOOMING_STIMULUS_ONSET,
-    END_OF_CLASSIFICATION_WINDOW,
     N_SAMPLES_TO_SHOW,
-    N_SAMPLES_BEFORE,
-    ARENA_LENGTH_PX,
-    ARENA_WIDTH_PX,
 )
 from looming_spots.util.plotting import (
     get_x_length,
@@ -36,7 +28,6 @@ from looming_spots.util.plotting import (
     convert_x_axis,
 )
 from matplotlib import pyplot as plt
-from scipy import signal
 
 
 class Track(object):
@@ -64,7 +55,6 @@ class Track(object):
         func_dict = {
             "speed": self.peak_speed,
             "latency peak detect": self.latency,
-            "reaction time": self.reaction_time_s,
             "time in safety zone": self.time_in_safety_zone,
             "classified as flee": self.is_escape,
             "time to reach shelter stimulus onset": self.time_to_shelter,
@@ -97,7 +87,7 @@ class Track(object):
 
     def load_box_corner_coordinates(self):
         """
-        Gets the coordinates of the arena box for this trial/track.
+        Gets the coordinates of the arena box floor for this trial/track.
         :return:
         """
         return load_box_corner_coordinates(self.path)
@@ -154,12 +144,6 @@ class Track(object):
 
     def peak_speed(self, return_loc=False):
         return get_peak_speed(self.normalised_x_track, return_loc)
-
-    def reaction_time(self):
-        return self.estimate_reaction_time(self.smoothed_x_acceleration())
-
-    def reaction_time_s(self):
-        return self.reaction_time() / FRAME_RATE
 
     @property
     def smoothed_x_acceleration(self):

@@ -70,7 +70,6 @@ def normalise_y_track(y, frame_rate=30, display_frame_rate=30):
 
 
 def load_box_corner_coordinates(session_directory):
-
     """
     Loads box corner coordinates that have been manually determined using the box_corner_gui. See projective transform
     for details on the coordinate order.
@@ -106,8 +105,11 @@ def track_in_standard_space(
     :param tracking_method:
     :param start:
     :param end:
+    :param transformed:
     :param loom_folder:
+    :param padding: offset used in DLC tracking
     :return: x and y positional traces
+
     """
 
     p = pathlib.Path(session_directory)
@@ -180,7 +182,7 @@ def get_tracking_method(session_directory):
 
 def latency_peak_detect(normalised_x_track, n_stds=2.5):
     """
-    Calculates the onset, in samples, of escape using the normalised positional x-trace.
+    Calculates the onset of escape in samples using the normalised positional x-trace.
 
     :param normalised_x_track:
     :return:
@@ -194,7 +196,7 @@ def latency_peak_detect(normalised_x_track, n_stds=2.5):
 
 def latency_peak_detect_s(normalised_x_track):
     """
-    Calculates the onset, in seconds, of escape using the normalised positional x-trace.
+    Calculates the escape onset in seconds using the normalised positional x-trace.
 
     :param normalised_x_track:
     :return:

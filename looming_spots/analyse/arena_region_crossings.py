@@ -84,6 +84,10 @@ def get_next_entry_from_track(
 
 
 def arena_entry_bools_dictionary(normalised_x_track):
+    """
+    Returns a dictionary of booleans indicating location of the mouse within 3 defined
+    regions of the arena.
+    """
     shelter_boundary = SHELTER_FRONT
     tz_boundary = 0.6
     positions = {
@@ -99,7 +103,8 @@ def arena_entry_bools_dictionary(normalised_x_track):
 
 def get_all_tz_entries(normalised_x_track):
     """
-    Finds the sample idx where the threat zone (TZ) is entered by the mouse.
+    Finds the sample idx where the mouse enters the threat zone (TZ).
+
     :param normalised_x_track:
     :return:
     """

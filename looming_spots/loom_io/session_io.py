@@ -12,6 +12,7 @@ from cached_property import cached_property
 
 import looming_spots.util
 from looming_spots.analyse import track_functions
+
 from looming_spots.analyse.track_functions import get_tracking_method
 from looming_spots.constants import (
     AUDITORY_STIMULUS_CHANNEL_ADDED_DATE,
@@ -20,7 +21,6 @@ from looming_spots.constants import (
 
 from looming_spots.db import trial
 from looming_spots.loom_io.load import (
-    load_all_channels_on_clock_ups,
     load_all_channels_raw,
 )
 from looming_spots.exceptions import MouseNotFoundError
@@ -34,8 +34,6 @@ class Session(object):
     The Session class aims to load data that has been acquired in a series of recording sessions and provide
     a simple means to read and access this data, trials are generated from this data and have access to the data
     provided.
-
-
 
     """
 
@@ -118,12 +116,6 @@ class Session(object):
         session_dir = datetime.strftime(self.dt, "%Y%m%d_%H_%M_%S")
         return os.path.join(PROCESSED_DATA_DIRECTORY, parent_dir, session_dir)
 
-    @property
-    def video_path(self):
-        return os.path.join(
-            self.path.replace("processed_data", "raw_data"), "camera.avi"
-        )
-
     def contains_auditory(self):
         aud_idx_path = os.path.join(self.path, "auditory_starts.npy")
         if os.path.isfile(aud_idx_path):
@@ -204,36 +196,6 @@ class Session(object):
         return [t for t in self.trials if t.trial_type == key]
 
     @property
-    def trials_results(self):
-        """
-
-        :return:
-        """
-        test_trials = [t for t in self.trials if "test" in t.trial_type]
-        return np.array(
-            [t.track.classify_escape() for t in test_trials[: self.n_trials_to_include]]
-        )
-
-    @property
-    def n_trials_total(self):
-        return len(self.trials)
-
-    @property
-    def n_test_trials(self):
-        return len(self.get_trials_of_protocol_type("test"))
-
-    @property
-    def n_lse_trials(self):
-        return len(self.get_trials_of_protocol_type("lse"))
-
-    def hours(self):
-        return self.dt.hour + self.dt.minute / 60
-
-    @property
-    def n_looms(self):
-        return len(self.looming_stimuli_idx)
-
-    @property
     def photodiode_trace(self, raw=False):
         if raw:
             pd = load_all_channels_raw(self.path)["photodiode"]
@@ -244,27 +206,9 @@ class Session(object):
     def get_clock_raw(self):
         return load_all_channels_raw(self.path)["clock"]
 
-    @property
-    def auditory_trace(self):
-        return self.data["auditory_stimulus"]
-
-    @cached_property
-    def signal(self):
-        if "signal" in self.data:
-            return self.data["signal"]
-
-    @cached_property
-    def background(self):
-        if "background" in self.data:
-            return self.data["background"]
-
     @cached_property
     def data(self):
         return load.load_all_channels_on_clock_ups(self.path)
-
-    @property
-    def contains_lse(self):
-        return photodiode.contains_lse(self.looming_stimuli_idx)
 
     @cached_property
     def looming_stimuli_idx(self):
@@ -308,20 +252,6 @@ class Session(object):
     def test_loom_idx(self):
         return photodiode.get_test_looms_from_loom_idx(self.looming_stimuli_idx)
 
-    @property
-    def lse_protocol_start(self):
-        return photodiode.get_lse_start(self.looming_stimuli_idx)
-
-    def test_loom_classification(self):  # TEST
-        assert len(self.lse_loom_idx) + len(self.test_loom_idx) == int(
-            len(self.looming_stimuli_idx) / 5
-        )
-
-    def contains_visual_stimuli(self):
-        photodiode_trace = load_all_channels_on_clock_ups(self.path)["photodiode"]
-        if (photodiode_trace > 0.5).any():
-            return True
-
     def get_looming_stimuli_test_trials_idx(self):
         return self.looming_stimuli_idx[::5]
 
@@ -333,7 +263,6 @@ class Session(object):
             "photodiode": self.get_photodiode_trace,
             "x_pos": self.x_pos,
             "y_pos": self.y_pos,
-            "delta_f": self.get_delta_f,
             "loom_onsets": self.get_loom_idx,
             "auditory_onsets": self.get_auditory_idx,
             "trials": self.get_session_trials,
@@ -345,8 +274,8 @@ class Session(object):
         return self.photodiode_trace - np.median(self.photodiode_trace)
 
     def track(self):
-        return tracks.track_in_standard_space(
-            self.path, get_tracking_method(self.path), 0, len(self)
+        return track_functions.track_in_standard_space(
+            self.path, get_tracking_method(self.path), 0, len(self), None
         )
 
     def x_pos(self):
@@ -354,9 +283,6 @@ class Session(object):
 
     def y_pos(self):
         return self.track()[1]
-
-    def get_delta_f(self):
-        return self.data["delta_f"]
 
     def get(self, key):
         current_session = self

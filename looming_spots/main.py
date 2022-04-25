@@ -6,7 +6,7 @@ import pandas as pd
 HEAD_DIRECTORY = pathlib.Path("Z:\\margrie\\glusterfs\\imaging\\l\\loomer")
 PROCESSED_DATA_DIRECTORY = HEAD_DIRECTORY / "processed_data"
 
-DATA_DIRECTORY = pathlib.Path("D:\\SWC\\lenzietal2022_lse\\test_rerun_raw2\\")
+DATA_DIRECTORY = pathlib.Path("D:\\SWC\\lenzietal2022_lse\\test_rerun_raw3\\")
 EXAMPLE_TRACKS_DIR = DATA_DIRECTORY / "example_tracks"
 FIGURE_DIRECTORY = DATA_DIRECTORY / "figures"
 DATAFRAME_PATH = DATA_DIRECTORY / "dataframes"

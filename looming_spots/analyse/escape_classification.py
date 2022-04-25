@@ -51,7 +51,13 @@ def classify_escape(normalised_x_track, speed_thresh=-SPEED_THRESHOLD):
 
 
 def is_track_a_freeze(unsmoothed_speed):
+    """
+    Uses speed trace to define a freeze response from 0.4 seconds after stimulus onset
+    until 5 seconds after stimulus onset.
 
+    :param unsmoothed_speed:
+    :return:
+    """
     upper_percentile = 97.5
     lower_percentile = 2.5
     freeze_metric_threshold = 2.5

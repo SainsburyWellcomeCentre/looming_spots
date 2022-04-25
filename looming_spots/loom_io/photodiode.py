@@ -24,11 +24,6 @@ def get_test_loom_idx(loom_idx, n_looms_per_stimulus=5):
         return test_loom_idx * n_looms_per_stimulus
 
 
-def get_test_looms_from_photodiode_trace(directory):
-    loom_idx, _ = get_loom_idx_from_photodiode_trace(directory)
-    return get_test_looms_from_loom_idx(loom_idx)
-
-
 def get_loom_idx_from_photodiode_trace(directory, save=True):
     try:
         data = load_all_channels_on_clock_ups(directory)
@@ -75,24 +70,6 @@ def contains_lse(loom_idx, n_looms_per_stimulus=5):
     if np.count_nonzero([np.abs(x) < 5 for x in ili]) >= 3:
         return True
     return False
-
-
-def get_nearest_clock_up(raw_pd_value, clock_ups_pd):
-    from bisect import bisect_left
-
-    insertion_point = bisect_left(clock_ups_pd, raw_pd_value)
-    difference_left = raw_pd_value - clock_ups_pd[insertion_point - 1]
-    difference_right = raw_pd_value - clock_ups_pd[insertion_point]
-
-    increment = 0 if difference_right < difference_left else -1
-    nearest_clock_up_idx = insertion_point + increment
-    distance_from_clock_up = (
-        difference_left
-        if abs(difference_left) < abs(difference_right)
-        else difference_right
-    )
-
-    return nearest_clock_up_idx, distance_from_clock_up
 
 
 def find_pd_threshold_crossings(ai, threshold=0.4):

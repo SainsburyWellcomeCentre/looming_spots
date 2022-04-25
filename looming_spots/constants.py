@@ -1,4 +1,3 @@
-import os
 import pathlib
 from datetime import datetime
 
@@ -40,7 +39,6 @@ N_SAMPLES_TO_SHOW = N_SAMPLES_BEFORE + N_SAMPLES_AFTER
 
 
 HEAD_DIRECTORY = pathlib.Path("Z:\\margrie\\glusterfs\\imaging\\l\\loomer")
-EXPERIMENTAL_RECORDS_PATH = "~/Downloads/updated_loom_sheet_format.csv"
 RAW_DATA_DIRECTORY = HEAD_DIRECTORY / "raw_data"
 PROCESSED_DATA_DIRECTORY = HEAD_DIRECTORY / "processed_data"
 

@@ -1,12 +1,8 @@
-import os
-
 import numpy as np
 import pandas as pd
-import scipy.io
 from cached_property import cached_property
 
 from looming_spots.loom_io import session_io
-from looming_spots.util.generic_functions import flatten_list
 
 
 class MouseLoomTrialGroup(object):
@@ -83,7 +79,7 @@ class MouseLoomTrialGroup(object):
 
     @cached_property
     def sessions(self):
-        unlinked_sessions = looming_spots.io.session_io.load_sessions(self.mouse_id)
+        unlinked_sessions = session_io.load_sessions(self.mouse_id)
         singly_linked_trials, doubly_linked_sessions = [], []
 
         for i, (s_current, s_next) in enumerate(
