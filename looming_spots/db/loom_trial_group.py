@@ -40,11 +40,6 @@ class MouseLoomTrialGroup(object):
         for i, t in enumerate(self.auditory_trials()):
             t.set_auditory_trial_idx(i)
 
-    def mixed_post_test(self):
-        all_escape = all(t.classify_escape() for t in self.post_test_trials()[:3])
-        none_escape = all(not t.classify_escape() for t in self.post_test_trials()[:3])
-        return not (all_escape or none_escape)
-
     @cached_property
     def all_trials(
         self,
