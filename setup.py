@@ -22,8 +22,8 @@ setup(
         "cached-property",
         "tqdm",
         "scikit-image",
-        "opencv",
         "tables",
         "more_itertools",
+        "pims"
     ],
 )
